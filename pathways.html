@@ -114,8 +114,12 @@
                 <input type="number" id="caPurchaseYrEarly" value="2026" oninput="calculate()">
             </div>
             <div class="input-group">
-                <label>CA Purchase Year (Path 2 & 5)</label>
-                <input type="number" id="caPurchaseYrLate" value="2028" oninput="calculate()">
+                <label>CA Purchase Year (Path 2)</label>
+                <input type="number" id="caPurchaseYrPath2" value="2028" oninput="calculate()">
+            </div>
+            <div class="input-group">
+                <label>CA Purchase Year (Path 5)</label>
+                <input type="number" id="caPurchaseYrPath5" value="2028" oninput="calculate()">
             </div>
         </div>
 
@@ -170,7 +174,8 @@
         const endYear = Number(document.getElementById('endYear').value);
         const flPurchaseYr = Number(document.getElementById('flPurchaseYr').value);
         const caPurchaseYrEarly = Number(document.getElementById('caPurchaseYrEarly').value);
-        const caPurchaseYrLate = Number(document.getElementById('caPurchaseYrLate').value);
+        const caPurchaseYrPath2 = Number(document.getElementById('caPurchaseYrPath2').value);
+        const caPurchaseYrPath5 = Number(document.getElementById('caPurchaseYrPath5').value);
 
         // Fixed Costs & Constants (Based on 6.5% interest models)
         const baseLife = 300000;
@@ -188,7 +193,8 @@
         
         const flHoldYrs = endYear - flPurchaseYr;
         const caHoldEarlyYrs = endYear - caPurchaseYrEarly;
-        const caHoldLateYrs = endYear - caPurchaseYrLate;
+        const caHoldPath2Yrs = endYear - caPurchaseYrPath2;
+        const caHoldPath5Yrs = endYear - caPurchaseYrPath5;
         const waHoldYrs = years; // 27 years
 
         const netRentWA = (waRentMonthly * 12) * (1 - mgmtFee);
@@ -202,7 +208,8 @@
         const fvWa = calcFVRealEstate(waHome, waApprec, waHoldYrs);
         const fvFl = calcFVRealEstate(flHome, flApprec, flHoldYrs);
         const fvCaEarly = calcFVRealEstate(caHome, caApprec, caHoldEarlyYrs);
-        const fvCaLate = calcFVRealEstate(caHome, caApprec, caHoldLateYrs);
+        const fvCaPath2 = calcFVRealEstate(caHome, caApprec, caHoldPath2Yrs);
+        const fvCaPath5 = calcFVRealEstate(caHome, caApprec, caHoldPath5Yrs);
 
         const results = [];
         const labels = [];
@@ -221,7 +228,7 @@
         let p2Start = startLiq - caEntryTax - (caHome * 0.2);
         let p2Pmt = caGross + caCarry + waCarry - netRentWA;
         let p2Liq = p2Start * Math.pow(1 + r, years) - calcAnnuity(p2Pmt, years);
-        let p2Re = fvWa + fvCaLate;
+        let p2Re = fvWa + fvCaPath2;
         results.push(["Path 2: Immediate CA", p2Liq, p2Re, 0, p2Liq + p2Re]);
 
         // Path 3
@@ -244,7 +251,7 @@
         let p5Start = startLiq - (flHome * 0.2) - (caHome * 0.2);
         let p5Pmt = baseLife + flCarry + caCarry + waCarry - netRentWA - netRentCA;
         let p5Liq = p5Start * Math.pow(1 + r, years) - calcAnnuity(p5Pmt, years);
-        let p5Re = fvWa + fvFl + fvCaLate;
+        let p5Re = fvWa + fvFl + fvCaPath5;
         results.push(["Path 5: Hybrid FL/CA", p5Liq, p5Re, 0, p5Liq + p5Re]);
 
         // Render Table & Build Chart Data
