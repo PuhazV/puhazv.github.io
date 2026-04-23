@@ -115,20 +115,18 @@
                 <label>End Year (Death of 2nd Spouse)</label>
                 <input type="number" id="endYear" value="2055" oninput="calculate()">
             </div>
-
             <div class="input-group">
-                <label>CA Purchase Year (Path 2)</label>
-                <input type="number" id="caPurchaseYrPath2" value="2026" oninput="calculate()">
-            </div>
-            <div class="input-group">
-                <label>FL Purchase Year (Path 3, 5)</label>
+                <label>FL Purchase Year</label>
                 <input type="number" id="flPurchaseYr" value="2026" oninput="calculate()">
             </div>
             <div class="input-group">
                 <label>CA Purchase Year (Path 4 Delayed)</label>
                 <input type="number" id="caPurchaseYrEarly" value="2026" oninput="calculate()">
             </div>
-
+            <div class="input-group">
+                <label>CA Purchase Year (Path 2)</label>
+                <input type="number" id="caPurchaseYrPath2" value="2028" oninput="calculate()">
+            </div>
             <div class="input-group">
                 <label>CA Purchase Year (Path 5)</label>
                 <input type="number" id="caPurchaseYrPath5" value="2028" oninput="calculate()">
@@ -136,7 +134,7 @@
         </div>
 
         <div class="outputs-section">
-            <div class="chart-container">
+            <div class="chart-container" id="chartWrapper">
                 <canvas id="legacyChart"></canvas>
             </div>
             <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
@@ -163,141 +161,196 @@
     const formatCurrency = (num) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(num);
 
     function calculate() {
-        // Fetch inputs
-        const startLiq = Number(document.getElementById('startLiquid').value);
-        const r = Number(document.getElementById('marketReturn').value) / 100;
-        const g = Number(document.getElementById('inflation').value) / 100;
-        
-        const dpPct = Number(document.getElementById('downPaymentPct').value) / 100;
-        const intRate = Number(document.getElementById('interestRate').value) / 100;
+        try {
+            // Fetch inputs
+            const startLiq = Number(document.getElementById('startLiquid').value);
+            const r = Number(document.getElementById('marketReturn').value) / 100;
+            const g = Number(document.getElementById('inflation').value) / 100;
+            
+            const dpPct = Number(document.getElementById('downPaymentPct').value) / 100;
+            const intRate = Number(document.getElementById('interestRate').value) / 100;
 
-        const waHome = Number(document.getElementById('waHome').value);
-        const caHome = Number(document.getElementById('caHome').value);
-        const flHome = Number(document.getElementById('flHome').value);
-        
-        const waApprec = Number(document.getElementById('waApprec').value) / 100;
-        const caApprec = Number(document.getElementById('caApprec').value) / 100;
-        const flApprec = Number(document.getElementById('flApprec').value) / 100;
+            const waHome = Number(document.getElementById('waHome').value);
+            const caHome = Number(document.getElementById('caHome').value);
+            const flHome = Number(document.getElementById('flHome').value);
+            
+            const waApprec = Number(document.getElementById('waApprec').value) / 100;
+            const caApprec = Number(document.getElementById('caApprec').value) / 100;
+            const flApprec = Number(document.getElementById('flApprec').value) / 100;
 
-        const waRentMonthly = Number(document.getElementById('waRent').value);
-        const caRentMonthly = Number(document.getElementById('caRent').value);
-        const mgmtFee = Number(document.getElementById('mgmtFee').value) / 100;
-        
-        const endYear = Number(document.getElementById('endYear').value);
-        const flPurchaseYr = Number(document.getElementById('flPurchaseYr').value);
-        const caPurchaseYrEarly = Number(document.getElementById('caPurchaseYrEarly').value);
-        const caPurchaseYrPath2 = Number(document.getElementById('caPurchaseYrPath2').value);
-        const caPurchaseYrPath5 = Number(document.getElementById('caPurchaseYrPath5').value);
+            const waRentMonthly = Number(document.getElementById('waRent').value);
+            const caRentMonthly = Number(document.getElementById('caRent').value);
+            const mgmtFee = Number(document.getElementById('mgmtFee').value) / 100;
+            
+            const endYear = Number(document.getElementById('endYear').value);
+            const flPurchaseYr = Number(document.getElementById('flPurchaseYr').value);
+            const caPurchaseYrEarly = Number(document.getElementById('caPurchaseYrEarly').value);
+            const caPurchaseYrPath2 = Number(document.getElementById('caPurchaseYrPath2').value);
+            const caPurchaseYrPath5 = Number(document.getElementById('caPurchaseYrPath5').value);
 
-        // Fixed Costs & Constants
-        const baseLife = 300000;
-        const caGross = 345000;
-        const waCarry = 42000;
-        const caEntryTax = 1060000;
-        const estateExempt = 6140000;
-        const estateTaxRate = 0.20;
+            // Fixed Costs & Constants
+            const baseLife = 300000;
+            const caGross = 345000;
+            const waCarry = 42000;
+            const caEntryTax = 1060000;
+            const estateExempt = 6140000;
+            const estateTaxRate = 0.20;
 
-        // Dynamic Mortgage Calculations (30 Year Fixed)
-        const calcAnnualMortgage = (principal, rate) => {
-            if (rate === 0) return principal / 30; // Handle 0% interest
-            const rMo = rate / 12;
-            const n = 360; // 30 years
-            const moPmt = principal * (rMo * Math.pow(1 + rMo, n)) / (Math.pow(1 + rMo, n) - 1);
-            return moPmt * 12;
-        };
+            // Dynamic Mortgage Calculations (30 Year Fixed)
+            const calcAnnualMortgage = (principal, rate) => {
+                if (rate <= 0) return principal / 30; // Handle 0% interest safely
+                const rMo = rate / 12;
+                const n = 360; // 30 years
+                const moPmt = principal * (rMo * Math.pow(1 + rMo, n)) / (Math.pow(1 + rMo, n) - 1);
+                return moPmt * 12;
+            };
 
-        // Calculate dynamic carry costs: Mortgage P&I + Static Base (Tax/Ins/HOA percentage of home value)
-        const caMortgage = calcAnnualMortgage(caHome * (1 - dpPct), intRate);
-        const caCarry = caMortgage + (caHome * 0.0175); // 1.75% for CA Tax/Ins/HOA
-        
-        const flMortgage = calcAnnualMortgage(flHome * (1 - dpPct), intRate);
-        const flCarry = flMortgage + (flHome * 0.0225); // 2.25% for FL Tax/CDD/Ins/HOA
+            // Calculate dynamic carry costs: Mortgage P&I + Static Base
+            const caMortgage = calcAnnualMortgage(caHome * (1 - dpPct), intRate);
+            const caCarry = caMortgage + (caHome * 0.0175); // 1.75% for CA Tax/Ins/HOA
+            
+            const flMortgage = calcAnnualMortgage(flHome * (1 - dpPct), intRate);
+            const flCarry = flMortgage + (flHome * 0.0225); // 2.25% for FL Tax/CDD/Ins/HOA
 
-        // Dynamic Timelines
-        const retireStartYear = 2028; 
-        const years = endYear - retireStartYear; 
-        
-        const flHoldYrs = endYear - flPurchaseYr;
-        const caHoldEarlyYrs = endYear - caPurchaseYrEarly;
-        const caHoldPath2Yrs = endYear - caPurchaseYrPath2;
-        const caHoldPath5Yrs = endYear - caPurchaseYrPath5;
+            // Dynamic Timelines
+            const retireStartYear = 2028; 
+            const years = endYear - retireStartYear; 
+            
+            const flHoldYrs = endYear - flPurchaseYr;
+            const caHoldEarlyYrs = endYear - caPurchaseYrEarly;
+            const caHoldPath2Yrs = endYear - caPurchaseYrPath2;
+            const caHoldPath5Yrs = endYear - caPurchaseYrPath5;
 
-        const netRentWA = (waRentMonthly * 12) * (1 - mgmtFee);
-        const netRentCA = (caRentMonthly * 12) * (1 - mgmtFee);
+            const netRentWA = (waRentMonthly * 12) * (1 - mgmtFee);
+            const netRentCA = (caRentMonthly * 12) * (1 - mgmtFee);
 
-        // Formula Helpers
-        const calcAnnuity = (pmt, n) => pmt * ((Math.pow(1 + r, n) - Math.pow(1 + g, n)) / (r - g));
-        const calcFVRealEstate = (val, apprec, n) => val * Math.pow(1 + apprec, n);
+            // Robust Formula Helpers (Prevents Division by Zero)
+            const calcAnnuity = (pmt, n) => {
+                if (n <= 0) return 0;
+                if (Math.abs(r - g) < 0.0001) {
+                    return pmt * n * Math.pow(1 + r, n - 1); // Exact match approximation
+                }
+                return pmt * ((Math.pow(1 + r, n) - Math.pow(1 + g, n)) / (r - g));
+            };
 
-        // Real Estate End Values
-        const fvWa = calcFVRealEstate(waHome, waApprec, years);
-        const fvFl = calcFVRealEstate(flHome, flApprec, flHoldYrs);
-        const fvCaEarly = calcFVRealEstate(caHome, caApprec, caHoldEarlyYrs);
-        const fvCaPath2 = calcFVRealEstate(caHome, caApprec, caHoldPath2Yrs);
-        const fvCaPath5 = calcFVRealEstate(caHome, caApprec, caHoldPath5Yrs);
+            const calcFVRealEstate = (val, apprec, n) => {
+                if (n <= 0) return val;
+                return val * Math.pow(1 + apprec, n);
+            };
 
-        const results = [];
-        const labels = [];
-        const liquidData = [];
-        const realEstateData = [];
-        const taxData = [];
+            // Real Estate End Values
+            const fvWa = calcFVRealEstate(waHome, waApprec, years);
+            const fvFl = calcFVRealEstate(flHome, flApprec, flHoldYrs);
+            const fvCaEarly = calcFVRealEstate(caHome, caApprec, caHoldEarlyYrs);
+            const fvCaPath2 = calcFVRealEstate(caHome, caApprec, caHoldPath2Yrs);
+            const fvCaPath5 = calcFVRealEstate(caHome, caApprec, caHoldPath5Yrs);
 
-        // Path 1
-        let p1Liq = startLiq * Math.pow(1 + r, years) - calcAnnuity(baseLife, years);
-        let p1Estate = fvWa + p1Liq;
-        let p1Tax = p1Estate > estateExempt ? (p1Estate - estateExempt) * estateTaxRate : 0;
-        results.push(["Path 1: Stay in WA", p1Liq, fvWa, -p1Tax, p1Estate - p1Tax]);
+            const results = [];
+            const labels = [];
+            const liquidData = [];
+            const realEstateData = [];
+            const taxData = [];
 
-        // Path 2
-        let p2Start = startLiq - caEntryTax - (caHome * dpPct);
-        let p2Pmt = caGross + caCarry + waCarry - netRentWA;
-        let p2Liq = p2Start * Math.pow(1 + r, years) - calcAnnuity(p2Pmt, years);
-        let p2Re = fvWa + fvCaPath2;
-        results.push(["Path 2: Immediate CA", p2Liq, p2Re, 0, p2Liq + p2Re]);
+            // Path 1
+            let p1Liq = startLiq * Math.pow(1 + r, years) - calcAnnuity(baseLife, years);
+            let p1Estate = fvWa + p1Liq;
+            let p1Tax = p1Estate > estateExempt ? (p1Estate - estateExempt) * estateTaxRate : 0;
+            results.push(["Path 1: Stay in WA", p1Liq, fvWa, -p1Tax, p1Estate - p1Tax]);
 
-        // Path 3
-        let p3Start = startLiq - (flHome * dpPct);
-        let p3Pmt = baseLife + flCarry + waCarry - netRentWA;
-        let p3Liq = p3Start * Math.pow(1 + r, years) - calcAnnuity(p3Pmt, years);
-        let p3Re = fvWa + fvFl;
-        results.push(["Path 3: Immediate FL", p3Liq, p3Re, 0, p3Liq + p3Re]);
+            // Path 2
+            let p2Start = startLiq - caEntryTax - (caHome * dpPct);
+            let p2Pmt = caGross + caCarry + waCarry - netRentWA;
+            let p2Liq = p2Start * Math.pow(1 + r, years) - calcAnnuity(p2Pmt, years);
+            let p2Re = fvWa + fvCaPath2;
+            results.push(["Path 2: Immediate CA", p2Liq, p2Re, 0, p2Liq + p2Re]);
 
-        // Path 4 
-        let p4Start = startLiq - (caHome * dpPct);
-        let p4Pmt1 = baseLife + caCarry + waCarry + 32500 - netRentCA;
-        let p4Pmt2 = caGross + caCarry + waCarry - netRentWA;
-        let p4Liq7 = p4Start * Math.pow(1 + r, 7) - calcAnnuity(p4Pmt1, 7);
-        let inflatedP4Pmt2 = p4Pmt2 * Math.pow(1 + g, 7);
-        let p4LiqFinal = p4Liq7 * Math.pow(1 + r, years - 7) - calcAnnuity(inflatedP4Pmt2, years - 7);
-        let p4Re = fvWa + fvCaEarly;
-        results.push(["Path 4: Delayed CA", p4LiqFinal, p4Re, 0, p4LiqFinal + p4Re]);
+            // Path 3
+            let p3Start = startLiq - (flHome * dpPct);
+            let p3Pmt = baseLife + flCarry + waCarry - netRentWA;
+            let p3Liq = p3Start * Math.pow(1 + r, years) - calcAnnuity(p3Pmt, years);
+            let p3Re = fvWa + fvFl;
+            results.push(["Path 3: Immediate FL", p3Liq, p3Re, 0, p3Liq + p3Re]);
 
-        // Path 5
-        let p5Start = startLiq - (flHome * dpPct) - (caHome * dpPct);
-        let p5Pmt = baseLife + flCarry + caCarry + waCarry - netRentWA - netRentCA;
-        let p5Liq = p5Start * Math.pow(1 + r, years) - calcAnnuity(p5Pmt, years);
-        let p5Re = fvWa + fvFl + fvCaPath5;
-        results.push(["Path 5: Hybrid FL/CA", p5Liq, p5Re, 0, p5Liq + p5Re]);
+            // Path 4 
+            let p4Start = startLiq - (caHome * dpPct);
+            let p4Pmt1 = baseLife + caCarry + waCarry + 32500 - netRentCA;
+            let p4Pmt2 = caGross + caCarry + waCarry - netRentWA;
+            let p4Liq7 = p4Start * Math.pow(1 + r, 7) - calcAnnuity(p4Pmt1, 7);
+            let inflatedP4Pmt2 = p4Pmt2 * Math.pow(1 + g, 7);
+            let p4LiqFinal = p4Liq7 * Math.pow(1 + r, years - 7) - calcAnnuity(inflatedP4Pmt2, years - 7);
+            let p4Re = fvWa + fvCaEarly;
+            results.push(["Path 4: Delayed CA", p4LiqFinal, p4Re, 0, p4LiqFinal + p4Re]);
 
-        // Render Table
-        const tbody = document.querySelector('#resultsTable tbody');
-        tbody.innerHTML = '';
-        results.forEach(row => {
-            labels.push(row[0].replace(/Path \d: /, ''));
-            liquidData.push(row[1]);
-            realEstateData.push(row[2]);
-            taxData.push(row[3]); 
+            // Path 5
+            let p5Start = startLiq - (flHome * dpPct) - (caHome * dpPct);
+            let p5Pmt = baseLife + flCarry + caCarry + waCarry - netRentWA - netRentCA;
+            let p5Liq = p5Start * Math.pow(1 + r, years) - calcAnnuity(p5Pmt, years);
+            let p5Re = fvWa + fvFl + fvCaPath5;
+            results.push(["Path 5: Hybrid FL/CA", p5Liq, p5Re, 0, p5Liq + p5Re]);
 
-            let tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><strong>${row[0]}</strong></td>
-                <td class="currency">${formatCurrency(row[1])}</td>
-                <td class="currency">${formatCurrency(row[2])}</td>
-                <td class="currency negative">${row[3] === 0 ? '$0' : formatCurrency(row[3])}</td>
-                <td class="currency positive">${formatCurrency(row[4])}</td>
-            `;
-            tbody.appendChild(tr);
-        });
+            // Render Table
+            const tbody = document.querySelector('#resultsTable tbody');
+            tbody.innerHTML = '';
+            results.forEach(row => {
+                labels.push(row[0].replace(/Path \d: /, ''));
+                liquidData.push(row[1]);
+                realEstateData.push(row[2]);
+                taxData.push(row[3]); 
 
-        updateChart(labels, liquidData, realEstateData, taxData);
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${row[0]}</strong></td>
+                    <td class="currency">${formatCurrency(row[1])}</td>
+                    <td class="currency">${formatCurrency(row[2])}</td>
+                    <td class="currency negative">${row[3] === 0 ? '$0' : formatCurrency(row[3])}</td>
+                    <td class="currency positive">${formatCurrency(row[4])}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Attempt to Render Chart
+            updateChart(labels, liquidData, realEstateData, taxData);
+
+        } catch (error) {
+            // Failsafe: Display the exact error on the screen so you know what broke
+            const tbody = document.querySelector('#resultsTable tbody');
+            tbody.innerHTML = `<tr><td colspan="5" style="color:red; font-weight:bold;">Calculator Error: ${error.message}</td></tr>`;
+            console.error("Calculation failed:", error);
+        }
     }
+
+    function updateChart(labels, liquid, realEstate, tax) {
+        // Failsafe: If Chart.js CDN is blocked, gracefully skip the chart
+        if (typeof Chart === 'undefined') {
+            document.getElementById('chartWrapper').innerHTML = '<p style="color:red; text-align:center; padding-top:150px;"><b>Chart failed to load.</b><br>Check if an ad-blocker or firewall is blocking jsdelivr.com.</p>';
+            return;
+        }
+
+        const ctx = document.getElementById('legacyChart').getContext('2d');
+        if (legacyChartInstance) { legacyChartInstance.destroy(); }
+
+        legacyChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'Liquid Portfolio ($)', data: liquid, backgroundColor: '#3b82f6', stack: 'Stack 0' },
+                    { label: 'Real Estate Portfolio ($)', data: realEstate, backgroundColor: '#10b981', stack: 'Stack 0' },
+                    { label: 'WA Estate Tax Withheld ($)', data: tax, backgroundColor: '#ef4444', stack: 'Stack 0' }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    title: { display: true, text: 'Total 2055 Net Legacy Breakdown', font: { size: 16 } },
+                    tooltip: { callbacks: { label: function(context) { return context.dataset.label + ': ' + new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(context.parsed.y); } } }
+                },
+                scales: { x: { stacked: true }, y: { stacked: true, ticks: { callback: function(value) { return '$' + (value / 1000000).toFixed(1) + 'M'; } } } }
+            }
+        });
+    }
+
+    window.onload = calculate;
+</script>
+</body>
+</html>
