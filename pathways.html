@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retirement Pathways Calculator</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f6; color: #333; padding: 20px; }
+        .container { max-width: 1300px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #2c3e50; margin-bottom: 30px; }
+        
+        .dashboard-grid { display: grid; grid-template-columns: 350px 1fr; gap: 30px; }
+        
+        /* Inputs Section */
+        .inputs-section { background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; max-height: 85vh; overflow-y: auto; }
+        .input-group { margin-bottom: 12px; }
+        .input-group label { display: block; font-weight: bold; margin-bottom: 4px; font-size: 13px; color: #475569; }
+        .input-group input { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; font-family: monospace; }
+        h3 { margin-top: 0; color: #1e293b; font-size: 16px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; }
+        .section-divider { margin: 20px 0 10px 0; }
+
+        /* Outputs Section */
+        .outputs-section { display: flex; flex-direction: column; gap: 30px; }
+        .chart-container { background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; height: 400px; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
+        th { background-color: #2c3e50; color: white; }
+        tr:hover { background-color: #f1f5f9; }
+        .currency { text-align: right; font-family: monospace; font-size: 14px; }
+        .positive { color: #16a34a; font-weight: bold; }
+        .negative { color: #dc2626; }
+        
+        @media (max-width: 900px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Retirement Pathways Projection (2055)</h1>
+    
+    <div class="dashboard-grid">
+        <div class="inputs-section">
+            <h3>Economic & Portfolio Baseline</h3>
+            <div class="input-group">
+                <label>Starting Liquid Assets ($)</label>
+                <input type="number" id="startLiquid" value="10000000" oninput="calculate()">
+            </div>
+            <div class="input-group">
+                <label>Market Return (%)</label>
+                <input type="number" id="marketReturn" value="7" step="0.1" oninput="calculate()">
+            </div>
+            <div class="input-group">
+                <label>Inflation Rate (%)</label>
+                <input type="number" id="inflation" value="3" step="0.1" oninput="calculate()">
+            </div>
+
+            <h3 class="section-divider">Real Estate Values</h3>
+            <div class="input-group">
+                <label>WA Home Value ($)</label>
+                <input type="number" id="waHome" value="3000000" oninput="calculate()">
+            </div>
+            <div class="input-group">
+                <label>CA Home Value ($)</label>
+                <input type="number" id="caHome" value="1600000" oninput="calculate()">
+            </div>
+            <div class="input-group">
+                <label>FL Home Value ($)</label>
+                <input type="number" id="flHome" value="900000" oninput="calculate()">
+            </div>
+
+            <h3 class="section-divider">Appreciation Rates</h3>
+            <div class="input-group">
+                <label>WA Appreciation (%)</label>
+                <input type="number" id="waApprec" value="6" step="0.1" oninput="calculate()">
+            </div>
+            <div class="input-group">
+                <label>CA Appreciation (%)</label>
+                <input type="number" id="caApprec" value="6" step="0.1" oninput="calculate()">
+            </div>
+            <div class="input-group">
+                <label>FL Appreciation (%)</label>
+                <input type="number" id="flApprec" value="4" step="0.1" oninput="calculate()">
+            </div>
+
+            <h3 class="section-divider">Rental Cash Flow</h3>
+            <div class="input-group">
+                <label>WA Monthly Rent ($)</label>
+                <input type="number" id="waRent" value="6500" oninput="calculate()">
+            </div>
+            <div class="input-group">
+                <label>CA Monthly Rent ($)</label>
+                <input type="number" id="caRent" value="6500" oninput="calculate()">
+            </div>
+            <div class="input-group">
+                <label>Property Mgmt Fee (%)</label>
+                <input type="number" id="mgmtFee" value="7" step="0.1" oninput="calculate()">
+            </div>
+
+            <h3 class="section-divider">Timelines</h3>
+            <div class="input-group">
+                <label>End Year (Death of 2nd Spouse)</label>
+                <input type="number" id="endYear" value="2055" oninput="calculate()">
+            </div>
+            <div class="input-group">
+                <label>FL Purchase Year</label>
+                <input type="number" id="flPurchaseYr" value="2026" oninput="calculate()">
+            </div>
+            <div class="input-group">
+                <label>CA Purchase Year (Path 4 Delayed)</label>
+                <input type="number" id="caPurchaseYrEarly" value="2026" oninput="calculate()">
+            </div>
+            <div class="input-group">
+                <label>CA Purchase Year (Path 2 & 5)</label>
+                <input type="number" id="caPurchaseYrLate" value="2028" oninput="calculate()">
+            </div>
+        </div>
+
+        <div class="outputs-section">
+            
+            <div class="chart-container">
+                <canvas id="legacyChart"></canvas>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <table id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th>Pathway</th>
+                            <th class="currency">Final Liquid</th>
+                            <th class="currency">Final Real Estate</th>
+                            <th class="currency">WA Estate Tax</th>
+                            <th class="currency">Net Legacy</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let legacyChartInstance = null; // Global reference to destroy/rebuild chart
+
+    const formatCurrency = (num) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(num);
+
+    function calculate() {
+        // Fetch inputs
+        const startLiq = Number(document.getElementById('startLiquid').value);
+        const r = Number(document.getElementById('marketReturn').value) / 100;
+        const g = Number(document.getElementById('inflation').value) / 100;
+        
+        const waHome = Number(document.getElementById('waHome').value);
+        const caHome = Number(document.getElementById('caHome').value);
+        const flHome = Number(document.getElementById('flHome').value);
+        
+        const waApprec = Number(document.getElementById('waApprec').value) / 100;
+        const caApprec = Number(document.getElementById('caApprec').value) / 100;
+        const flApprec = Number(document.getElementById('flApprec').value) / 100;
+
+        const waRentMonthly = Number(document.getElementById('waRent').value);
+        const caRentMonthly = Number(document.getElementById('caRent').value);
+        const mgmtFee = Number(document.getElementById('mgmtFee').value) / 100;
+        
+        const endYear = Number(document.getElementById('endYear').value);
+        const flPurchaseYr = Number(document.getElementById('flPurchaseYr').value);
+        const caPurchaseYrEarly = Number(document.getElementById('caPurchaseYrEarly').value);
+        const caPurchaseYrLate = Number(document.getElementById('caPurchaseYrLate').value);
+
+        // Fixed Costs & Constants (Based on 6.5% interest models)
+        const baseLife = 300000;
+        const caGross = 345000;
+        const waCarry = 42000;
+        const caCarry = 125080;
+        const flCarry = 74850;
+        const caEntryTax = 1060000;
+        const estateExempt = 6140000;
+        const estateTaxRate = 0.20;
+
+        // Dynamic Calculations
+        const retireStartYear = 2028; // End of 2028 / Start of 2029 compounding
+        const years = endYear - retireStartYear; // Usually 27 years
+        
+        const flHoldYrs = endYear - flPurchaseYr;
+        const caHoldEarlyYrs = endYear - caPurchaseYrEarly;
+        const caHoldLateYrs = endYear - caPurchaseYrLate;
+        const waHoldYrs = years; // 27 years
+
+        const netRentWA = (waRentMonthly * 12) * (1 - mgmtFee);
+        const netRentCA = (caRentMonthly * 12) * (1 - mgmtFee);
+
+        // Formula Helpers
+        const calcAnnuity = (pmt, n) => pmt * ((Math.pow(1 + r, n) - Math.pow(1 + g, n)) / (r - g));
+        const calcFVRealEstate = (val, apprec, n) => val * Math.pow(1 + apprec, n);
+
+        // Real Estate End Values
+        const fvWa = calcFVRealEstate(waHome, waApprec, waHoldYrs);
+        const fvFl = calcFVRealEstate(flHome, flApprec, flHoldYrs);
+        const fvCaEarly = calcFVRealEstate(caHome, caApprec, caHoldEarlyYrs);
+        const fvCaLate = calcFVRealEstate(caHome, caApprec, caHoldLateYrs);
+
+        const results = [];
+        const labels = [];
+        const liquidData = [];
+        const realEstateData = [];
+        const taxData = [];
+
+        // Path 1
+        let p1Liq = startLiq * Math.pow(1 + r, years) - calcAnnuity(baseLife, years);
+        let p1Estate = fvWa + p1Liq;
+        let p1Tax = p1Estate > estateExempt ? (p1Estate - estateExempt) * estateTaxRate : 0;
+        let p1Net = p1Estate - p1Tax;
+        results.push(["Path 1: Stay in WA", p1Liq, fvWa, -p1Tax, p1Net]);
+
+        // Path 2
+        let p2Start = startLiq - caEntryTax - (caHome * 0.2);
+        let p2Pmt = caGross + caCarry + waCarry - netRentWA;
+        let p2Liq = p2Start * Math.pow(1 + r, years) - calcAnnuity(p2Pmt, years);
+        let p2Re = fvWa + fvCaLate;
+        results.push(["Path 2: Immediate CA", p2Liq, p2Re, 0, p2Liq + p2Re]);
+
+        // Path 3
+        let p3Start = startLiq - (flHome * 0.2);
+        let p3Pmt = baseLife + flCarry + waCarry - netRentWA;
+        let p3Liq = p3Start * Math.pow(1 + r, years) - calcAnnuity(p3Pmt, years);
+        let p3Re = fvWa + fvFl;
+        results.push(["Path 3: Immediate FL", p3Liq, p3Re, 0, p3Liq + p3Re]);
+
+        // Path 4 (Delayed 2035)
+        let p4Start = startLiq - (caHome * 0.2);
+        let p4Pmt1 = baseLife + caCarry + waCarry + 32500 - netRentCA;
+        let p4Pmt2 = caGross + caCarry + waCarry - netRentWA;
+        let p4Liq7 = p4Start * Math.pow(1 + r, 7) - calcAnnuity(p4Pmt1, 7);
+        let p4LiqFinal = p4Liq7 * Math.pow(1 + r, years - 7) - calcAnnuity(p4Pmt2, years - 7);
+        let p4Re = fvWa + fvCaEarly;
+        results.push(["Path 4: Delayed CA", p4LiqFinal, p4Re, 0, p4LiqFinal + p4Re]);
+
+        // Path 5
+        let p5Start = startLiq - (flHome * 0.2) - (caHome * 0.2);
+        let p5Pmt = baseLife + flCarry + caCarry + waCarry - netRentWA - netRentCA;
+        let p5Liq = p5Start * Math.pow(1 + r, years) - calcAnnuity(p5Pmt, years);
+        let p5Re = fvWa + fvFl + fvCaLate;
+        results.push(["Path 5: Hybrid FL/CA", p5Liq, p5Re, 0, p5Liq + p5Re]);
+
+        // Render Table & Build Chart Data
+        const tbody = document.querySelector('#resultsTable tbody');
+        tbody.innerHTML = '';
+        results.forEach(row => {
+            labels.push(row[0].replace(/Path \d: /, ''));
+            liquidData.push(row[1]);
+            realEstateData.push(row[2]);
+            taxData.push(row[3]); // Negative values for tax
+
+            let tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${row[0]}</strong></td>
+                <td class="currency">${formatCurrency(row[1])}</td>
+                <td class="currency">${formatCurrency(row[2])}</td>
+                <td class="currency negative">${row[3] === 0 ? '$0' : formatCurrency(row[3])}</td>
+                <td class="currency positive">${formatCurrency(row[4])}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        updateChart(labels, liquidData, realEstateData, taxData);
+    }
+
+    function updateChart(labels, liquid, realEstate, tax) {
+        const ctx = document.getElementById('legacyChart').getContext('2d');
+        
+        if (legacyChartInstance) {
+            legacyChartInstance.destroy(); // Clear old chart data
+        }
+
+        legacyChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Liquid Portfolio ($)',
+                        data: liquid,
+                        backgroundColor: '#3b82f6', // Blue
+                        stack: 'Stack 0',
+                    },
+                    {
+                        label: 'Real Estate Portfolio ($)',
+                        data: realEstate,
+                        backgroundColor: '#10b981', // Green
+                        stack: 'Stack 0',
+                    },
+                    {
+                        label: 'WA Estate Tax Withheld ($)',
+                        data: tax,
+                        backgroundColor: '#ef4444', // Red
+                        stack: 'Stack 0',
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Total 2055 Net Legacy Breakdown',
+                        font: { size: 16 }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) { label += ': '; }
+                                if (context.parsed.y !== null) {
+                                    label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(context.parsed.y);
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { stacked: true },
+                    y: { 
+                        stacked: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + (value / 1000000).toFixed(1) + 'M';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Run calculation automatically on page load
+    window.onload = calculate;
+</script>
+</body>
+</html>
