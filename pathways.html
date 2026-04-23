@@ -243,7 +243,10 @@
         let p4Pmt1 = baseLife + caCarry + waCarry + 32500 - netRentCA;
         let p4Pmt2 = caGross + caCarry + waCarry - netRentWA;
         let p4Liq7 = p4Start * Math.pow(1 + r, 7) - calcAnnuity(p4Pmt1, 7);
-        let p4LiqFinal = p4Liq7 * Math.pow(1 + r, years - 7) - calcAnnuity(p4Pmt2, years - 7);
+        // Inflate the Year 8 payment to account for 7 years of 3% inflation
+        let inflatedP4Pmt2 = p4Pmt2 * Math.pow(1 + g, 7);
+        // Calculate the final 20 years using the newly inflated payment
+        let p4LiqFinal = p4Liq7 * Math.pow(1 + r, years - 7) - calcAnnuity(inflatedP4Pmt2, years - 7);
         let p4Re = fvWa + fvCaEarly;
         results.push(["Path 4: Delayed CA", p4LiqFinal, p4Re, 0, p4LiqFinal + p4Re]);
 
