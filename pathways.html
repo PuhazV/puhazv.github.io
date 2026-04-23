@@ -58,6 +58,16 @@
                 <input type="number" id="inflation" value="3" step="0.1" oninput="calculate()">
             </div>
 
+            <h3 class="section-divider">Mortgage Terms</h3>
+            <div class="input-group">
+                <label>Down Payment (%)</label>
+                <input type="number" id="downPaymentPct" value="20" step="1" oninput="calculate()">
+            </div>
+            <div class="input-group">
+                <label>Mortgage Interest Rate (%)</label>
+                <input type="number" id="interestRate" value="6.5" step="0.1" oninput="calculate()">
+            </div>
+
             <h3 class="section-divider">Real Estate Values</h3>
             <div class="input-group">
                 <label>WA Home Value ($)</label>
@@ -105,9 +115,10 @@
                 <label>End Year (Death of 2nd Spouse)</label>
                 <input type="number" id="endYear" value="2055" oninput="calculate()">
             </div>
+
             <div class="input-group">
                 <label>CA Purchase Year (Path 2)</label>
-                <input type="number" id="caPurchaseYrPath2" value="2028" oninput="calculate()">
+                <input type="number" id="caPurchaseYrPath2" value="2026" oninput="calculate()">
             </div>
             <div class="input-group">
                 <label>FL Purchase Year (Path 3, 5)</label>
@@ -117,6 +128,7 @@
                 <label>CA Purchase Year (Path 4 Delayed)</label>
                 <input type="number" id="caPurchaseYrEarly" value="2026" oninput="calculate()">
             </div>
+
             <div class="input-group">
                 <label>CA Purchase Year (Path 5)</label>
                 <input type="number" id="caPurchaseYrPath5" value="2028" oninput="calculate()">
@@ -124,11 +136,9 @@
         </div>
 
         <div class="outputs-section">
-            
             <div class="chart-container">
                 <canvas id="legacyChart"></canvas>
             </div>
-
             <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
                 <table id="resultsTable">
                     <thead>
@@ -149,8 +159,7 @@
 </div>
 
 <script>
-    let legacyChartInstance = null; // Global reference to destroy/rebuild chart
-
+    let legacyChartInstance = null; 
     const formatCurrency = (num) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(num);
 
     function calculate() {
@@ -159,6 +168,9 @@
         const r = Number(document.getElementById('marketReturn').value) / 100;
         const g = Number(document.getElementById('inflation').value) / 100;
         
+        const dpPct = Number(document.getElementById('downPaymentPct').value) / 100;
+        const intRate = Number(document.getElementById('interestRate').value) / 100;
+
         const waHome = Number(document.getElementById('waHome').value);
         const caHome = Number(document.getElementById('caHome').value);
         const flHome = Number(document.getElementById('flHome').value);
@@ -177,25 +189,38 @@
         const caPurchaseYrPath2 = Number(document.getElementById('caPurchaseYrPath2').value);
         const caPurchaseYrPath5 = Number(document.getElementById('caPurchaseYrPath5').value);
 
-        // Fixed Costs & Constants (Based on 6.5% interest models)
+        // Fixed Costs & Constants
         const baseLife = 300000;
         const caGross = 345000;
         const waCarry = 42000;
-        const caCarry = 125080;
-        const flCarry = 74850;
         const caEntryTax = 1060000;
         const estateExempt = 6140000;
         const estateTaxRate = 0.20;
 
-        // Dynamic Calculations
-        const retireStartYear = 2028; // End of 2028 / Start of 2029 compounding
-        const years = endYear - retireStartYear; // Usually 27 years
+        // Dynamic Mortgage Calculations (30 Year Fixed)
+        const calcAnnualMortgage = (principal, rate) => {
+            if (rate === 0) return principal / 30; // Handle 0% interest
+            const rMo = rate / 12;
+            const n = 360; // 30 years
+            const moPmt = principal * (rMo * Math.pow(1 + rMo, n)) / (Math.pow(1 + rMo, n) - 1);
+            return moPmt * 12;
+        };
+
+        // Calculate dynamic carry costs: Mortgage P&I + Static Base (Tax/Ins/HOA percentage of home value)
+        const caMortgage = calcAnnualMortgage(caHome * (1 - dpPct), intRate);
+        const caCarry = caMortgage + (caHome * 0.0175); // 1.75% for CA Tax/Ins/HOA
+        
+        const flMortgage = calcAnnualMortgage(flHome * (1 - dpPct), intRate);
+        const flCarry = flMortgage + (flHome * 0.0225); // 2.25% for FL Tax/CDD/Ins/HOA
+
+        // Dynamic Timelines
+        const retireStartYear = 2028; 
+        const years = endYear - retireStartYear; 
         
         const flHoldYrs = endYear - flPurchaseYr;
         const caHoldEarlyYrs = endYear - caPurchaseYrEarly;
         const caHoldPath2Yrs = endYear - caPurchaseYrPath2;
         const caHoldPath5Yrs = endYear - caPurchaseYrPath5;
-        const waHoldYrs = years; // 27 years
 
         const netRentWA = (waRentMonthly * 12) * (1 - mgmtFee);
         const netRentCA = (caRentMonthly * 12) * (1 - mgmtFee);
@@ -205,7 +230,7 @@
         const calcFVRealEstate = (val, apprec, n) => val * Math.pow(1 + apprec, n);
 
         // Real Estate End Values
-        const fvWa = calcFVRealEstate(waHome, waApprec, waHoldYrs);
+        const fvWa = calcFVRealEstate(waHome, waApprec, years);
         const fvFl = calcFVRealEstate(flHome, flApprec, flHoldYrs);
         const fvCaEarly = calcFVRealEstate(caHome, caApprec, caHoldEarlyYrs);
         const fvCaPath2 = calcFVRealEstate(caHome, caApprec, caHoldPath2Yrs);
@@ -221,50 +246,47 @@
         let p1Liq = startLiq * Math.pow(1 + r, years) - calcAnnuity(baseLife, years);
         let p1Estate = fvWa + p1Liq;
         let p1Tax = p1Estate > estateExempt ? (p1Estate - estateExempt) * estateTaxRate : 0;
-        let p1Net = p1Estate - p1Tax;
-        results.push(["Path 1: Stay in WA", p1Liq, fvWa, -p1Tax, p1Net]);
+        results.push(["Path 1: Stay in WA", p1Liq, fvWa, -p1Tax, p1Estate - p1Tax]);
 
         // Path 2
-        let p2Start = startLiq - caEntryTax - (caHome * 0.2);
+        let p2Start = startLiq - caEntryTax - (caHome * dpPct);
         let p2Pmt = caGross + caCarry + waCarry - netRentWA;
         let p2Liq = p2Start * Math.pow(1 + r, years) - calcAnnuity(p2Pmt, years);
         let p2Re = fvWa + fvCaPath2;
         results.push(["Path 2: Immediate CA", p2Liq, p2Re, 0, p2Liq + p2Re]);
 
         // Path 3
-        let p3Start = startLiq - (flHome * 0.2);
+        let p3Start = startLiq - (flHome * dpPct);
         let p3Pmt = baseLife + flCarry + waCarry - netRentWA;
         let p3Liq = p3Start * Math.pow(1 + r, years) - calcAnnuity(p3Pmt, years);
         let p3Re = fvWa + fvFl;
         results.push(["Path 3: Immediate FL", p3Liq, p3Re, 0, p3Liq + p3Re]);
 
-        // Path 4 (Delayed 2035)
-        let p4Start = startLiq - (caHome * 0.2);
+        // Path 4 
+        let p4Start = startLiq - (caHome * dpPct);
         let p4Pmt1 = baseLife + caCarry + waCarry + 32500 - netRentCA;
         let p4Pmt2 = caGross + caCarry + waCarry - netRentWA;
         let p4Liq7 = p4Start * Math.pow(1 + r, 7) - calcAnnuity(p4Pmt1, 7);
-        // Inflate the Year 8 payment to account for 7 years of 3% inflation
         let inflatedP4Pmt2 = p4Pmt2 * Math.pow(1 + g, 7);
-        // Calculate the final 20 years using the newly inflated payment
         let p4LiqFinal = p4Liq7 * Math.pow(1 + r, years - 7) - calcAnnuity(inflatedP4Pmt2, years - 7);
         let p4Re = fvWa + fvCaEarly;
         results.push(["Path 4: Delayed CA", p4LiqFinal, p4Re, 0, p4LiqFinal + p4Re]);
 
         // Path 5
-        let p5Start = startLiq - (flHome * 0.2) - (caHome * 0.2);
+        let p5Start = startLiq - (flHome * dpPct) - (caHome * dpPct);
         let p5Pmt = baseLife + flCarry + caCarry + waCarry - netRentWA - netRentCA;
         let p5Liq = p5Start * Math.pow(1 + r, years) - calcAnnuity(p5Pmt, years);
         let p5Re = fvWa + fvFl + fvCaPath5;
         results.push(["Path 5: Hybrid FL/CA", p5Liq, p5Re, 0, p5Liq + p5Re]);
 
-        // Render Table & Build Chart Data
+        // Render Table
         const tbody = document.querySelector('#resultsTable tbody');
         tbody.innerHTML = '';
         results.forEach(row => {
             labels.push(row[0].replace(/Path \d: /, ''));
             liquidData.push(row[1]);
             realEstateData.push(row[2]);
-            taxData.push(row[3]); // Negative values for tax
+            taxData.push(row[3]); 
 
             let tr = document.createElement('tr');
             tr.innerHTML = `
@@ -279,78 +301,3 @@
 
         updateChart(labels, liquidData, realEstateData, taxData);
     }
-
-    function updateChart(labels, liquid, realEstate, tax) {
-        const ctx = document.getElementById('legacyChart').getContext('2d');
-        
-        if (legacyChartInstance) {
-            legacyChartInstance.destroy(); // Clear old chart data
-        }
-
-        legacyChartInstance = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [
-                    {
-                        label: 'Liquid Portfolio ($)',
-                        data: liquid,
-                        backgroundColor: '#3b82f6', // Blue
-                        stack: 'Stack 0',
-                    },
-                    {
-                        label: 'Real Estate Portfolio ($)',
-                        data: realEstate,
-                        backgroundColor: '#10b981', // Green
-                        stack: 'Stack 0',
-                    },
-                    {
-                        label: 'WA Estate Tax Withheld ($)',
-                        data: tax,
-                        backgroundColor: '#ef4444', // Red
-                        stack: 'Stack 0',
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Total 2055 Net Legacy Breakdown',
-                        font: { size: 16 }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.dataset.label || '';
-                                if (label) { label += ': '; }
-                                if (context.parsed.y !== null) {
-                                    label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(context.parsed.y);
-                                }
-                                return label;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    x: { stacked: true },
-                    y: { 
-                        stacked: true,
-                        ticks: {
-                            callback: function(value) {
-                                return '$' + (value / 1000000).toFixed(1) + 'M';
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    // Run calculation automatically on page load
-    window.onload = calculate;
-</script>
-</body>
-</html>
