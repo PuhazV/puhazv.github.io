@@ -190,8 +190,12 @@
                 <input type="text" id="caRent" value="6,500" oninput="formatCurrencyInput(this)">
             </div>
             <div class="input-group">
-                <label>Path 4: CA Vacation Rental Income ($/mo)</label>
-                <input type="text" id="caVacationRent" value="8,500" oninput="formatCurrencyInput(this)">
+                <label>Path 4: CA Rental during WA Winter ($/mo)</label>
+                <input type="text" id="caWinterRentCost" value="6,500" oninput="formatCurrencyInput(this)">
+            </div>
+            <div class="input-group">
+                <label>Path 4: WA Winter months in CA</label>
+                <input type="number" id="waWinterMonths" value="5" oninput="calculate()">
             </div>
 
             <h3 class="section-divider">Timelines & Scenarios</h3>
@@ -346,7 +350,8 @@
 
             const waRentMonthly = getNum('waRent');
             const caRentMonthly = getNum('caRent');
-            const caVacationRentMonthly = getNum('caVacationRent');
+            const caWinterRentCost = getNum('caWinterRentCost');
+            const waWinterMonths = getNum('waWinterMonths');
             const mgmtFee = getNum('mgmtFee') / 100;
             
             const baseW1 = getNum('withdraw1') * 12;
@@ -365,7 +370,7 @@
             const caPurchaseYrPath5 = getNum('caPurchaseYrPath5');
 
             const waCarry = 42000; 
-            const waWinterRentLoss = 32500;
+            const waWinterRentLoss = caWinterRentCost * waWinterMonths;
             const caEntryTax = 1060000;
             const estateExempt = 6140000;
             const estateTaxRate = 0.20;
@@ -386,7 +391,6 @@
 
             const netRentWA_Base = (waRentMonthly * 12) * (1 - mgmtFee);
             const netRentCA_Base = (caRentMonthly * 12) * (1 - mgmtFee);
-            const netVacationRentCA_Base = (caVacationRentMonthly * 12) * (1 - mgmtFee);
 
             const calcFVRealEstate = (val, apprec, n) => n <= 0 ? val : val * Math.pow(1 + apprec, n);
             const fvWa = calcFVRealEstate(waHome, waApprec, years); 
@@ -422,7 +426,6 @@
                 let infFlStatic = flStaticBase * inf;
                 let infWaRent = netRentWA_Base * inf;
                 let infCaRent = netRentCA_Base * inf;
-                let infCaVacationRent = netVacationRentCA_Base * inf;
                 let infWaWinter = waWinterRentLoss * inf;
 
                 // Path 1
@@ -452,7 +455,7 @@
                 // Path 4
                 let p4NetNeed = 0, p4TaxR = 0;
                 if (i < delayedCaYears) {
-                    p4NetNeed = infBaseLife + caMortgage + infCaStatic + infWaCarry + infWaWinter - infCaVacationRent;
+                    p4NetNeed = infBaseLife + caMortgage + infCaStatic + infWaCarry + infWaWinter - infCaRent;
                     p4TaxR = Math.min(annualTaxRate, 0.99);
                 } else {
                     p4NetNeed = infBaseLife + caMortgage + infCaStatic + infWaCarry - infWaRent;
@@ -485,28 +488,28 @@
                 name: "Path 1: Stay in WA", liq: p1Liq, re: fvWa, tax: -p1Tax, net: p1Estate - p1Tax,
                 details: `
                     <div class="details-overview">
-                        <strong>Overview:</strong> Remain in your current Washington primary residence for the duration of retirement. This path requires the lowest initial capital output but exposes your final legacy to the aggressive WA state estate tax.
+                        <strong>Overview:</strong> Remain in our current Washington primary residence for the duration of retirement. This path requires the lowest initial capital output but exposes our final legacy to the aggressive WA state estate tax.
                     </div>
                     <div>
                         <h4>Liquid Capital & Compounding Mechanics</h4>
-                        <p>Your liquid portfolio operates on an iterative, year-by-year compounding engine. Your starting capital is <strong>${formatCurrency(startLiq)}</strong>. Every year, the simulation first withdraws your living expenses and property taxes, and then compounds the remaining balance by your assumed <strong>${formatPct(r)}</strong> market return.</p>
+                        <p>Our liquid portfolio operates on an iterative, year-by-year compounding engine. Our starting capital is <strong>${formatCurrency(startLiq)}</strong>. Every year, the simulation first withdraws our living expenses and property taxes, and then compounds the remaining balance by our assumed <strong>${formatPct(r)}</strong> market return.</p>
                         
                         <h5>Year 1 Calculation Breakdown:</h5>
                         <div class="math-box">
-                            Base Monthly Spend ($${formatCurrencyInput.name ? (baseW1/12).toLocaleString() : ''}/mo) × 12 = ${formatCurrency(baseW1)}<br>
+                            Base Monthly Spend ($${(baseW1/12).toLocaleString()}/mo) × 12 = ${formatCurrency(baseW1)}<br>
                             + WA Home Property Taxes & Insurance = ${formatCurrency(waCarry)}<br>
                             ---------------------------------------------------------<br>
-                            = Total Net Cash Required: ${formatCurrency(baseW1 + waCarry)}<br><br>
+                            = Net Required: ${formatCurrency(baseW1 + waCarry)}<br><br>
                             ÷ (1 - ${formatPct(tax1)} Federal Tax Rate)<br>
-                            = <strong>Gross Portfolio Withdrawal: ${formatCurrency((baseW1 + waCarry) / (1 - tax1))}</strong>
+                            = <strong>Gross Withdrawal: ${formatCurrency((baseW1 + waCarry) / (1 - tax1))}</strong>
                         </div>
-                        <p><em>Note: Variables like property taxes and base spend inflate automatically at <strong>${formatPct(g)}</strong> each year, constantly increasing your gross withdrawal requirement.</em></p>
+                        <p><em>Note: Variables like property taxes and base spend inflate automatically at <strong>${formatPct(g)}</strong> each year, constantly increasing our gross withdrawal requirement.</em></p>
                     </div>
                     <div>
                         <h4>Real Estate & Washington Estate Tax Penalty</h4>
-                        <p>Because you are domiciled in Washington, your entire net worth is subject to the state's estate tax. This is considered the least efficient option for wealth preservation across generations.</p>
+                        <p>Because we are domiciled in Washington, our entire net worth is subject to the state's estate tax. This is considered the least efficient option for wealth preservation across generations.</p>
                         <ul>
-                            <li><strong>WA Home Growth Calculation:</strong> Your ${formatCurrency(waHome)} home appreciates at ${formatPct(waApprec)} annually. Formula: <code>PV * (1 + ${waApprec})^${years} years</code> = <strong>${formatCurrency(fvWa)}</strong>.</li>
+                            <li><strong>WA Home Growth Calculation:</strong> Our ${formatCurrency(waHome)} home appreciates at ${formatPct(waApprec)} annually. Formula: <code>PV * (1 + ${waApprec})^${years} years</code> = <strong>${formatCurrency(fvWa)}</strong>.</li>
                             <li><strong>Total Gross Estate in ${endYear}:</strong> ${formatCurrency(p1Estate)} (Liquid Assets + Real Estate).</li>
                             <li><strong>Estate Tax Application:</strong> Washington allows a bypass trust exemption of roughly ${formatCurrency(estateExempt)}. Everything above this threshold is taxed.</li>
                         </ul>
@@ -524,11 +527,11 @@
                 name: "Path 2: Immediate CA", liq: p2Liq, re: p2Re, tax: 0, net: p2Liq + p2Re,
                 details: `
                     <div class="details-overview">
-                        <strong>Overview:</strong> Relocate permanently to California early in retirement. Establishing legal domicile in CA shields your entire legacy from WA estate taxes, but incurs a significant upfront entry cost and higher ongoing lifestyle costs.
+                        <strong>Overview:</strong> Relocate permanently to California early in retirement. Establishing legal domicile in CA shields our entire legacy from WA estate taxes, but incurs a significant upfront entry cost and higher ongoing lifestyle costs.
                     </div>
                     <div>
                         <h4>Liquid Capital & Compounding Mechanics</h4>
-                        <p>Moving out of Washington immediately subjects your portfolio to the <strong>${formatCurrency(caEntryTax)} CA Entry Tax</strong>. Furthermore, you must withdraw your CA down payment upfront. Because of this massive capital drain, your compounding engine is severely crippled from Day 1.</p>
+                        <p>Moving out of Washington immediately subjects our portfolio to the <strong>${formatCurrency(caEntryTax)} CA Entry Tax</strong>. Furthermore, we must withdraw our CA down payment upfront. Because of this massive capital drain, our compounding engine is severely crippled from Day 1.</p>
                         
                         <h5>Year 1 Calculation Breakdown:</h5>
                         <div class="math-box">
@@ -540,14 +543,14 @@
                             + WA Property Taxes & Ins = ${formatCurrency(waCarry)}<br>
                             - WA Rental Income (Net of ${formatPct(mgmtFee)} Mgmt Fee) = -${formatCurrency(netRentWA_Base)}<br>
                             ---------------------------------------------------------<br>
-                            = Total Net Cash Required: ${formatCurrency(baseW1 + caMortgage + caStaticBase + waCarry - netRentWA_Base)}<br><br>
+                            = Net Required: ${formatCurrency(baseW1 + caMortgage + caStaticBase + waCarry - netRentWA_Base)}<br><br>
                             ÷ (1 - ${formatPct(tax1 + caStateTax)} Combined Fed + CA State Tax Rate)<br>
-                            = <strong>Gross Portfolio Withdrawal: ${formatCurrency((baseW1 + caMortgage + caStaticBase + waCarry - netRentWA_Base) / (1 - (tax1 + caStateTax)))}</strong>
+                            = <strong>Gross Withdrawal: ${formatCurrency((baseW1 + caMortgage + caStaticBase + waCarry - netRentWA_Base) / (1 - (tax1 + caStateTax)))}</strong>
                         </div>
                     </div>
                     <div>
                         <h4>Real Estate & Estate Shielding</h4>
-                        <p>By shifting your legal domicile to California, you zero out your estate tax liability. Furthermore, real estate benefits from <strong>leverage</strong>. Your ${formatCurrency(caDpAmt)} down payment controls a ${formatCurrency(caHome)} asset.</p>
+                        <p>By shifting our legal domicile to California, we zero out our estate tax liability. Furthermore, real estate benefits from <strong>leverage</strong>. Our ${formatCurrency(caDpAmt)} down payment controls a ${formatCurrency(caHome)} asset.</p>
                         <ul>
                             <li><strong>WA Home Growth (${years} years):</strong> ${formatCurrency(fvWa)}</li>
                             <li><strong>CA Home Growth (${endYear - caPurchaseYrPath2} years):</strong> Appreciates from ${formatCurrency(caHome)} at ${formatPct(caApprec)}/yr = <strong>${formatCurrency(fvCaPath2)}</strong>.</li>
@@ -567,7 +570,7 @@
                     </div>
                     <div>
                         <h4>Liquid Capital & Compounding Mechanics</h4>
-                        <p>Florida does not penalize you with an entry tax. Your starting capital is only reduced by your FL down payment (${formatCurrency(flDpAmt)}). Additionally, because Florida has a 0% state income tax, your "gross-up" to pull cash out of your portfolio is perfectly efficient, maximizing your market compounding at ${formatPct(r)}.</p>
+                        <p>Florida does not penalize us with an entry tax. Our starting capital is only reduced by our FL down payment (${formatCurrency(flDpAmt)}). Additionally, because Florida has a 0% state income tax, our 'gross-up' to pull cash out of our portfolio is perfectly efficient, maximizing our market compounding at ${formatPct(r)}.</p>
                         
                         <h5>Year 1 Calculation Breakdown:</h5>
                         <div class="math-box">
@@ -579,14 +582,14 @@
                             + WA Property Taxes & Ins = ${formatCurrency(waCarry)}<br>
                             - WA Rental Income (Net of ${formatPct(mgmtFee)} Mgmt Fee) = -${formatCurrency(netRentWA_Base)}<br>
                             ---------------------------------------------------------<br>
-                            = Total Net Cash Required: ${formatCurrency(baseW1 + flMortgage + flStaticBase + waCarry - netRentWA_Base)}<br><br>
+                            = Net Required: ${formatCurrency(baseW1 + flMortgage + flStaticBase + waCarry - netRentWA_Base)}<br><br>
                             ÷ (1 - ${formatPct(tax1)} Federal Tax Only - Zero FL State Tax)<br>
-                            = <strong>Gross Portfolio Withdrawal: ${formatCurrency((baseW1 + flMortgage + flStaticBase + waCarry - netRentWA_Base) / (1 - tax1))}</strong>
+                            = <strong>Gross Withdrawal: ${formatCurrency((baseW1 + flMortgage + flStaticBase + waCarry - netRentWA_Base) / (1 - tax1))}</strong>
                         </div>
                     </div>
                     <div>
                         <h4>Real Estate & Estate Shielding</h4>
-                        <p>Your legacy is perfectly insulated in this scenario. Florida provides robust asset protection and zero estate taxes.</p>
+                        <p>Our legacy is perfectly insulated in this scenario. Florida provides robust asset protection and zero estate taxes.</p>
                         <ul>
                             <li><strong>WA Home Growth (${years} years):</strong> ${formatCurrency(fvWa)}</li>
                             <li><strong>FL Home Growth (${endYear - flPurchaseYr} years):</strong> Appreciates from ${formatCurrency(flHome)} at ${formatPct(flApprec)}/yr = <strong>${formatCurrency(fvFl)}</strong>.</li>
@@ -602,11 +605,11 @@
                 name: "Path 4: Delayed CA", liq: p4Liq, re: p4Re, tax: 0, net: p4Liq + p4Re,
                 details: `
                     <div class="details-overview">
-                        <strong>Overview:</strong> Purchase a CA property early to lock in appreciation, but delay the official move to CA for ${delayedCaYears} years. This splits time between WA and CA initially, maintaining flexibility while executing 0% state tax Roth conversions.
+                        <strong>Overview:</strong> Purchase a CA property early to lock in appreciation, but delay our official move to CA for ${delayedCaYears} years. This splits time between WA and CA initially, maintaining flexibility while executing 0% state tax Roth conversions.
                     </div>
                     <div>
                         <h4>Liquid Capital Mechanics (The Two-Phase System)</h4>
-                        <p>By waiting ${delayedCaYears} years to legally change your domicile, you avoid the devastating ${formatCurrency(caEntryTax)} CA entry tax. During this delay, you rent out your CA property as a Short-Term/Vacation rental to aggressively offset your dual-state carrying costs.</p>
+                        <p>By waiting ${delayedCaYears} years to legally change our domicile, we avoid the devastating ${formatCurrency(caEntryTax)} CA entry tax. During this delay, we rent out our CA property to aggressively offset our dual-state carrying costs while we rent a vacation home in CA during the WA winter.</p>
                         
                         <h5>Phase 1: WA Domicile (Years 1-${delayedCaYears}) - Year 1 Breakdown:</h5>
                         <div class="math-box">
@@ -615,22 +618,22 @@
                             + CA Mortgage P&I: ${formatCurrency(caMortgage)}<br>
                             + CA Taxes/HOA: ${formatCurrency(caStaticBase)}<br>
                             + WA Carry: ${formatCurrency(waCarry)}<br>
-                            + WA Winter Rent Loss (Housing cost while CA is rented): ${formatCurrency(waWinterRentLoss)}<br>
-                            - CA Vacation Rental Income (Net of Mgmt): -${formatCurrency(netVacationRentCA_Base)}<br>
+                            + CA Vacation Rental Cost (During WA Winter): ${formatCurrency(waWinterRentLoss)}<br>
+                            - CA LTR Income (Net of Mgmt): -${formatCurrency(netRentCA_Base)}<br>
                             ---------------------------------------------------------<br>
-                            = Net Required: ${formatCurrency(baseW1 + caMortgage + caStaticBase + waCarry + waWinterRentLoss - netVacationRentCA_Base)}<br>
+                            = Net Required: ${formatCurrency(baseW1 + caMortgage + caStaticBase + waCarry + waWinterRentLoss - netRentCA_Base)}<br>
                             ÷ (1 - ${formatPct(tax1)} Fed Tax Only)<br>
-                            = <strong>Gross Withdrawal: ${formatCurrency((baseW1 + caMortgage + caStaticBase + waCarry + waWinterRentLoss - netVacationRentCA_Base)/(1 - tax1))}</strong>
+                            = <strong>Gross Withdrawal: ${formatCurrency((baseW1 + caMortgage + caStaticBase + waCarry + waWinterRentLoss - netRentCA_Base)/(1 - tax1))}</strong>
                         </div>
                         
                         <h5>Phase 2: CA Domicile (Years ${delayedCaYears + 1}+):</h5>
-                        <p>You officially move to CA. You lose the lucrative CA Vacation Rental income stream, and your effective tax rate instantly jumps by the <strong>${formatPct(caStateTax)}</strong> CA premium. However, your portfolio survived the early years without the entry tax hit.</p>
+                        <p>We officially move to CA. We lose the rental income stream, and our effective tax rate instantly jumps by the <strong>${formatPct(caStateTax)}</strong> CA premium. However, our portfolio survived the early years without the entry tax hit.</p>
                     </div>
                     <div>
                         <h4>Real Estate & Estate Shielding</h4>
                         <ul>
-                            <li><strong>CA Home Growth (${endYear - caPurchaseYrPath4} years):</strong> Because you purchased it early in ${caPurchaseYrPath4}, it appreciates longer. Value: <strong>${formatCurrency(fvCaPath4)}</strong>.</li>
-                            <li><strong>Total Tax Forfeited at Death:</strong> $0. You are legally domiciled in CA when you pass.</li>
+                            <li><strong>CA Home Growth (${endYear - caPurchaseYrPath4} years):</strong> Because we purchased it early in ${caPurchaseYrPath4}, it appreciates longer. Value: <strong>${formatCurrency(fvCaPath4)}</strong>.</li>
+                            <li><strong>Total Tax Forfeited at Death:</strong> $0. We are legally domiciled in CA when we pass.</li>
                         </ul>
                     </div>
                     ${buildHistoryTable(p4Hist)}
@@ -646,7 +649,7 @@
                     </div>
                     <div>
                         <h4>Liquid Capital Mechanics (Maximum Leverage)</h4>
-                        <p>This path uses your portfolio to leverage three distinct properties simultaneously. You pay both the FL Down Payment (${formatCurrency(flDpAmt)}) and the CA Down Payment (${formatCurrency(caDpAmt)}) from your liquid assets. However, your daily lifestyle is highly subsidized by two streams of Long-Term Rental income, and your withdrawals are shielded by Florida's 0% state tax.</p>
+                        <p>This path uses our portfolio to leverage three distinct properties simultaneously. We pay both the FL Down Payment (${formatCurrency(flDpAmt)}) and the CA Down Payment (${formatCurrency(caDpAmt)}) from our liquid assets. However, our daily lifestyle is highly subsidized by two streams of Long-Term Rental income, and our withdrawals are shielded by Florida's 0% state tax.</p>
                         
                         <h5>Year 1 Calculation Breakdown:</h5>
                         <div class="math-box">
@@ -659,14 +662,14 @@
                             - WA LTR Income (Net) = -${formatCurrency(netRentWA_Base)}<br>
                             - CA LTR Income (Net) = -${formatCurrency(netRentCA_Base)}<br>
                             ---------------------------------------------------------<br>
-                            = Total Net Cash Required: ${formatCurrency(baseW1 + flMortgage + caMortgage + flStaticBase + caStaticBase + waCarry - netRentWA_Base - netRentCA_Base)}<br><br>
+                            = Net Required: ${formatCurrency(baseW1 + flMortgage + caMortgage + flStaticBase + caStaticBase + waCarry - netRentWA_Base - netRentCA_Base)}<br><br>
                             ÷ (1 - ${formatPct(tax1)} Federal Tax Only - Zero FL State Tax)<br>
-                            = <strong>Gross Portfolio Withdrawal: ${formatCurrency((baseW1 + flMortgage + caMortgage + flStaticBase + caStaticBase + waCarry - netRentWA_Base - netRentCA_Base) / (1 - tax1))}</strong>
+                            = <strong>Gross Withdrawal: ${formatCurrency((baseW1 + flMortgage + caMortgage + flStaticBase + caStaticBase + waCarry - netRentWA_Base - netRentCA_Base) / (1 - tax1))}</strong>
                         </div>
                     </div>
                     <div>
                         <h4>Real Estate & Estate Shielding</h4>
-                        <p>You control a massive real estate footprint while legally sheltering it from state-level wealth taxation via your Florida domicile.</p>
+                        <p>We control a massive real estate footprint while legally sheltering it from state-level wealth taxation via our Florida domicile.</p>
                         <ul>
                             <li><strong>WA Home Growth (${years} years):</strong> ${formatCurrency(fvWa)}</li>
                             <li><strong>FL Home Growth (${endYear - flPurchaseYr} years):</strong> ${formatCurrency(fvFl)}</li>
@@ -764,4 +767,4 @@
     window.onload = calculate;
 </script>
 </body>
-</html
+</html>
