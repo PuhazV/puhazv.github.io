@@ -6,68 +6,86 @@
     <title>Retirement Pathways Calculator (Advanced)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f6; color: #333; padding: 20px; }
-        .container { max-width: 98%; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: #2c3e50; margin-bottom: 30px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #0b1121; color: #f8fafc; padding: 20px; }
+        .container { max-width: 98%; margin: auto; background: #0f172a; padding: 30px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid #1e293b; }
+        h1 { text-align: center; color: #f8fafc; margin-bottom: 30px; font-weight: 300; letter-spacing: 1px; }
         
         .dashboard-grid { display: grid; grid-template-columns: 650px 1fr; gap: 30px; align-items: start; }
         
-        .inputs-section { background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; max-height: 85vh; overflow-y: auto; }
+        .inputs-section { background: #0f172a; padding: 0; max-height: 85vh; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #334155 #0f172a; }
+        .inputs-section::-webkit-scrollbar { width: 8px; }
+        .inputs-section::-webkit-scrollbar-track { background: #0f172a; }
+        .inputs-section::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
         
-        .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .input-group-box { background: white; padding: 15px; border-radius: 6px; border: 1px solid #cbd5e1; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .input-group-box h3 { margin-top: 0; color: #0f172a; font-size: 14px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding-right: 10px; }
+        .input-group-box { background: #1e293b; padding: 18px; border-radius: 8px; border: 1px solid #334155; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .input-group-box h3 { margin-top: 0; color: #38bdf8; font-size: 13px; border-bottom: 1px solid #334155; padding-bottom: 8px; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
 
-        .input-group { margin-bottom: 12px; }
-        .input-group label { display: block; font-weight: bold; margin-bottom: 4px; font-size: 13px; color: #475569; }
-        .input-group input { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; font-family: monospace; }
+        .input-group { margin-bottom: 14px; }
+        .input-group label { display: block; font-weight: 500; margin-bottom: 6px; font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
+        .input-group input { width: 100%; padding: 10px; border: 1px solid #334155; border-radius: 6px; box-sizing: border-box; font-family: 'SF Mono', Consolas, monospace; background: #0b1121; color: #f8fafc; transition: all 0.2s ease; }
+        .input-group input:focus { outline: none; border-color: #38bdf8; box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2); }
         
         .input-wrapper { position: relative; width: 100%; display: flex; align-items: center; }
         .input-wrapper input { width: 100%; }
-        .symbol-right { position: absolute; right: 10px; color: #64748b; font-weight: bold; pointer-events: none; font-size: 13px; }
-        .input-wrapper input.has-right { padding-right: 25px; }
+        .symbol-right { position: absolute; right: 12px; color: #64748b; font-weight: bold; pointer-events: none; font-size: 13px; }
+        .input-wrapper input.has-right { padding-right: 30px; }
 
-        .outputs-section { display: flex; flex-direction: column; gap: 30px; }
-        .chart-container { background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; height: 400px; }
+        .outputs-section { display: flex; flex-direction: column; gap: 20px; }
+        .chart-container { background: #1e293b; padding: 20px; border-radius: 8px; border: 1px solid #334155; height: 400px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
-        th { background-color: #2c3e50; color: white; }
-        .currency { text-align: right; font-family: monospace; font-size: 14px; }
-        .positive { color: #16a34a; font-weight: bold; }
-        .negative { color: #dc2626; }
+        .results-container { background: #1e293b; padding: 20px; border-radius: 8px; border: 1px solid #334155; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .results-container p { font-size: 13px; color: #94a3b8; margin-top: 0; margin-bottom: 15px; }
         
-        .clickable-row { cursor: pointer; transition: background-color 0.2s ease; }
-        .clickable-row:hover { background-color: #e2e8f0; }
-        .clickable-row td:first-child { font-weight: bold; color: #2563eb; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        th, td { padding: 14px 12px; text-align: left; border-bottom: 1px solid #334155; font-size: 14px; }
+        th { background-color: #0b1121; color: #94a3b8; font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; border-top: 1px solid #334155; position: sticky; top: 0; z-index: 10; }
+        th:first-child { border-top-left-radius: 6px; border-left: 1px solid #334155; }
+        th:last-child { border-top-right-radius: 6px; border-right: 1px solid #334155; }
+        td:first-child { border-left: 1px solid #334155; }
+        td:last-child { border-right: 1px solid #334155; }
         
-        .details-row { display: none; background-color: #f8fafc; border-bottom: 2px solid #cbd5e1; }
+        .currency { text-align: right; font-family: 'SF Mono', Consolas, monospace; font-size: 14px; }
+        .positive { color: #34d399; font-weight: 600; }
+        .negative { color: #f87171; }
+        
+        .clickable-row { cursor: pointer; transition: background-color 0.2s ease; background: #1e293b; }
+        .clickable-row:hover { background-color: #0f172a; } 
+        .clickable-row td:first-child { font-weight: 600; color: #38bdf8; }
+        
+        .details-row { display: none; background-color: #0b1121; }
         .details-row.open { display: table-row; }
+        .details-row td { padding: 0; border: none; }
         
-        .details-content { padding: 20px; font-size: 13px; color: #334155; display: grid; grid-template-columns: 1fr 1fr; gap: 20px 30px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
-        .details-overview { grid-column: 1 / -1; background: #e0e7ff; padding: 12px 15px; border-radius: 6px; border-left: 4px solid #4f46e5; font-size: 14px; color: #1e293b; margin-bottom: 15px; }
-        .details-overview strong { color: #312e81; }
+        .details-content { padding: 25px; font-size: 13px; color: #cbd5e1; display: grid; grid-template-columns: 1fr 1fr; gap: 25px 40px; border-bottom: 2px solid #38bdf8; border-left: 1px solid #334155; border-right: 1px solid #334155; }
         
-        .details-content h4 { margin: 0 0 12px 0; color: #0f172a; font-size: 15px; border-bottom: 2px solid #cbd5e1; padding-bottom: 6px; }
-        .details-content ul { margin: 0; padding-left: 20px; line-height: 1.6; }
-        .details-content li { margin-bottom: 8px; }
+        .details-overview { grid-column: 1 / -1; background: #1e293b; padding: 15px 20px; border-radius: 6px; border-left: 4px solid #8b5cf6; font-size: 14px; color: #e2e8f0; margin-bottom: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .details-overview strong { color: #c4b5fd; font-weight: 600; }
         
-        .math-box { background: #f1f5f9; padding: 12px; border-left: 3px solid #64748b; font-family: monospace; font-size: 12.5px; margin-top: 5px; color: #0f172a; line-height: 1.5; }
-        .math-box strong { color: #1e293b; font-weight: bold; }
-        .math-subtext { color: #64748b; font-size: 11px; display: block; margin-left: 15px; font-style: italic; }
+        .details-content h4 { margin: 0 0 15px 0; color: #f8fafc; font-size: 15px; border-bottom: 1px solid #334155; padding-bottom: 8px; font-weight: 500; letter-spacing: 0.5px; }
+        .details-content ul { margin: 0; padding-left: 20px; line-height: 1.7; }
+        .details-content li { margin-bottom: 10px; }
+        .details-content strong { color: #f8fafc; }
         
-        .toggle-icon { display: inline-block; width: 15px; transition: transform 0.2s; font-size: 12px; }
-        .open .toggle-icon { transform: rotate(90deg); }
+        .math-box { background: #0f172a; padding: 15px; border-radius: 6px; border-left: 3px solid #38bdf8; font-family: 'SF Mono', Consolas, monospace; font-size: 12.5px; margin-top: 10px; color: #cbd5e1; line-height: 1.6; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
+        .math-box strong { color: #34d399; font-weight: bold; }
+        .math-subtext { color: #64748b; font-size: 11.5px; display: block; margin-left: 15px; font-style: italic; margin-bottom: 4px; }
+        
+        .toggle-icon { display: inline-block; width: 15px; transition: transform 0.2s; font-size: 12px; color: #94a3b8; }
+        .open .toggle-icon { transform: rotate(90deg); color: #38bdf8; }
 
-        .history-table th { background-color: #cbd5e1; color: #0f172a; font-weight: bold; font-size: 12px; padding: 8px; }
-        .history-table td { font-size: 12px; border-bottom: 1px solid #e2e8f0; }
-        .history-table tr:hover { background-color: #f1f5f9; }
-
-        @media (max-width: 900px) {
-            .dashboard-grid { grid-template-columns: 1fr; }
-            .details-content { grid-template-columns: 1fr; }
-        }
-    </style>
+        .history-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; font-family: 'SF Mono', Consolas, monospace; text-align: right; }
+        .history-table th { background-color: #0b1121; color: #94a3b8; font-weight: 600; font-size: 11px; padding: 10px; border-top: 1px solid #334155; border-bottom: 1px solid #334155; letter-spacing: 0.5px; position: sticky; top: 0; z-index: 5; }
+        .history-table td { padding: 8px 10px; font-size: 12.5px; border-bottom: 1px solid #1e293b; color: #cbd5e1; border-left: none; border-right: none; }
+        .history-table tr:nth-child(even) td { background-color: #0b1121; }
+        .history-table tr:nth-child(odd) td { background-color: #0f172a; }
+        .history-table tr:hover td { background-color: #1e293b; }
+        .history-table td:nth-child(1) { color: #94a3b8; font-weight: bold; text-align: center; } /* Year */
+        .history-table td:nth-child(2) { color: #eab308; } /* Net Shortfall */
+        .history-table td:nth-child(3) { color: #f87171; } /* Tax */
+        .history-table td:nth-child(4) { color: #fb7185; } /* Gross Withdrawal */
+        .history-table td:nth-child(5) { color: #38bdf8; font-weight: 600; } /* End Liq */
+</style>
 </head>
 <body>
 
@@ -271,7 +289,7 @@
             <div class="chart-container" id="chartWrapper">
                 <canvas id="legacyChart"></canvas>
             </div>
-            <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <div class="results-container">
                 <p style="font-size: 13px; color: #64748b; margin-top: 0; margin-bottom: 10px;"><em>Click any row to view calculation breakdown and year-by-year amortization.</em></p>
                 <table id="resultsTable">
                     <thead>
@@ -332,19 +350,20 @@
         }
     }
 
+    
     function buildHistoryTable(historyData) {
         let html = `
         <div style="grid-column: 1 / -1; margin-top: 15px; overflow-x: auto;">
-            <h4 style="margin-bottom: 10px; color: #0f172a; border-bottom: 2px solid #cbd5e1; padding-bottom: 5px;">Year-by-Year Amortization Loop</h4>
-            <div style="max-height: 400px; overflow-y: auto; border: 1px solid #cbd5e1; border-radius: 4px;">
-                <table class="history-table" style="width: 100%; border-collapse: collapse; font-size: 12px; font-family: monospace; text-align: right;">
-                    <thead style="position: sticky; top: 0; background-color: #cbd5e1; z-index: 1;">
+            <h4 style="margin-bottom: 10px; color: #f8fafc; border-bottom: 1px solid #334155; padding-bottom: 8px;">Year-by-Year Amortization Loop</h4>
+            <div style="max-height: 400px; overflow-y: auto; border: 1px solid #334155; border-radius: 6px; background: #0f172a;">
+                <table class="history-table">
+                    <thead>
                         <tr>
-                            <th style="padding: 8px; text-align: center; border-bottom: 1px solid #94a3b8;">Year</th>
-                            <th style="padding: 8px; border-bottom: 1px solid #94a3b8;">Net Shortfall</th>
-                            <th style="padding: 8px; border-bottom: 1px solid #94a3b8;">Taxes Paid</th>
-                            <th style="padding: 8px; border-bottom: 1px solid #94a3b8;">Gross Withdrawal</th>
-                            <th style="padding: 8px; border-bottom: 1px solid #94a3b8;">End Liquid Bal</th>
+                            <th>Year</th>
+                            <th>Net Shortfall</th>
+                            <th>Taxes Paid</th>
+                            <th>Gross Withdrawal</th>
+                            <th>End Liquid Bal</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -352,11 +371,11 @@
         historyData.forEach(row => {
             html += `
                         <tr>
-                            <td style="padding: 6px; text-align: center; font-weight: bold; color: #475569;">${row.year}</td>
-                            <td style="padding: 6px; color: #16a34a;">${formatCurrency(row.netNeed)}</td>
-                            <td style="padding: 6px; color: #ea580c;">${formatCurrency(row.tax)}</td>
-                            <td style="padding: 6px; color: #dc2626;">-${formatCurrency(row.gross)}</td>
-                            <td style="padding: 6px; font-weight: bold; color: #2563eb;">${formatCurrency(row.liq)}</td>
+                            <td>${row.year}</td>
+                            <td>${formatCurrency(row.netNeed)}</td>
+                            <td>${formatCurrency(row.tax)}</td>
+                            <td>-${formatCurrency(row.gross)}</td>
+                            <td>${formatCurrency(row.liq)}</td>
                         </tr>
             `;
         });
@@ -367,6 +386,7 @@
         </div>`;
         return html;
     }
+
 
     function calculate() {
         try {
@@ -933,26 +953,28 @@
                         type: 'line', 
                         label: 'FINAL NET LEGACY', 
                         data: netLegacy, 
-                        borderColor: '#fbbf24', 
-                        backgroundColor: '#f59e0b',
+                        borderColor: '#fcd34d', 
+                        backgroundColor: '#fcd34d',
                         borderWidth: 3,
                         pointRadius: 6,
                         tension: 0.1,
                         fill: false
                     },
-                    { type: 'bar', label: 'Liquid Portfolio ($)', data: liquid, backgroundColor: '#3b82f6', stack: 'Stack 0' },
-                    { type: 'bar', label: 'Real Estate Portfolio ($)', data: realEstate, backgroundColor: '#10b981', stack: 'Stack 0' },
-                    { type: 'bar', label: 'WA Estate Tax Withheld ($)', data: tax, backgroundColor: '#ef4444', stack: 'Stack 0' }
+                    { type: 'bar', label: 'Liquid Portfolio ($)', data: liquid, backgroundColor: '#38bdf8', stack: 'Stack 0' },
+                    { type: 'bar', label: 'Real Estate Portfolio ($)', data: realEstate, backgroundColor: '#34d399', stack: 'Stack 0' },
+                    { type: 'bar', label: 'WA Estate Tax Withheld ($)', data: tax, backgroundColor: '#f87171', stack: 'Stack 0' }
                 ]
             },
             options: {
                 responsive: true, maintainAspectRatio: false,
+                color: '#94a3b8',
                 plugins: {
-                    title: { display: true, text: 'Total Net Legacy Breakdown (Gross Assets vs. Final Net)', font: { size: 16 } }
+                    title: { display: true, text: 'Total Net Legacy Breakdown (Gross Assets vs. Final Net)', font: { size: 16, weight: '500' }, color: '#f8fafc' },
+                    legend: { labels: { color: '#cbd5e1' } }
                 },
                 scales: { 
-                    x: { stacked: true }, 
-                    y: { stacked: true, ticks: { callback: function(value) { return '$' + (value / 1000000).toFixed(1) + 'M'; } } } 
+                    x: { stacked: true, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }, 
+                    y: { stacked: true, grid: { color: '#334155' }, ticks: { color: '#94a3b8', callback: function(value) { return '$' + (value / 1000000).toFixed(1) + 'M'; } } } 
                 }
             }
         });
