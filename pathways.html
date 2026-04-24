@@ -50,7 +50,9 @@
         .details-content ul { margin: 0; padding-left: 20px; line-height: 1.6; }
         .details-content li { margin-bottom: 8px; }
         
-        .math-box { background: #f1f5f9; padding: 10px; border-left: 3px solid #64748b; font-family: monospace; font-size: 12px; margin-top: 5px; color: #0f172a;}
+        .math-box { background: #f1f5f9; padding: 12px; border-left: 3px solid #64748b; font-family: monospace; font-size: 12.5px; margin-top: 5px; color: #0f172a; line-height: 1.5; }
+        .math-box strong { color: #1e293b; font-weight: bold; }
+        .math-subtext { color: #64748b; font-size: 11px; display: block; margin-left: 15px; font-style: italic; }
         
         .toggle-icon { display: inline-block; width: 15px; transition: transform 0.2s; font-size: 12px; }
         .open .toggle-icon { transform: rotate(90deg); }
@@ -254,6 +256,7 @@
     
     const formatCurrency = (num) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(num);
     const formatPct = (decimalVal) => Number((decimalVal * 100).toFixed(2)) + '%';
+    const numToCommas = (num) => Number(num).toLocaleString('en-US');
 
     function formatCurrencyInput(inputElem) {
         let rawValue = inputElem.value.replace(/,/g, '').replace(/[^\d.]/g, '');
@@ -369,6 +372,7 @@
             const delayedCaYears = getNum('delayedCaYears');
             const caPurchaseYrPath5 = getNum('caPurchaseYrPath5');
 
+            // Baseline fixed assumption for existing WA home
             const waCarry = 42000; 
             const waWinterRentLoss = caWinterRentCost * waWinterMonths;
             const caEntryTax = 1060000;
@@ -384,10 +388,10 @@
             };
 
             const caMortgage = calcAnnualMortgage(caHome * (1 - caDpPct), intRate);
-            const caStaticBase = caHome * 0.0175; 
+            const caStaticBase = caHome * 0.0175; // 1.75%
             
             const flMortgage = calcAnnualMortgage(flHome * (1 - flDpPct), intRate);
-            const flStaticBase = flHome * 0.0225; 
+            const flStaticBase = flHome * 0.0225; // 2.25%
 
             const netRentWA_Base = (waRentMonthly * 12) * (1 - mgmtFee);
             const netRentCA_Base = (caRentMonthly * 12) * (1 - mgmtFee);
@@ -494,12 +498,17 @@
                         <h4>Liquid Capital & Compounding Mechanics</h4>
                         <p>Our liquid portfolio operates on an iterative, year-by-year compounding engine. Our starting capital is <strong>${formatCurrency(startLiq)}</strong>. Every year, the simulation first withdraws our living expenses and property taxes, and then compounds the remaining balance by our assumed <strong>${formatPct(r)}</strong> market return.</p>
                         
-                        <h5>Year 1 Calculation Breakdown:</h5>
+                        <h5>Year 1 Detailed Calculation Formulas:</h5>
                         <div class="math-box">
-                            Base Monthly Spend ($${(baseW1/12).toLocaleString()}/mo) × 12 = ${formatCurrency(baseW1)}<br>
-                            + WA Home Property Taxes & Insurance = ${formatCurrency(waCarry)}<br>
+                            + Base Spend: ${formatCurrency(baseW1)}
+                            <span class="math-subtext">($${numToCommas(baseW1/12)}/mo × 12 months)</span>
+                            
+                            + WA Carry: ${formatCurrency(waCarry)}
+                            <span class="math-subtext">(Fixed baseline estimate for property taxes & insurance on our paid-off $3M home)</span>
+                            
                             ---------------------------------------------------------<br>
-                            = Net Required: ${formatCurrency(baseW1 + waCarry)}<br><br>
+                            = <strong>Net Required: ${formatCurrency(baseW1 + waCarry)}</strong><br><br>
+                            
                             ÷ (1 - ${formatPct(tax1)} Federal Tax Rate)<br>
                             = <strong>Gross Withdrawal: ${formatCurrency((baseW1 + waCarry) / (1 - tax1))}</strong>
                         </div>
@@ -533,17 +542,29 @@
                         <h4>Liquid Capital & Compounding Mechanics</h4>
                         <p>Moving out of Washington immediately subjects our portfolio to the <strong>${formatCurrency(caEntryTax)} CA Entry Tax</strong>. Furthermore, we must withdraw our CA down payment upfront. Because of this massive capital drain, our compounding engine is severely crippled from Day 1.</p>
                         
-                        <h5>Year 1 Calculation Breakdown:</h5>
+                        <h5>Year 1 Detailed Calculation Formulas:</h5>
                         <div class="math-box">
-                            Starting Portfolio: ${formatCurrency(startLiq)} - ${formatCurrency(caEntryTax)} (Entry Tax) - ${formatCurrency(caDpAmt)} (CA Down Payment) = <strong>${formatCurrency(startLiq - caEntryTax - caDpAmt)}</strong><br><br>
+                            Starting Portfolio: ${formatCurrency(startLiq - caEntryTax - caDpAmt)}
+                            <span class="math-subtext">(${formatCurrency(startLiq)} initial - ${formatCurrency(caEntryTax)} Entry Tax - ${formatCurrency(caDpAmt)} CA Down Payment)</span><br>
                             
-                            Base Monthly Spend ($${(baseW1/12).toLocaleString()}/mo) × 12 = ${formatCurrency(baseW1)}<br>
-                            + CA Fixed Mortgage P&I (30Y at ${formatPct(intRate)}) = ${formatCurrency(caMortgage)}<br>
-                            + CA Static Taxes & HOA = ${formatCurrency(caStaticBase)}<br>
-                            + WA Property Taxes & Ins = ${formatCurrency(waCarry)}<br>
-                            - WA Rental Income (Net of ${formatPct(mgmtFee)} Mgmt Fee) = -${formatCurrency(netRentWA_Base)}<br>
+                            + Base Spend: ${formatCurrency(baseW1)}
+                            <span class="math-subtext">($${numToCommas(baseW1/12)}/mo × 12 months)</span>
+                            
+                            + CA Mortgage P&I: ${formatCurrency(caMortgage)}
+                            <span class="math-subtext">(${formatCurrency(caHome - caDpAmt)} principal loan amortized at ${formatPct(intRate)} over 30 years)</span>
+                            
+                            + CA Taxes/HOA: ${formatCurrency(caStaticBase)}
+                            <span class="math-subtext">(Estimated at a static 1.75% of the ${formatCurrency(caHome)} property value)</span>
+                            
+                            + WA Carry: ${formatCurrency(waCarry)}
+                            <span class="math-subtext">(Taxes & insurance to maintain the empty WA home)</span>
+                            
+                            - WA LTR Income (Net): -${formatCurrency(netRentWA_Base)}
+                            <span class="math-subtext">($${numToCommas(waRentMonthly)}/mo × 12 months, minus ${formatPct(mgmtFee)} Property Mgmt Fee)</span>
+                            
                             ---------------------------------------------------------<br>
-                            = Net Required: ${formatCurrency(baseW1 + caMortgage + caStaticBase + waCarry - netRentWA_Base)}<br><br>
+                            = <strong>Net Required: ${formatCurrency(baseW1 + caMortgage + caStaticBase + waCarry - netRentWA_Base)}</strong><br><br>
+                            
                             ÷ (1 - ${formatPct(tax1 + caStateTax)} Combined Fed + CA State Tax Rate)<br>
                             = <strong>Gross Withdrawal: ${formatCurrency((baseW1 + caMortgage + caStaticBase + waCarry - netRentWA_Base) / (1 - (tax1 + caStateTax)))}</strong>
                         </div>
@@ -570,20 +591,32 @@
                     </div>
                     <div>
                         <h4>Liquid Capital & Compounding Mechanics</h4>
-                        <p>Florida does not penalize us with an entry tax. Our starting capital is only reduced by our FL down payment (${formatCurrency(flDpAmt)}). Additionally, because Florida has a 0% state income tax, our 'gross-up' to pull cash out of our portfolio is perfectly efficient, maximizing our market compounding at ${formatPct(r)}.</p>
+                        <p>Florida does not penalize us with an entry tax. Our starting capital is only reduced by our FL down payment (${formatCurrency(flDpAmt)}). Additionally, because Florida has a 0% state income tax, our "gross-up" to pull cash out of our portfolio is perfectly efficient, maximizing our market compounding at ${formatPct(r)}.</p>
                         
-                        <h5>Year 1 Calculation Breakdown:</h5>
+                        <h5>Year 1 Detailed Calculation Formulas:</h5>
                         <div class="math-box">
-                            Starting Portfolio: ${formatCurrency(startLiq)} - ${formatCurrency(flDpAmt)} (FL Down Payment) = <strong>${formatCurrency(startLiq - flDpAmt)}</strong><br><br>
+                            Starting Portfolio: ${formatCurrency(startLiq - flDpAmt)}
+                            <span class="math-subtext">(${formatCurrency(startLiq)} initial - ${formatCurrency(flDpAmt)} FL Down Payment. Zero Entry Tax.)</span><br>
                             
-                            Base Monthly Spend ($${(baseW1/12).toLocaleString()}/mo) × 12 = ${formatCurrency(baseW1)}<br>
-                            + FL Fixed Mortgage P&I (30Y at ${formatPct(intRate)}) = ${formatCurrency(flMortgage)}<br>
-                            + FL Static Taxes & HOA = ${formatCurrency(flStaticBase)}<br>
-                            + WA Property Taxes & Ins = ${formatCurrency(waCarry)}<br>
-                            - WA Rental Income (Net of ${formatPct(mgmtFee)} Mgmt Fee) = -${formatCurrency(netRentWA_Base)}<br>
+                            + Base Spend: ${formatCurrency(baseW1)}
+                            <span class="math-subtext">($${numToCommas(baseW1/12)}/mo × 12 months)</span>
+                            
+                            + FL Mortgage P&I: ${formatCurrency(flMortgage)}
+                            <span class="math-subtext">(${formatCurrency(flHome - flDpAmt)} principal loan amortized at ${formatPct(intRate)} over 30 years)</span>
+                            
+                            + FL Taxes/HOA: ${formatCurrency(flStaticBase)}
+                            <span class="math-subtext">(Estimated at a static 2.25% of the ${formatCurrency(flHome)} property value, factoring in CDD)</span>
+                            
+                            + WA Carry: ${formatCurrency(waCarry)}
+                            <span class="math-subtext">(Taxes & insurance to maintain the empty WA home)</span>
+                            
+                            - WA LTR Income (Net): -${formatCurrency(netRentWA_Base)}
+                            <span class="math-subtext">($${numToCommas(waRentMonthly)}/mo × 12 months, minus ${formatPct(mgmtFee)} Property Mgmt Fee)</span>
+                            
                             ---------------------------------------------------------<br>
-                            = Net Required: ${formatCurrency(baseW1 + flMortgage + flStaticBase + waCarry - netRentWA_Base)}<br><br>
-                            ÷ (1 - ${formatPct(tax1)} Federal Tax Only - Zero FL State Tax)<br>
+                            = <strong>Net Required: ${formatCurrency(baseW1 + flMortgage + flStaticBase + waCarry - netRentWA_Base)}</strong><br><br>
+                            
+                            ÷ (1 - ${formatPct(tax1)} Federal Tax Only - 0% FL State Tax)<br>
                             = <strong>Gross Withdrawal: ${formatCurrency((baseW1 + flMortgage + flStaticBase + waCarry - netRentWA_Base) / (1 - tax1))}</strong>
                         </div>
                     </div>
@@ -613,21 +646,36 @@
                         
                         <h5>Phase 1: WA Domicile (Years 1-${delayedCaYears}) - Year 1 Breakdown:</h5>
                         <div class="math-box">
-                            Starting Portfolio: ${formatCurrency(startLiq - caDpAmt)} (Zero entry tax)<br><br>
-                            Base Spend: ${formatCurrency(baseW1)}<br>
-                            + CA Mortgage P&I: ${formatCurrency(caMortgage)}<br>
-                            + CA Taxes/HOA: ${formatCurrency(caStaticBase)}<br>
-                            + WA Carry: ${formatCurrency(waCarry)}<br>
-                            + CA Vacation Rental Cost (During WA Winter): ${formatCurrency(waWinterRentLoss)}<br>
-                            - CA LTR Income (Net of Mgmt): -${formatCurrency(netRentCA_Base)}<br>
+                            Starting Portfolio: ${formatCurrency(startLiq - caDpAmt)}
+                            <span class="math-subtext">(${formatCurrency(startLiq)} initial - ${formatCurrency(caDpAmt)} CA Down Payment. Zero Entry Tax.)</span><br>
+
+                            + Base Spend: ${formatCurrency(baseW1)}
+                            <span class="math-subtext">($${numToCommas(baseW1/12)}/mo × 12 months)</span>
+                            
+                            + CA Mortgage P&I: ${formatCurrency(caMortgage)}
+                            <span class="math-subtext">(${formatCurrency(caHome - caDpAmt)} principal loan amortized at ${formatPct(intRate)} over 30 years)</span>
+                            
+                            + CA Taxes/HOA: ${formatCurrency(caStaticBase)}
+                            <span class="math-subtext">(Estimated at a static 1.75% of the ${formatCurrency(caHome)} property value)</span>
+                            
+                            + WA Carry: ${formatCurrency(waCarry)}
+                            <span class="math-subtext">(Baseline taxes & insurance on our primary WA home)</span>
+                            
+                            + WA Winter Rent Loss: ${formatCurrency(waWinterRentLoss)}
+                            <span class="math-subtext">(Housing cost to rent a place in CA for ${waWinterMonths} months at $${numToCommas(caWinterRentCost)}/mo)</span>
+                            
+                            - CA LTR Income (Net): -${formatCurrency(netRentCA_Base)}
+                            <span class="math-subtext">($${numToCommas(caRentMonthly)}/mo from owned CA home × 12 months, minus ${formatPct(mgmtFee)} Property Mgmt Fee)</span>
+                            
                             ---------------------------------------------------------<br>
-                            = Net Required: ${formatCurrency(baseW1 + caMortgage + caStaticBase + waCarry + waWinterRentLoss - netRentCA_Base)}<br>
-                            ÷ (1 - ${formatPct(tax1)} Fed Tax Only)<br>
+                            = <strong>Net Required: ${formatCurrency(baseW1 + caMortgage + caStaticBase + waCarry + waWinterRentLoss - netRentCA_Base)}</strong><br><br>
+                            
+                            ÷ (1 - ${formatPct(tax1)} Fed Tax Only - WA residency)<br>
                             = <strong>Gross Withdrawal: ${formatCurrency((baseW1 + caMortgage + caStaticBase + waCarry + waWinterRentLoss - netRentCA_Base)/(1 - tax1))}</strong>
                         </div>
                         
                         <h5>Phase 2: CA Domicile (Years ${delayedCaYears + 1}+):</h5>
-                        <p>We officially move to CA. We lose the rental income stream, and our effective tax rate instantly jumps by the <strong>${formatPct(caStateTax)}</strong> CA premium. However, our portfolio survived the early years without the entry tax hit.</p>
+                        <p>We officially move to CA. We lose the rental income stream from the CA property, and our effective tax rate instantly jumps by the <strong>${formatPct(caStateTax)}</strong> CA premium. However, our portfolio survived the early years without the entry tax hit.</p>
                     </div>
                     <div>
                         <h4>Real Estate & Estate Shielding</h4>
@@ -651,19 +699,33 @@
                         <h4>Liquid Capital Mechanics (Maximum Leverage)</h4>
                         <p>This path uses our portfolio to leverage three distinct properties simultaneously. We pay both the FL Down Payment (${formatCurrency(flDpAmt)}) and the CA Down Payment (${formatCurrency(caDpAmt)}) from our liquid assets. However, our daily lifestyle is highly subsidized by two streams of Long-Term Rental income, and our withdrawals are shielded by Florida's 0% state tax.</p>
                         
-                        <h5>Year 1 Calculation Breakdown:</h5>
+                        <h5>Year 1 Detailed Calculation Formulas:</h5>
                         <div class="math-box">
-                            Starting Portfolio: ${formatCurrency(startLiq - flDpAmt - caDpAmt)} (Zero entry tax)<br><br>
+                            Starting Portfolio: ${formatCurrency(startLiq - flDpAmt - caDpAmt)}
+                            <span class="math-subtext">(${formatCurrency(startLiq)} initial - ${formatCurrency(flDpAmt)} FL DP - ${formatCurrency(caDpAmt)} CA DP. Zero Entry Tax.)</span><br>
                             
-                            Base Monthly Spend ($${(baseW1/12).toLocaleString()}/mo) × 12 = ${formatCurrency(baseW1)}<br>
-                            + FL Mortgage P&I = ${formatCurrency(flMortgage)}<br>
-                            + CA Mortgage P&I = ${formatCurrency(caMortgage)}<br>
-                            + Combined Prop Taxes/HOA (FL + CA + WA) = ${formatCurrency(flStaticBase + caStaticBase + waCarry)}<br>
-                            - WA LTR Income (Net) = -${formatCurrency(netRentWA_Base)}<br>
-                            - CA LTR Income (Net) = -${formatCurrency(netRentCA_Base)}<br>
+                            + Base Spend: ${formatCurrency(baseW1)}
+                            <span class="math-subtext">($${numToCommas(baseW1/12)}/mo × 12 months)</span>
+                            
+                            + FL Mortgage P&I: ${formatCurrency(flMortgage)}
+                            <span class="math-subtext">(${formatCurrency(flHome - flDpAmt)} principal loan amortized at ${formatPct(intRate)} over 30 years)</span>
+                            
+                            + CA Mortgage P&I: ${formatCurrency(caMortgage)}
+                            <span class="math-subtext">(${formatCurrency(caHome - caDpAmt)} principal loan amortized at ${formatPct(intRate)} over 30 years)</span>
+                            
+                            + Combined Prop Taxes/HOA: ${formatCurrency(flStaticBase + caStaticBase + waCarry)}
+                            <span class="math-subtext">(Static bases: FL 2.25% + CA 1.75% + WA $42k Baseline)</span>
+                            
+                            - WA LTR Income (Net): -${formatCurrency(netRentWA_Base)}
+                            <span class="math-subtext">($${numToCommas(waRentMonthly)}/mo × 12 months, minus ${formatPct(mgmtFee)} Property Mgmt Fee)</span>
+                            
+                            - CA LTR Income (Net): -${formatCurrency(netRentCA_Base)}
+                            <span class="math-subtext">($${numToCommas(caRentMonthly)}/mo × 12 months, minus ${formatPct(mgmtFee)} Property Mgmt Fee)</span>
+                            
                             ---------------------------------------------------------<br>
-                            = Net Required: ${formatCurrency(baseW1 + flMortgage + caMortgage + flStaticBase + caStaticBase + waCarry - netRentWA_Base - netRentCA_Base)}<br><br>
-                            ÷ (1 - ${formatPct(tax1)} Federal Tax Only - Zero FL State Tax)<br>
+                            = <strong>Net Required: ${formatCurrency(baseW1 + flMortgage + caMortgage + flStaticBase + caStaticBase + waCarry - netRentWA_Base - netRentCA_Base)}</strong><br><br>
+                            
+                            ÷ (1 - ${formatPct(tax1)} Federal Tax Only - 0% FL State Tax)<br>
                             = <strong>Gross Withdrawal: ${formatCurrency((baseW1 + flMortgage + caMortgage + flStaticBase + caStaticBase + waCarry - netRentWA_Base - netRentCA_Base) / (1 - tax1))}</strong>
                         </div>
                     </div>
