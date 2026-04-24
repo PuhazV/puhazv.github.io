@@ -311,6 +311,7 @@
             const caStateTax = getNum('caStateTax') / 100;
 
             const waCarry = 42000; 
+            const waWinterRentLoss = 32500;
             const caEntryTax = 1060000;
             const estateExempt = 6140000;
             const estateTaxRate = 0.20;
@@ -364,7 +365,7 @@
                 let infFlStatic = flStaticBase * inf;
                 let infWaRent = netRentWA_Base * inf;
                 let infCaRent = netRentCA_Base * inf;
-                let infWaWinter = 32500 * inf;
+                let infWaWinter = waWinterRentLoss * inf;
 
                 // Path 1
                 let p1NetNeed = infBaseLife + infWaCarry;
@@ -420,132 +421,179 @@
             const taxData = [];
             const netLegacyData = [];
 
-            // Path 1
+            // --- Pathway 1 ---
             let p1Estate = fvWa + p1Liq;
             let p1Tax = p1Estate > estateExempt ? (p1Estate - estateExempt) * estateTaxRate : 0;
             results.push({
                 name: "Path 1: Stay in WA", liq: p1Liq, re: fvWa, tax: -p1Tax, net: p1Estate - p1Tax,
                 details: `
                     <div class="details-overview">
-                        <strong>Overview:</strong> Remain in WA. Lowest capital output but exposes legacy to aggressive WA estate taxes.
+                        <strong>Overview:</strong> Remain in your current Washington primary residence for the duration of retirement. This path requires the lowest initial capital output but exposes your final legacy to the aggressive WA state estate tax.
                     </div>
                     <div>
-                        <h4>Withdrawal & Tax Logic</h4>
+                        <h4>Liquid Capital Mechanics</h4>
                         <ul>
-                            <li><strong>Base Lifestyle:</strong> Uses decadal inputs ($${formatCurrency(baseW1)} Yr 1) + WA Carry</li>
-                            <li><strong>Effective Tax Rate:</strong> Matches Federal Tax input (0% State Tax).</li>
+                            <li><strong>Starting Portfolio:</strong> ${formatCurrency(startLiq)}</li>
+                            <li><strong>Year 1 Withdrawal Breakdown:</strong>
+                                <ul>
+                                    <li>Standard Lifestyle: ${formatCurrency(baseW1)} (Inflates based on decadal limits)</li>
+                                    <li>WA Home Carrying Costs: ${formatCurrency(waCarry)} (Taxes/Ins - inflates over time)</li>
+                                    <li>Effective Tax Rate applied to gross withdrawal: ${formatPct(tax1)}</li>
+                                </ul>
+                            </li>
                         </ul>
                     </div>
                     <div>
                         <h4>Real Estate & Estate Tax</h4>
                         <ul>
-                            <li><strong>WA Home Growth:</strong> ${formatCurrency(fvWa)}</li>
-                            <li><strong>WA Estate Tax:</strong> ${formatCurrency(p1Tax)}</li>
+                            <li><strong>WA Home Growth:</strong> ${formatCurrency(fvWa)}<br><em>Calculated as ${formatCurrency(waHome)} appreciating at ${formatPct(waApprec)} annually for ${years} years.</em></li>
+                            <li><strong>Gross Estate Size:</strong> ${formatCurrency(p1Estate)}</li>
+                            <li><strong>WA Estate Tax Liability:</strong> ${formatCurrency(p1Tax)}<br><em>Calculated by subtracting the ${formatCurrency(estateExempt)} bypass trust exemption from the Gross Estate, and taxing the remainder at roughly ${formatPct(estateTaxRate)}.</em></li>
                         </ul>
                     </div>
                     ${buildHistoryTable(p1Hist)}
                 `
             });
 
-            // Path 2
+            // --- Pathway 2 ---
             let p2Re = fvWa + fvCaPath2;
             results.push({
                 name: "Path 2: Immediate CA", liq: p2Liq, re: p2Re, tax: 0, net: p2Liq + p2Re,
                 details: `
                     <div class="details-overview">
-                        <strong>Overview:</strong> Move to CA early. Shields estate from WA death tax, but triggers heavy CA income/entry taxes.
+                        <strong>Overview:</strong> Relocate permanently to California early in retirement. Establishing legal domicile in CA shields your entire legacy from WA estate taxes, but incurs a significant upfront entry cost and higher ongoing lifestyle costs.
                     </div>
                     <div>
-                        <h4>Withdrawal & Tax Logic</h4>
+                        <h4>Liquid Capital Mechanics</h4>
                         <ul>
-                            <li><strong>Starting Penalty:</strong> Suffer immediate $1.06M entry tax penalty on liquid assets.</li>
-                            <li><strong>Base Lifestyle:</strong> Decadal inputs + CA Mortgage/Carry + WA Carry - WA Rent</li>
-                            <li><strong>Effective Tax Rate:</strong> Federal + ${formatPct(caStateTax)} CA State Tax. Requires higher gross withdrawals.</li>
+                            <li><strong>Starting Portfolio:</strong> ${formatCurrency(startLiq - caEntryTax - caDpAmt)}<br><em>The initial ${formatCurrency(startLiq)} is permanently reduced by the ${formatCurrency(caEntryTax)} CA Entry Tax and a ${formatCurrency(caDpAmt)} down payment.</em></li>
+                            <li><strong>Year 1 Withdrawal Breakdown:</strong>
+                                <ul>
+                                    <li>Standard Lifestyle: ${formatCurrency(baseW1)} (Inflates based on decadal limits)</li>
+                                    <li>CA Fixed Mortgage P&I: ${formatCurrency(caMortgage)} (Fixed 30Y)</li>
+                                    <li>CA Static Taxes/HOA: ${formatCurrency(caStaticBase)} (Inflates)</li>
+                                    <li>WA Static Carrying Costs: ${formatCurrency(waCarry)} (Inflates)</li>
+                                    <li><em>Minus</em> WA Net Rental: -${formatCurrency(netRentWA_Base)} (Rents inflate)</li>
+                                    <li>Effective Tax Rate applied to gross withdrawal: ${formatPct(tax1 + caStateTax)} (Includes CA State Premium)</li>
+                                </ul>
+                            </li>
                         </ul>
                     </div>
                     <div>
                         <h4>Real Estate & Estate Tax</h4>
                         <ul>
-                            <li><strong>Real Estate Growth:</strong> ${formatCurrency(p2Re)} (WA + CA)</li>
-                            <li><strong>Estate Tax Liability:</strong> $0</li>
+                            <li><strong>WA Home Growth:</strong> ${formatCurrency(fvWa)}</li>
+                            <li><strong>CA Home Growth:</strong> ${formatCurrency(fvCaPath2)}<br><em>(${formatCurrency(caHome)} appreciating at ${formatPct(caApprec)} annually for ${years + 2} years).</em></li>
+                            <li><strong>WA Estate Tax Liability:</strong> $0<br><em>Domiciled in California at the time of passing.</em></li>
                         </ul>
                     </div>
                     ${buildHistoryTable(p2Hist)}
                 `
             });
 
-            // Path 3
+            // --- Pathway 3 ---
             let p3Re = fvWa + fvFl;
             results.push({
                 name: "Path 3: Immediate FL", liq: p3Liq, re: p3Re, tax: 0, net: p3Liq + p3Re,
                 details: `
                     <div class="details-overview">
-                        <strong>Overview:</strong> Move to FL. Highly efficient path establishing domicile in a state with no income/estate tax.
+                        <strong>Overview:</strong> Relocate permanently to Florida early in retirement. This highly efficient path establishes domicile in a state with no income or estate tax, protecting your capital compounding while avoiding WA taxes entirely.
                     </div>
                     <div>
-                        <h4>Withdrawal & Tax Logic</h4>
+                        <h4>Liquid Capital Mechanics</h4>
                         <ul>
-                            <li><strong>Base Lifestyle:</strong> Decadal inputs + FL Mortgage/Carry + WA Carry - WA Rent</li>
-                            <li><strong>Effective Tax Rate:</strong> Matches Federal Tax input (0% State Tax).</li>
+                            <li><strong>Starting Portfolio:</strong> ${formatCurrency(startLiq - flDpAmt)}<br><em>The initial ${formatCurrency(startLiq)} is reduced by a ${formatCurrency(flDpAmt)} down payment. No entry taxes are triggered.</em></li>
+                            <li><strong>Year 1 Withdrawal Breakdown:</strong>
+                                <ul>
+                                    <li>Standard Lifestyle: ${formatCurrency(baseW1)} (Inflates based on decadal limits)</li>
+                                    <li>FL Fixed Mortgage P&I: ${formatCurrency(flMortgage)} (Fixed 30Y)</li>
+                                    <li>FL Static Taxes/CDD/HOA: ${formatCurrency(flStaticBase)} (Inflates)</li>
+                                    <li>WA Static Carrying Costs: ${formatCurrency(waCarry)} (Inflates)</li>
+                                    <li><em>Minus</em> WA Net Rental: -${formatCurrency(netRentWA_Base)} (Rents inflate)</li>
+                                    <li>Effective Tax Rate applied to gross withdrawal: ${formatPct(tax1)} (0% State Tax)</li>
+                                </ul>
+                            </li>
                         </ul>
                     </div>
                     <div>
                         <h4>Real Estate & Estate Tax</h4>
                         <ul>
-                            <li><strong>Real Estate Growth:</strong> ${formatCurrency(p3Re)} (WA + FL)</li>
-                            <li><strong>Estate Tax Liability:</strong> $0</li>
+                            <li><strong>WA Home Growth:</strong> ${formatCurrency(fvWa)}</li>
+                            <li><strong>FL Home Growth:</strong> ${formatCurrency(fvFl)}<br><em>(${formatCurrency(flHome)} appreciating at ${formatPct(flApprec)} annually for ${years + 2} years).</em></li>
+                            <li><strong>WA Estate Tax Liability:</strong> $0<br><em>Florida does not levy a state income tax or a state estate tax.</em></li>
                         </ul>
                     </div>
                     ${buildHistoryTable(p3Hist)}
                 `
             });
 
-            // Path 4
+            // --- Pathway 4 ---
             let p4Re = fvWa + fvCaPath2;
             results.push({
                 name: "Path 4: Delayed CA", liq: p4Liq, re: p4Re, tax: 0, net: p4Liq + p4Re,
                 details: `
                     <div class="details-overview">
-                        <strong>Overview:</strong> Buy CA early but delay move for 7 years to finish Roth conversions at 0% WA tax.
+                        <strong>Overview:</strong> Purchase a CA property early to lock in real estate appreciation, but delay the official move to CA for several years. This splits time between WA and CA initially, maintaining flexibility before committing to CA domicile.
                     </div>
                     <div>
-                        <h4>Withdrawal & Tax Logic (Two Phases)</h4>
+                        <h4>Liquid Capital Mechanics (Two Phases)</h4>
                         <ul>
-                            <li><strong>Years 1-7 (WA):</strong> Fed Tax Only. Carry CA + WA homes + Winter rentals. Offset by CA Rent.</li>
-                            <li><strong>Years 8+ (CA):</strong> Shift to CA Effective Tax (${formatPct(caStateTax)} premium). Lose rental offsets.</li>
+                            <li><strong>Starting Portfolio:</strong> ${formatCurrency(startLiq - caDpAmt)} <em>(Initial minus CA Downpayment. Zero entry tax due to WA Roth cleanup).</em></li>
+                            <li><strong>Phase 1 (Yrs 1-7 in WA) Year 1 Breakdown:</strong>
+                                <ul>
+                                    <li>Standard Lifestyle: ${formatCurrency(baseW1)} (Inflates)</li>
+                                    <li>CA Fixed Mortgage P&I: ${formatCurrency(caMortgage)}</li>
+                                    <li>CA Static Taxes: ${formatCurrency(caStaticBase)}</li>
+                                    <li>WA Static Carry: ${formatCurrency(waCarry)}</li>
+                                    <li><em>Minus</em> CA Net Rent (-${formatCurrency(netRentCA_Base)}) <em>Plus</em> WA Winter Rent Loss (${formatCurrency(waWinterRentLoss)})</li>
+                                    <li>Effective Tax Rate: ${formatPct(tax1)} (0% State Tax during cleanup)</li>
+                                </ul>
+                            </li>
+                            <li><strong>Phase 2 (Yrs 8+ in CA):</strong> Loses Winter Rent expense and CA Rental Income, but effective tax rate increases to include the ${formatPct(caStateTax)} CA premium.</li>
                         </ul>
                     </div>
                     <div>
                         <h4>Real Estate & Estate Tax</h4>
                         <ul>
-                            <li><strong>Real Estate Growth:</strong> ${formatCurrency(p4Re)} (WA + CA)</li>
-                            <li><strong>Estate Tax Liability:</strong> $0</li>
+                            <li><strong>WA Home Growth:</strong> ${formatCurrency(fvWa)}</li>
+                            <li><strong>CA Home Growth:</strong> ${formatCurrency(fvCaPath2)}</li>
+                            <li><strong>WA Estate Tax Liability:</strong> $0<br><em>Domiciled in CA at time of passing.</em></li>
                         </ul>
                     </div>
                     ${buildHistoryTable(p4Hist)}
                 `
             });
 
-            // Path 5
+            // --- Pathway 5 ---
             let p5Re = fvWa + fvFl + fvCaPath2;
             results.push({
                 name: "Path 5: Hybrid FL/CA", liq: p5Liq, re: p5Re, tax: 0, net: p5Liq + p5Re,
                 details: `
                     <div class="details-overview">
-                        <strong>Overview:</strong> Ultimate snowbird strategy. Domicile in FL (no tax), rent out CA & WA homes.
+                        <strong>Overview:</strong> The ultimate "snowbird" strategy. Establish legal tax domicile in Florida while actively owning and renting properties in WA, FL, and CA to heavily subsidize the carrying costs of a three-home lifestyle.
                     </div>
                     <div>
-                        <h4>Withdrawal & Tax Logic</h4>
+                        <h4>Liquid Capital Mechanics</h4>
                         <ul>
-                            <li><strong>Base Lifestyle:</strong> Decadal inputs + FL + CA + WA Carries. Subsidized heavily by Dual Rents.</li>
-                            <li><strong>Effective Tax Rate:</strong> Matches Federal Tax input (0% FL State Tax).</li>
+                            <li><strong>Starting Portfolio:</strong> ${formatCurrency(startLiq - flDpAmt - caDpAmt)}<br><em>Reduced by the FL down payment (${formatCurrency(flDpAmt)}) and CA down payment (${formatCurrency(caDpAmt)}). Zero entry tax.</em></li>
+                            <li><strong>Year 1 Withdrawal Breakdown:</strong>
+                                <ul>
+                                    <li>Standard Lifestyle: ${formatCurrency(baseW1)} (Inflates based on decadal limits)</li>
+                                    <li>FL/CA Fixed Mortgages: ${formatCurrency(flMortgage + caMortgage)}</li>
+                                    <li>FL/CA/WA Static Carry (Taxes/HOA): ${formatCurrency(flStaticBase + caStaticBase + waCarry)}</li>
+                                    <li><em>Minus</em> Dual Rental Offset (WA/CA): -${formatCurrency(netRentWA_Base + netRentCA_Base)}</li>
+                                    <li>Effective Tax Rate applied to gross withdrawal: ${formatPct(tax1)} (0% State Tax)</li>
+                                </ul>
+                            </li>
                         </ul>
                     </div>
                     <div>
                         <h4>Real Estate & Estate Tax</h4>
                         <ul>
-                            <li><strong>Real Estate Growth:</strong> ${formatCurrency(p5Re)} (WA + FL + CA)</li>
-                            <li><strong>Estate Tax Liability:</strong> $0</li>
+                            <li><strong>WA Home Growth:</strong> ${formatCurrency(fvWa)}</li>
+                            <li><strong>FL Home Growth:</strong> ${formatCurrency(fvFl)}</li>
+                            <li><strong>CA Home Growth:</strong> ${formatCurrency(fvCaPath2)}</li>
+                            <li><strong>WA Estate Tax Liability:</strong> $0<br><em>Legally domiciled in Florida.</em></li>
                         </ul>
                     </div>
                     ${buildHistoryTable(p5Hist)}
