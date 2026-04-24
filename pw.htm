@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retirement Pathways Calculator</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f6; color: #333; padding: 20px; }
+        .container { max-width: 1300px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #2c3e50; margin-bottom: 30px; }
+        
+        .dashboard-grid { display: grid; grid-template-columns: 350px 1fr; gap: 30px; align-items: start; }
+        
+        /* Inputs Section */
+        .inputs-section { background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; max-height: 85vh; overflow-y: auto; }
+        .input-group { margin-bottom: 12px; }
+        .input-group label { display: block; font-weight: bold; margin-bottom: 4px; font-size: 13px; color: #475569; }
+        .input-group input { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; font-family: monospace; }
+        h3 { margin-top: 0; color: #1e293b; font-size: 16px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; }
+        .section-divider { margin: 20px 0 10px 0; }
+
+        /* Outputs Section */
+        .outputs-section { display: flex; flex-direction: column; gap: 30px; }
+        .chart-container { background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; height: 400px; }
+        
+        /* Table & Expandable Rows */
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
+        th { background-color: #2c3e50; color: white; }
+        .currency { text-align: right; font-family: monospace; font-size: 14px; }
+        .positive { color: #16a34a; font-weight: bold; }
+        .negative { color: #dc2626; }
+        
+        .clickable-row { cursor: pointer; transition: background-color 0.2s ease; }
+        .clickable-row:hover { background-color: #e2e8f0; }
+        .clickable-row td:first-child { font-weight: bold; color: #2563eb; }
+        
+        .details-row { display: none; background-color: #f8fafc; border-bottom: 2px solid #cbd5e1; }
+        .details-row.open { display: table-row; }
+        .details-content { padding: 20px; font-size: 13px; color: #334155; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
+        .details-content h4 { margin: 0 0 12px 0; color: #0f172a; font-size: 15px; border-bottom: 2px solid #cbd5e1; padding-bottom: 6px; }
+        .details-content ul { margin: 0; padding-left: 20px; line-height: 1.6; }
+        .details-content li { margin-bottom: 8px; }
+        .details-content li ul { margin-top: 6px; margin-bottom: 6px; }
+        
+        .toggle-icon { display: inline-block; width: 15px; transition: transform 0.2s; font-size: 12px; }
+        .open .toggle-icon { transform: rotate(90deg); }
+
+        @media (max-width: 900px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .details-content { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Retirement Pathways Projection (2055)</h1>
+    
+    <div class="dashboard-grid">
+        <div class="inputs-section">
+            <h3>Economic & Portfolio Baseline</h3>
+            <div class="input-group">
+                <label>Starting Liquid Assets ($)</label>
+                <input type="text" id="startLiquid" value="10,000,000" oninput="formatCurrencyInput(this)">
+            </div>
+            <div class="input-group">
+                <label>Market Return (%)</label>
+                <input type="number" id="marketReturn" value="7" step="0.1" oninput="calculate()">
+            </div>
+            <div class="input-group">
+                <label>Inflation Rate (%)</label>
+                <input type="number" id="inflation" value="3" step="0.1" oninput="calculate()">
+            </div>
+
+            <h3 class="section-divider">Mortgage Terms</h3>
+            <div class="input-group">
+                <label>Down Payment (%)</label>
+                <input type="number" id="downPaymentPct" value="20" step="1" oninput="calculate()">
+            </div>
+            <div class="input-group">
+                <label>Mortgage Interest Rate (%)</label>
+                <input type="number" id="interestRate" value="6.5" step="0.1" oninput="calculate()">
+            </div>
+
+            <h3 class="section-divider">Real Estate Values</h3>
+            <div class="input-group">
+                <label>WA Home Value ($)</label>
+                <input type="text" id="waHome" value="3,000,000" oninput="formatCurrencyInput(this)">
+            </div>
+            <div class="input-group">
+                <label>CA Home Value ($)</label>
+                <input type="text" id="caHome" value="1,600,000" oninput="formatCurrencyInput(this)">
+            </div>
+            <div class="input-group">
+                <label>FL Home Value ($)</label>
+                <input type="text" id="flHome" value="900,000" oninput="formatCurrencyInput(this)">
+            </div>
+
+            <h3 class="section-divider">Appreciation Rates</h3>
+            <div class="input-group">
+                <label>WA Appreciation (%)</label>
+                <input type="number" id="waApprec" value="6" step="0.1" oninput="calculate()">
+            </div>
+            <div class="input-group">
+                <label>CA Appreciation (%)</label>
+                <input type="number" id="caApprec" value="6" step="0.1" oninput="calculate()">
+            </div>
+            <div class="input-group">
+                <label>FL Appreciation (%)</label>
+                <input type="number" id="flApprec" value="4" step="0.1" oninput="calculate()">
+            </div>
+
+            <h3 class="section-divider">Rental Cash Flow</h3>
+            <div class="input-group">
+                <label>WA Monthly Rent ($)</label>
+                <input type="text" id="waRent" value="6,500" oninput="formatCurrencyInput(this)">
+            </div>
+            <div class="input-group">
+                <label>CA Monthly Rent ($)</label>
+                <input type="text" id="caRent" value="6,500" oninput="formatCurrencyInput(this)">
+            </div>
+            <div class="input-group">
+                <label>Property Mgmt Fee (%)</label>
+                <input type="number" id="mgmtFee" value="7" step="0.1" oninput="calculate()">
+            </div>
+
+            <h3 class="section-divider">Timelines</h3>
+            <div class="input-group">
+                <label>End Year (Death of 2nd Spouse)</label>
+                <input type="number" id="endYear" value="2055" oninput="calculate()">
+            </div>
+            <div class="input-group">
+                <label>CA Purchase Year (Path 2)</label>
+                <input type="number" id="caPurchaseYrPath2" value="2026" oninput="calculate()">
+            </div>
+            <div class="input-group">
+                <label>FL Purchase Year (Paths 3, 5)</label>
+                <input type="number" id="flPurchaseYr" value="2026" oninput="calculate()">
+            </div>
+            <div class="input-group">
+                <label>CA Purchase Year (Path 4 Delayed)</label>
+                <input type="number" id="caPurchaseYrEarly" value="2026" oninput="calculate()">
+            </div>
+            <div class="input-group">
+                <label>CA Purchase Year (Path 5)</label>
+                <input type="number" id="caPurchaseYrPath5" value="2028" oninput="calculate()">
+            </div>
+        </div>
+
+        <div class="outputs-section">
+            <div class="chart-container" id="chartWrapper">
+                <canvas id="legacyChart"></canvas>
+            </div>
+            <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <p style="font-size: 13px; color: #64748b; margin-top: 0; margin-bottom: 10px;"><em>Click any row to view detailed calculation breakdown.</em></p>
+                <table id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th>Pathway</th>
+                            <th class="currency">Final Liquid</th>
+                            <th class="currency">Final Real Estate</th>
+                            <th class="currency">WA Estate Tax</th>
+                            <th class="currency">Net Legacy</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let legacyChartInstance = null; 
+    
+    // Formatters
+    const formatCurrency = (num) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(num);
+    const formatPct = (decimalVal) => Number((decimalVal * 100).toFixed(2)) + '%';
+
+    // Auto-format currency inputs with commas
+    function formatCurrencyInput(inputElem) {
+        let rawValue = inputElem.value.replace(/,/g, '').replace(/[^\d.]/g, '');
+        if (rawValue !== '') {
+            let parts = rawValue.split('.');
+            parts[0] = Number(parts[0]).toLocaleString('en-US');
+            inputElem.value = parts.join('.');
+        } else {
+            inputElem.value = '';
+        }
+        calculate();
+    }
+
+    // Helper to get raw number from formatted input
+    const getNum = (id) => Number(document.getElementById(id).value.replace(/,/g, ''));
+
+    // Toggle expanding row
+    function toggleRow(index) {
+        const row = document.getElementById(`main-row-${index}`);
+        const detailRow = document.getElementById(`detail-row-${index}`);
+        
+        if (detailRow.classList.contains('open')) {
+            detailRow.classList.remove('open');
+            row.classList.remove('open');
+        } else {
+            document.querySelectorAll('.details-row').forEach(r => r.classList.remove('open'));
+            document.querySelectorAll('.clickable-row').forEach(r => r.classList.remove('open'));
+            
+            detailRow.classList.add('open');
+            row.classList.add('open');
+        }
+    }
+
+    function calculate() {
+        try {
+            // Fetch inputs
+            const startLiq = getNum('startLiquid');
+            const r = getNum('marketReturn') / 100;
+            const g = getNum('inflation') / 100;
+            
+            const dpPct = getNum('downPaymentPct') / 100;
+            const intRate = getNum('interestRate') / 100;
+
+            const waHome = getNum('waHome');
+            const caHome = getNum('caHome');
+            const flHome = getNum('flHome');
+            
+            const waApprec = getNum('waApprec') / 100;
+            const caApprec = getNum('caApprec') / 100;
+            const flApprec = getNum('flApprec') / 100;
+
+            const waRentMonthly = getNum('waRent');
+            const caRentMonthly = getNum('caRent');
+            const mgmtFee = getNum('mgmtFee') / 100;
+            
+            const endYear = getNum('endYear');
+            const flPurchaseYr = getNum('flPurchaseYr');
+            const caPurchaseYrEarly = getNum('caPurchaseYrEarly');
+            const caPurchaseYrPath2 = getNum('caPurchaseYrPath2');
+            const caPurchaseYrPath5 = getNum('caPurchaseYrPath5');
+
+            // Fixed Costs & Constants
+            const baseLife = 300000;
+            const caGross = 345000;
+            const waCarry = 42000;
+            const caEntryTax = 1060000;
+            const estateExempt = 6140000;
+            const estateTaxRate = 0.20;
+
+            // Dynamic Mortgage Calculations
+            const calcAnnualMortgage = (principal, rate) => {
+                if (rate <= 0) return principal / 30; 
+                const rMo = rate / 12;
+                const n = 360; 
+                const moPmt = principal * (rMo * Math.pow(1 + rMo, n)) / (Math.pow(1 + rMo, n) - 1);
+                return moPmt * 12;
+            };
+
+            const caMortgage = calcAnnualMortgage(caHome * (1 - dpPct), intRate);
+            const caStaticBase = caHome * 0.0175;
+            const caCarry = caMortgage + caStaticBase; 
+            
+            const flMortgage = calcAnnualMortgage(flHome * (1 - dpPct), intRate);
+            const flStaticBase = flHome * 0.0225;
+            const flCarry = flMortgage + flStaticBase; 
+
+            // Dynamic Timelines
+            const retireStartYear = 2028; 
+            const years = endYear - retireStartYear; 
+            
+            const flHoldYrs = endYear - flPurchaseYr;
+            const caHoldEarlyYrs = endYear - caPurchaseYrEarly;
+            const caHoldPath2Yrs = endYear - caPurchaseYrPath2;
+            const caHoldPath5Yrs = endYear - caPurchaseYrPath5;
+
+            const netRentWA = (waRentMonthly * 12) * (1 - mgmtFee);
+            const netRentCA = (caRentMonthly * 12) * (1 - mgmtFee);
+
+            // Formula Helpers
+            const calcAnnuity = (pmt, n) => {
+                if (n <= 0) return 0;
+                if (Math.abs(r - g) < 0.0001) return pmt * n * Math.pow(1 + r, n - 1); 
+                return pmt * ((Math.pow(1 + r, n) - Math.pow(1 + g, n)) / (r - g));
+            };
+            const calcFVRealEstate = (val, apprec, n) => {
+                if (n <= 0) return val;
+                return val * Math.pow(1 + apprec, n);
+            };
+
+            // Real Estate End Values
+            const fvWa = calcFVRealEstate(waHome, waApprec, years);
+            const fvFl = calcFVRealEstate(flHome, flApprec, flHoldYrs);
+            const fvCaEarly = calcFVRealEstate(caHome, caApprec, caHoldEarlyYrs);
+            const fvCaPath2 = calcFVRealEstate(caHome, caApprec, caHoldPath2Yrs);
+            const fvCaPath5 = calcFVRealEstate(caHome, caApprec, caHoldPath5Yrs);
+
+            const results = [];
+            const labels = [];
+            const liquidData = [];
+            const realEstateData = [];
+            const taxData = [];
+
+            // --- Pathway 1 ---
+            let p1Liq = startLiq * Math.pow(1 + r, years) - calcAnnuity(baseLife, years);
+            let p1Estate = fvWa + p1Liq;
+            let p1Tax = p1Estate > estateExempt ? (p1Estate - estateExempt) * estateTaxRate : 0;
+            results.push({
+                name: "Path 1: Stay in WA", liq: p1Liq, re: fvWa, tax: -p1Tax, net: p1Estate - p1Tax,
+                details: `
+                    <div>
+                        <h4>Liquid Capital Mechanics</h4>
+                        <ul>
+                            <li><strong>Starting Portfolio:</strong> ${formatCurrency(startLiq)}</li>
+                            <li><strong>Year 1 Withdrawal Breakdown:</strong> Total ${formatCurrency(baseLife)}
+                                <ul>
+                                    <li>General Living Expenses: ${formatCurrency(baseLife - waCarry)}</li>
+                                    <li>WA Home Carrying Costs: ${formatCurrency(waCarry)} (Taxes, Insurance, HOA)</li>
+                                </ul>
+                            </li>
+                            <li><strong>Compounding Engine:</strong> To preserve purchasing power, withdrawals inflate at ${formatPct(g)} annually. The remaining capital in the portfolio grows at ${formatPct(r)} annually over the ${years}-year horizon.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Real Estate & Estate Tax</h4>
+                        <ul>
+                            <li><strong>WA Home Growth:</strong> ${formatCurrency(fvWa)}<br><em>Calculated as ${formatCurrency(waHome)} appreciating at ${formatPct(waApprec)} annually for ${years} years.</em></li>
+                            <li><strong>Gross Estate Size:</strong> ${formatCurrency(p1Estate)}</li>
+                            <li><strong>WA Estate Tax Liability:</strong> ${formatCurrency(p1Tax)}<br><em>Calculated by subtracting the ${formatCurrency(estateExempt)} bypass trust exemption from the Gross Estate, and taxing the remainder at roughly ${formatPct(estateTaxRate)}.</em></li>
+                        </ul>
+                    </div>
+                `
+            });
+
+            // --- Pathway 2 ---
+            let caDpAmt = caHome * dpPct;
+            let p2Start = startLiq - caEntryTax - caDpAmt;
+            let p2Pmt = caGross + caCarry + waCarry - netRentWA;
+            let p2Liq = p2Start * Math.pow(1 + r, years) - calcAnnuity(p2Pmt, years);
+            let p2Re = fvWa + fvCaPath2;
+            results.push({
+                name: "Path 2: Immediate CA", liq: p2Liq, re: p2Re, tax: 0, net: p2Liq + p2Re,
+                details: `
+                    <div>
+                        <h4>Liquid Capital Mechanics</h4>
+                        <ul>
+                            <li><strong>Starting Portfolio:</strong> ${formatCurrency(p2Start)}<br><em>The initial ${formatCurrency(startLiq)} is permanently reduced by the ${formatCurrency(caEntryTax)} CA Entry Tax (capital gains) and a ${formatCurrency(caDpAmt)} down payment (${formatPct(dpPct)} of the CA home value).</em></li>
+                            <li><strong>Year 1 Withdrawal Breakdown:</strong> Net withdrawal of ${formatCurrency(p2Pmt)}
+                                <ul>
+                                    <li>California Gross Lifestyle: ${formatCurrency(caGross)}</li>
+                                    <li><strong>CA Total Carrying Costs: ${formatCurrency(caCarry)}</strong><br><em>(${formatCurrency(caMortgage)} Mortgage P&I + ${formatCurrency(caStaticBase)} Static Taxes/Ins/HOA)</em></li>
+                                    <li>WA Static Carrying Costs: ${formatCurrency(waCarry)}</li>
+                                    <li><em>Minus</em> WA Net Rental Income: -${formatCurrency(netRentWA)} (After ${formatPct(mgmtFee)} mgmt fee)</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Real Estate & Estate Tax</h4>
+                        <ul>
+                            <li><strong>WA Home Growth:</strong> ${formatCurrency(fvWa)}</li>
+                            <li><strong>CA Home Growth:</strong> ${formatCurrency(fvCaPath2)}<br><em>(${formatCurrency(caHome)} appreciating at ${formatPct(caApprec)} annually for ${caHoldPath2Yrs} years).</em></li>
+                            <li><strong>WA Estate Tax Liability:</strong> $0<br><em>Because you are legally domiciled in California at the time of passing, the punitive Washington state estate tax does not apply.</em></li>
+                        </ul>
+                    </div>
+                `
+            });
+
+            // --- Pathway 3 ---
+            let flDpAmt = flHome * dpPct;
+            let p3Start = startLiq - flDpAmt;
+            let p3Pmt = baseLife + flCarry + waCarry - netRentWA;
+            let p3Liq = p3Start * Math.pow(1 + r, years) - calcAnnuity(p3Pmt, years);
+            let p3Re = fvWa + fvFl;
+            results.push({
+                name: "Path 3: Immediate FL", liq: p3Liq, re: p3Re, tax: 0, net: p3Liq + p3Re,
+                details: `
+                    <div>
+                        <h4>Liquid Capital Mechanics</h4>
+                        <ul>
+                            <li><strong>Starting Portfolio:</strong> ${formatCurrency(p3Start)}<br><em>The initial ${formatCurrency(startLiq)} is reduced by a ${formatCurrency(flDpAmt)} down payment (${formatPct(dpPct)} of the FL home value). No entry taxes are triggered.</em></li>
+                            <li><strong>Year 1 Withdrawal Breakdown:</strong> Net withdrawal of ${formatCurrency(p3Pmt)}
+                                <ul>
+                                    <li>Standard Lifestyle: ${formatCurrency(baseLife)}</li>
+                                    <li><strong>FL Total Carrying Costs: ${formatCurrency(flCarry)}</strong><br><em>(${formatCurrency(flMortgage)} Mortgage P&I + ${formatCurrency(flStaticBase)} Static Taxes/CDD/HOA)</em></li>
+                                    <li>WA Static Carrying Costs: ${formatCurrency(waCarry)}</li>
+                                    <li><em>Minus</em> WA Net Rental Income: -${formatCurrency(netRentWA)}</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Real Estate & Estate Tax</h4>
+                        <ul>
+                            <li><strong>WA Home Growth:</strong> ${formatCurrency(fvWa)}</li>
+                            <li><strong>FL Home Growth:</strong> ${formatCurrency(fvFl)}<br><em>(${formatCurrency(flHome)} appreciating at ${formatPct(flApprec)} annually for ${flHoldYrs} years).</em></li>
+                            <li><strong>WA Estate Tax Liability:</strong> $0<br><em>Florida does not levy a state income tax or a state estate tax, fully protecting the compounding portfolio and the legacy.</em></li>
+                        </ul>
+                    </div>
+                `
+            });
+
+            // --- Pathway 4 ---
+            let p4Start = startLiq - caDpAmt;
+            let p4Pmt1 = baseLife + caCarry + waCarry + 32500 - netRentCA;
+            let p4Pmt2 = caGross + caCarry + waCarry - netRentWA;
+            let p4Liq7 = p4Start * Math.pow(1 + r, 7) - calcAnnuity(p4Pmt1, 7);
+            let inflatedP4Pmt2 = p4Pmt2 * Math.pow(1 + g, 7);
+            let p4LiqFinal = p4Liq7 * Math.pow(1 + r, years - 7) - calcAnnuity(inflatedP4Pmt2, years - 7);
+            let p4Re = fvWa + fvCaEarly;
+            results.push({
+                name: "Path 4: Delayed CA", liq: p4LiqFinal, re: p4Re, tax: 0, net: p4LiqFinal + p4Re,
+                details: `
+                    <div>
+                        <h4>Liquid Capital Mechanics (Two Phases)</h4>
+                        <ul>
+                            <li><strong>Starting Portfolio:</strong> ${formatCurrency(p4Start)} <em>(Initial minus CA Downpayment)</em></li>
+                            <li><strong>Phase 1 (Yrs 1-7) Net Withdrawal:</strong> ${formatCurrency(p4Pmt1)}
+                                <ul>
+                                    <li>Standard Base (${formatCurrency(baseLife)}) + CA Carry (${formatCurrency(caCarry)}) + WA Carry (${formatCurrency(waCarry)})</li>
+                                    <li><em>Minus</em> CA Net Rent (-${formatCurrency(netRentCA)}) <em>Plus</em> WA Winter Rent Loss ($32,500)</li>
+                                </ul>
+                            </li>
+                            <li><strong>Phase 2 (Yrs 8-27) Net Withdrawal:</strong> ${formatCurrency(p4Pmt2)}
+                                <ul>
+                                    <li>Moves to CA Gross Base (${formatCurrency(caGross)}) + CA/WA Carry Costs</li>
+                                    <li><em>Minus</em> full-time WA Net Rent (-${formatCurrency(netRentWA)})</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Real Estate & Estate Tax</h4>
+                        <ul>
+                            <li><strong>WA Home Growth:</strong> ${formatCurrency(fvWa)}</li>
+                            <li><strong>CA Home Growth:</strong> ${formatCurrency(fvCaEarly)}<br><em>Because this home was purchased early (Year ${caPurchaseYrEarly}), it benefits from a longer ${caHoldEarlyYrs}-year appreciation window.</em></li>
+                            <li><strong>WA Estate Tax Liability:</strong> $0</li>
+                        </ul>
+                    </div>
+                `
+            });
+
+            // --- Pathway 5 ---
+            let p5Start = startLiq - flDpAmt - caDpAmt;
+            let p5Pmt = baseLife + flCarry + caCarry + waCarry - netRentWA - netRentCA;
+            let p5Liq = p5Start * Math.pow(1 + r, years) - calcAnnuity(p5Pmt, years);
+            let p5Re = fvWa + fvFl + fvCaPath5;
+            results.push({
+                name: "Path 5: Hybrid FL/CA", liq: p5Liq, re: p5Re, tax: 0, net: p5Liq + p5Re,
+                details: `
+                    <div>
+                        <h4>Liquid Capital Mechanics</h4>
+                        <ul>
+                            <li><strong>Starting Portfolio:</strong> ${formatCurrency(p5Start)}<br><em>Reduced by the FL down payment (${formatCurrency(flDpAmt)}) and CA down payment (${formatCurrency(caDpAmt)}).</em></li>
+                            <li><strong>Year 1 Withdrawal Breakdown:</strong> Net withdrawal of ${formatCurrency(p5Pmt)}
+                                <ul>
+                                    <li>Standard Lifestyle: ${formatCurrency(baseLife)}</li>
+                                    <li>Total Carrying Costs: FL (${formatCurrency(flCarry)}) + CA (${formatCurrency(caCarry)}) + WA (${formatCurrency(waCarry)})</li>
+                                    <li><strong>The Dual Rental Offset:</strong> Generating full-time net rent from both WA (-${formatCurrency(netRentWA)}) and CA (-${formatCurrency(netRentCA)}) massively subsidizes the carry costs of owning three properties.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Real Estate & Estate Tax</h4>
+                        <ul>
+                            <li><strong>WA Home Growth:</strong> ${formatCurrency(fvWa)}</li>
+                            <li><strong>FL Home Growth:</strong> ${formatCurrency(fvFl)}</li>
+                            <li><strong>CA Home Growth:</strong> ${formatCurrency(fvCaPath5)}</li>
+                            <li><strong>WA Estate Tax Liability:</strong> $0<br><em>Legally domiciled in Florida, fully shielded from both state income tax and the Washington state estate tax.</em></li>
+                        </ul>
+                    </div>
+                `
+            });
+
+            // Render Table & Chart Data
+            const tbody = document.querySelector('#resultsTable tbody');
+            tbody.innerHTML = '';
+            
+            results.forEach((row, index) => {
+                labels.push(row.name.replace(/Path \d: /, ''));
+                liquidData.push(row.liq);
+                realEstateData.push(row.re);
+                taxData.push(row.tax); 
+
+                // Main Clickable Row
+                let tr = document.createElement('tr');
+                tr.id = `main-row-${index}`;
+                tr.className = 'clickable-row';
+                tr.onclick = () => toggleRow(index);
+                tr.innerHTML = `
+                    <td><span class="toggle-icon">►</span> ${row.name}</td>
+                    <td class="currency">${formatCurrency(row.liq)}</td>
+                    <td class="currency">${formatCurrency(row.re)}</td>
+                    <td class="currency negative">${row.tax === 0 ? '$0' : formatCurrency(row.tax)}</td>
+                    <td class="currency positive">${formatCurrency(row.net)}</td>
+                `;
+                tbody.appendChild(tr);
+
+                // Hidden Details Row
+                let detailTr = document.createElement('tr');
+                detailTr.id = `detail-row-${index}`;
+                detailTr.className = 'details-row';
+                detailTr.innerHTML = `
+                    <td colspan="5">
+                        <div class="details-content">
+                            ${row.details}
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(detailTr);
+            });
+
+            // Attempt to Render Chart
+            updateChart(labels, liquidData, realEstateData, taxData);
+
+        } catch (error) {
+            const tbody = document.querySelector('#resultsTable tbody');
+            tbody.innerHTML = `<tr><td colspan="5" style="color:red; font-weight:bold;">Calculator Error: ${error.message}</td></tr>`;
+            console.error("Calculation failed:", error);
+        }
+    }
+
+    function updateChart(labels, liquid, realEstate, tax) {
+        if (typeof Chart === 'undefined') {
+            document.getElementById('chartWrapper').innerHTML = '<p style="color:red; text-align:center; padding-top:150px;"><b>Chart failed to load.</b><br>Check if an ad-blocker or firewall is blocking jsdelivr.com.</p>';
+            return;
+        }
+
+        const ctx = document.getElementById('legacyChart').getContext('2d');
+        if (legacyChartInstance) { legacyChartInstance.destroy(); }
+
+        legacyChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'Liquid Portfolio ($)', data: liquid, backgroundColor: '#3b82f6', stack: 'Stack 0' },
+                    { label: 'Real Estate Portfolio ($)', data: realEstate, backgroundColor: '#10b981', stack: 'Stack 0' },
+                    { label: 'WA Estate Tax Withheld ($)', data: tax, backgroundColor: '#ef4444', stack: 'Stack 0' }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    title: { display: true, text: 'Total 2055 Net Legacy Breakdown', font: { size: 16 } },
+                    tooltip: { callbacks: { label: function(context) { return context.dataset.label + ': ' + new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(context.parsed.y); } } }
+                },
+                scales: { x: { stacked: true }, y: { stacked: true, ticks: { callback: function(value) { return '$' + (value / 1000000).toFixed(1) + 'M'; } } } }
+            }
+        });
+    }
+
+    window.onload = calculate;
+</script>
+</body>
+</html>
