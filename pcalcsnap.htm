@@ -3,10 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Retirement Multi-Pathway Workstation</title>
+    <title>Retirement Multi-Pathway Workstation | Pro Edition</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --primary: #3b82f6; --baseline: #94a3b8; --success: #10b981; --danger: #ef4444; --bg: #f8fafc; --title-bar: #1e293b; }
+        :root { 
+            --primary: #3b82f6; 
+            --baseline: #94a3b8; 
+            --success: #10b981; 
+            --danger: #ef4444; 
+            --title-bar: #1e293b; 
+            --sidebar-bg: #f8fafc;
+        }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background-color: #f1f5f9; color: #1e293b; padding: 0; margin: 0; }
         
         .container { max-width: 98vw; margin: auto; padding: 0 20px 20px 20px; }
@@ -23,54 +30,65 @@
         .stat-label { font-size: 10px; color: #94a3b8; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
         .stat-value { font-size: 20px; font-weight: 800; font-family: monospace; color: white; }
 
-        /* Collapsible Scenario Drawer */
+        /* Scenario Manager Drawer */
         .scenario-drawer { 
-            background: #f8fafc; border-bottom: 2px solid #e2e8f0; 
+            background: #f1f5f9; border-bottom: 2px solid #cbd5e1; 
             max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; 
         }
         .scenario-drawer.expanded { max-height: 500px; padding: 20px 0; }
-        
         .scenario-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; padding: 0 40px; }
+        
         .scenario-card { 
             background: white; border: 2px solid #e2e8f0; padding: 12px; border-radius: 8px; 
             transition: all 0.2s; display: flex; flex-direction: column; gap: 8px; color: #333;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
         .scenario-card.empty { border: 2px dashed #cbd5e1; background: transparent; justify-content: center; align-items: center; cursor: pointer; color: #94a3b8; }
-        .scenario-card.empty:hover { border-color: var(--primary); color: var(--primary); }
+        .scenario-card.empty:hover { border-color: var(--primary); color: var(--primary); background: white; }
         .scenario-card.active-baseline { border-color: var(--primary); background: #eff6ff; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1); }
         
         .name-input { width: 100%; border: 1px solid #cbd5e1; border-radius: 4px; padding: 6px; font-weight: bold; font-size: 12px; box-sizing: border-box; }
         .card-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; }
 
-        /* Core Layout */
+        /* Sidebar Inputs */
         .dashboard-grid { display: grid; grid-template-columns: 420px 1fr; gap: 20px; padding: 20px 0; }
-        .inputs-section { background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; position: sticky; top: 85px; max-height: calc(100vh - 110px); overflow-y: auto; }
+        .inputs-section { background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; position: sticky; top: 85px; max-height: calc(100vh - 110px); overflow-y: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         
-        h3 { font-size: 12px; margin-top: 15px; border-bottom: 1px solid #f1f5f9; padding-bottom: 5px; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; }
-        .input-grid-5 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 10px; }
+        h3 { font-size: 12px; margin-top: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 5px; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; }
+        .input-grid-5 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
         .input-group label { display: block; font-size: 10px; font-weight: bold; color: #64748b; margin-bottom: 3px; }
-        .input-group input { width: 100%; min-width: 60px; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px; font-family: monospace; box-sizing: border-box; }
+        .input-group input { width: 100%; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px; font-family: monospace; box-sizing: border-box; }
 
+        /* Stress Test & Overrides Styling */
+        .event-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; background: #f8fafc; padding: 8px; border-radius: 6px; border: 1px solid #e2e8f0; }
+        .input-wrapper { position: relative; width: 100%; display: flex; align-items: center; }
+        .symbol-right { position: absolute; right: 8px; color: #64748b; font-weight: bold; font-size: 12px; }
+        .symbol-left { position: absolute; left: 8px; color: #64748b; font-weight: bold; font-size: 12px; }
+        .input-wrapper input.has-left { padding-left: 20px; }
+        .input-wrapper input.has-right { padding-right: 22px; }
+
+        /* Output Styling */
         .outputs-section { display: flex; flex-direction: column; gap: 20px; }
-        .chart-container { background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; height: 500px; }
-        .table-container { background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: auto; }
+        .chart-container { background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; height: 500px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .table-container { background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         
         table { width: 100%; border-collapse: collapse; min-width: 1000px; }
-        th, td { padding: 10px 12px; font-size: 11px; text-align: right; border-bottom: 1px solid #f1f5f9; font-family: monospace; }
-        th { background: #f8fafc; font-weight: 700; position: sticky; top: 0; z-index: 5; }
+        th, td { padding: 12px; font-size: 11px; text-align: right; border-bottom: 1px solid #f1f5f9; font-family: monospace; }
+        th { background: #f8fafc; font-weight: 700; position: sticky; top: 0; z-index: 5; color: #475569; }
         
         .compare-col { display: none; }
         .compare-active .compare-col { display: table-cell; }
-
-        .delta-col { background-color: #fef2f2; color: var(--danger); font-weight: bold; width: 110px; }
-        .delta-pos { background-color: #f0fdf4; color: var(--success); }
+        .delta-col { background-color: #fef2f2; color: var(--danger); font-weight: bold; }
+        .delta-pos { background-color: #f0fdf4 !important; color: var(--success) !important; }
         .base-col { color: var(--baseline); border-left: 1px solid #f1f5f9; background: #fafafa; }
         
         .btn { border: 1px solid #cbd5e1; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer; background: white; padding: 6px; transition: 0.2s; }
-        .btn:hover:not(:disabled) { background: #f1f5f9; }
+        .btn:hover:not(:disabled) { background: #f1f5f9; border-color: #94a3b8; }
         .btn-active { background: var(--primary) !important; color: white !important; border-color: var(--primary); }
-        .btn-manage { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); font-size: 11px; padding: 6px 12px; color: white; }
+        .btn-manage { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); font-size: 11px; padding: 6px 15px; color: white; border-radius: 20px; }
         .btn-manage:hover { background: rgba(255,255,255,0.2); }
+        .btn-add-row { background: #f1f5f9; border: 1px dashed #cbd5e1; color: #475569; width: 100%; margin-top: 5px; }
+        .btn-add-row:hover { background: #e2e8f0; border-style: solid; }
     </style>
 </head>
 <body>
@@ -78,11 +96,11 @@
 <div class="summary-ribbon">
     <div class="stat-group">
         <div class="stat-item"><span class="stat-label">Final Net Worth (Live)</span><span class="stat-value" id="valNW">$0</span></div>
-        <div class="stat-item"><span class="stat-label">NW Difference</span><span class="stat-value" id="deltaNW">$0</span></div>
+        <div class="stat-item"><span class="stat-label">NW vs Baseline</span><span class="stat-value" id="deltaNW">$0</span></div>
     </div>
     <div style="display: flex; gap: 20px; align-items: center;">
         <div style="font-size: 11px; font-weight: bold; color: #94a3b8;">
-            Baseline: <span id="comparingToText" style="color: var(--primary)">None Selected</span>
+            Comparing To: <span id="comparingToText" style="color: var(--primary)">None</span>
         </div>
         <button class="btn btn-manage" onclick="toggleDrawer()">⚙️ Manage Scenarios</button>
     </div>
@@ -95,25 +113,26 @@
 <div class="container">
     <div class="dashboard-grid">
         <aside class="inputs-section">
-            <h3>Fundamentals</h3>
+            <h3>Initial Assets & Constants</h3>
             <div class="input-grid-5" style="grid-template-columns: 1fr 1fr;">
                 <div class="input-group"><label>Start Year</label><input type="number" id="startYear" value="2028" oninput="calculate()"></div>
                 <div class="input-group"><label>Inflation %</label><input type="number" id="inflation" value="4.0" step="0.1" oninput="calculate()"></div>
                 <div class="input-group"><label>Investments $</label><input type="text" id="startLiquid" value="10,000,000" oninput="formatCurrencyInput(this)"></div>
-                <div class="input-group"><label>Growth %</label><input type="number" id="stockGrowth" value="7.0" step="0.1" oninput="calculate()"></div>
-                <div class="input-group"><label>House $</label><input type="text" id="startHouse" value="3,000,000" oninput="formatCurrencyInput(this)"></div>
-                <div class="input-group"><label>Apprec %</label><input type="number" id="reApprec" value="4.0" step="0.1" oninput="calculate()"></div>
+                <div class="input-group"><label>Stock Growth %</label><input type="number" id="stockGrowth" value="7.0" step="0.1" oninput="calculate()"></div>
+                <div class="input-group"><label>House Value $</label><input type="text" id="startHouse" value="3,000,000" oninput="formatCurrencyInput(this)"></div>
+                <div class="input-group"><label>RE Apprec %</label><input type="number" id="reApprec" value="4.0" step="0.1" oninput="calculate()"></div>
             </div>
 
             <h3>Monthly Spend ($)</h3><div class="input-grid-5" id="spendGrid"></div>
             <h3>Monthly Income ($)</h3><div class="input-grid-5" id="incomeGrid"></div>
             <h3>Tax Rates (%)</h3><div class="input-grid-5" id="taxGrid"></div>
 
-            <h3>Overrides</h3>
+            <h3>Stress Test & Event Overrides</h3>
             <div id="dynamicReturns"></div>
-            <button class="btn" style="width:100%; margin-bottom:10px" onclick="addRow('return')">+ Growth Year Override</button>
-            <div id="dynamicEvents"></div>
-            <button class="btn" style="width:100%" onclick="addRow('event')">+ Cash Flow Event</button>
+            <button class="btn btn-add-row" onclick="addRow('return')">+ Add Growth Override</button>
+            
+            <div id="dynamicEvents" style="margin-top:15px;"></div>
+            <button class="btn btn-add-row" onclick="addRow('event')">+ Add One-Time Cash Event</button>
         </aside>
 
         <main class="outputs-section">
@@ -123,15 +142,15 @@
                     <thead>
                         <tr>
                             <th style="text-align: center;">Year</th>
-                            <th>Withdraw</th>
-                            <th style="color: var(--primary)">Liq (Live)</th>
+                            <th>Withdrawal</th>
+                            <th style="color: var(--primary)">End Liq (Live)</th>
                             <th class="base-col compare-col">Liq (Base)</th>
                             <th class="delta-col compare-col">Liq Δ</th>
                             <th>House (Live)</th>
                             <th class="base-col compare-col">House (Base)</th>
                             <th class="delta-col compare-col">House Δ</th>
-                            <th>Nominal NW</th>
-                            <th style="background:#f0fdf4">Real Power</th>
+                            <th>Total NW</th>
+                            <th style="background:#f0fdf4">Purchasing Power</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -142,9 +161,9 @@
 </div>
 
 <script>
-    let scenarios = JSON.parse(localStorage.getItem('scenData4')) || { A: null, B: null, C: null, D: null };
-    let scenarioNames = JSON.parse(localStorage.getItem('scenNames4')) || { A: '', B: '', C: '', D: '' };
-    let baselineSlot = localStorage.getItem('baseSlot4') || null;
+    let scenarios = JSON.parse(localStorage.getItem('scenData_v5')) || { A: null, B: null, C: null, D: null };
+    let scenarioNames = JSON.parse(localStorage.getItem('scenNames_v5')) || { A: '', B: '', C: '', D: '' };
+    let baselineSlot = localStorage.getItem('baseSlot_v5') || null;
     let chartObj = null;
     const fmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 
@@ -156,14 +175,14 @@
             for (let i = 1; i <= 8; i++) {
                 let def;
                 if (k === 'spend') {
-                    if (i <= 2) def = 25000;      // Yrs 1-10
-                    else if (i <= 4) def = 20000; // Yrs 11-20
-                    else def = 15000;             // Yrs 21-40
+                    if (i <= 2) def = 25000;      
+                    else if (i <= 4) def = 20000; 
+                    else def = 15000;             
                 } else if (k === 'tax') {
-                    if (i <= 2) def = 15;         // Yrs 1-10
-                    else if (i <= 4) def = 12;     // Yrs 11-20
-                    else if (i <= 6) def = 10;     // Yrs 21-30
-                    else def = 8;                 // Yrs 31-40
+                    if (i <= 2) def = 15;         
+                    else if (i <= 4) def = 12;     
+                    else if (i <= 6) def = 10;     
+                    else def = 8;                 
                 } else def = 0;
 
                 const div = document.createElement('div');
@@ -174,7 +193,6 @@
         });
     }
 
-    // Logic remains consistent with previous robust version
     function formatCurrencyInput(el) {
         let v = el.value.replace(/,/g, '').replace(/[^\d.]/g, '');
         if (v) el.value = Number(v).toLocaleString();
@@ -185,8 +203,8 @@
         const v = id => Number(document.getElementById(id).value.replace(/,/g, ''));
         const inp = { startYear: v('startYear'), inflation: v('inflation')/100, startLiquid: v('startLiquid'), stockGrowth: v('stockGrowth')/100, startHouse: v('startHouse'), reApprec: v('reApprec')/100, buckets: [], returns: [], events: [] };
         for (let i = 1; i <= 8; i++) inp.buckets.push({ spend: v(`spend${i}`)*12, income: v(`income${i}`)*12, tax: v(`tax${i}`)/100 });
-        document.querySelectorAll('.dyn-ret').forEach(r => inp.returns.push({ yr: Number(r.dataset.yr), val: Number(r.value)/100 }));
-        document.querySelectorAll('.dyn-evt').forEach(e => inp.events.push({ yr: Number(e.dataset.yr), val: Number(e.value.replace(/,/g, '')) }));
+        document.querySelectorAll('.dyn-ret').forEach(r => inp.returns.push({ yr: Number(r.value), val: Number(r.parentElement.nextElementSibling.querySelector('input').value)/100 }));
+        document.querySelectorAll('.dyn-evt').forEach(e => inp.events.push({ yr: Number(e.value), val: Number(e.parentElement.nextElementSibling.querySelector('input').value.replace(/,/g, '')) }));
         return inp;
     }
 
@@ -246,8 +264,11 @@
     function updateChart(live, base) {
         const ctx = document.getElementById('mainChart').getContext('2d');
         if (chartObj) chartObj.destroy();
-        const ds = [{ label: 'Portfolio', data: live.map(r => r.endLiq), backgroundColor: '#3b82f6', stack: 'A' }, { label: 'Real Estate', data: live.map(r => r.house), backgroundColor: '#10b981', stack: 'A' }];
-        if (base) ds.push({ label: 'Baseline Pathway', data: base.map(r => r.total), borderColor: '#94a3b8', borderDash: [5, 5], type: 'line', fill: false, borderWidth: 2 });
+        const ds = [
+            { label: 'Portfolio Assets', data: live.map(r => r.endLiq), backgroundColor: 'rgba(59, 130, 246, 0.7)', stack: 'A' }, 
+            { label: 'Real Estate Value', data: live.map(r => r.house), backgroundColor: 'rgba(16, 185, 129, 0.7)', stack: 'A' }
+        ];
+        if (base) ds.push({ label: 'Baseline Pathway', data: base.map(r => r.total), borderColor: '#94a3b8', borderDash: [5, 5], type: 'line', fill: false, borderWidth: 3 });
         chartObj = new Chart(ctx, { type: 'bar', data: { labels: live.map(r => r.yr), datasets: ds }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { stacked: true, ticks: { callback: v => '$' + (v/1e6).toFixed(1) + 'M' } }, x: { stacked: true } }, plugins: { legend: { position: 'bottom' } } } });
     }
 
@@ -259,14 +280,14 @@
             const div = document.createElement('div');
             div.className = `scenario-card ${isEmpty ? 'empty' : ''} ${baselineSlot === s ? 'active-baseline' : ''}`;
             if (isEmpty) {
-                div.innerHTML = `<span>+ Save Current as Scenario ${s}</span>`;
+                div.innerHTML = `<span>+ Save New Scenario ${s}</span>`;
                 div.onclick = () => saveSlot(s);
             } else {
                 div.innerHTML = `
                     <div class="stat-label">Scenario ${s}</div>
-                    <input type="text" class="name-input" id="name-${s}" placeholder="Name..." value="${scenarioNames[s]}" onchange="updateScenarioNames()">
+                    <input type="text" class="name-input" id="name-${s}" placeholder="Scenario Name..." value="${scenarioNames[s]}" onchange="updateScenarioNames()">
                     <div class="card-actions">
-                        <button class="btn" onclick="saveSlot('${s}')">Save</button>
+                        <button class="btn" onclick="saveSlot('${s}')">Update</button>
                         <button class="btn" onclick="loadSlot('${s}')">Load</button>
                         <button class="btn" onclick="clearSlot('${s}')" style="color:var(--danger)">Clear</button>
                     </div>
@@ -274,10 +295,10 @@
             }
             grid.appendChild(div);
         });
-        document.getElementById('comparingToText').innerText = baselineSlot ? (scenarioNames[baselineSlot] || `Scenario ${baselineSlot}`) : 'None Selected';
+        document.getElementById('comparingToText').innerText = baselineSlot ? (scenarioNames[baselineSlot] || `Scenario ${baselineSlot}`) : 'None';
     }
 
-    function saveSlot(s) { scenarios[s] = getInputs(); if (!scenarioNames[s]) scenarioNames[s] = `Scenario ${s}`; localStorage.setItem('scenData4', JSON.stringify(scenarios)); localStorage.setItem('scenNames4', JSON.stringify(scenarioNames)); updateScenarioCards(); calculate(); }
+    function saveSlot(s) { scenarios[s] = getInputs(); if (!scenarioNames[s]) scenarioNames[s] = `Scenario ${s}`; localStorage.setItem('scenData_v5', JSON.stringify(scenarios)); localStorage.setItem('scenNames_v5', JSON.stringify(scenarioNames)); updateScenarioCards(); calculate(); }
     function loadSlot(s) { 
         const d = scenarios[s]; if (!d) return;
         document.getElementById('startYear').value = d.startYear;
@@ -291,17 +312,27 @@
         document.getElementById('dynamicEvents').innerHTML = ''; d.events.forEach(e => addRow('event', e.yr, e.val));
         calculate();
     }
-    function clearSlot(s) { scenarios[s] = null; scenarioNames[s] = ''; if (baselineSlot === s) baselineSlot = null; localStorage.setItem('scenData4', JSON.stringify(scenarios)); localStorage.setItem('scenNames4', JSON.stringify(scenarioNames)); localStorage.setItem('baseSlot4', baselineSlot); updateScenarioCards(); calculate(); }
-    function setBaseline(s) { baselineSlot = (baselineSlot === s) ? null : s; localStorage.setItem('baseSlot4', baselineSlot); updateScenarioCards(); calculate(); }
-    function updateScenarioNames() { ['A', 'B', 'C', 'D'].forEach(s => { const el = document.getElementById(`name-${s}`); if (el) scenarioNames[s] = el.value; }); localStorage.setItem('scenNames4', JSON.stringify(scenarioNames)); updateScenarioCards(); }
+    function clearSlot(s) { scenarios[s] = null; scenarioNames[s] = ''; if (baselineSlot === s) baselineSlot = null; localStorage.setItem('scenData_v5', JSON.stringify(scenarios)); localStorage.setItem('scenNames_v5', JSON.stringify(scenarioNames)); localStorage.setItem('baseSlot_v5', baselineSlot); updateScenarioCards(); calculate(); }
+    function setBaseline(s) { baselineSlot = (baselineSlot === s) ? null : s; localStorage.setItem('baseSlot_v5', baselineSlot); updateScenarioCards(); calculate(); }
+    function updateScenarioNames() { ['A', 'B', 'C', 'D'].forEach(s => { const el = document.getElementById(`name-${s}`); if (el) scenarioNames[s] = el.value; }); localStorage.setItem('scenNames_v5', JSON.stringify(scenarioNames)); updateScenarioCards(); }
 
     function addRow(t, yO, vO) {
         const c = document.getElementById(t === 'return' ? 'dynamicReturns' : 'dynamicEvents');
         const yr = yO || (Number(document.getElementById('startYear').value) + 2 + c.children.length);
         const div = document.createElement('div');
         div.className = 'event-row';
-        div.style.display = 'flex'; div.style.gap = '5px'; div.style.marginBottom = '5px'; div.style.alignItems = 'center';
-        div.innerHTML = `<span style="font-size:10px;width:30px">${yr}:</span><input type="${t==='return'?'number':'text'}" class="${t==='return'?'dyn-ret':'dyn-evt'}" data-yr="${yr}" value="${(vO||(t==='return'?-20:50000)).toLocaleString()}" style="width:100%" oninput="calculate()"><button class="btn" style="color:var(--danger); border:none" onclick="this.parentElement.remove();calculate()">×</button>`;
+        div.innerHTML = `
+            <div style="width:50px; font-weight:bold; font-size:11px; color:#475569;">Year</div>
+            <input type="number" class="${t==='return'?'dyn-ret':'dyn-evt'}" value="${yr}" style="width:60px; padding:4px;" oninput="calculate()">
+            <div style="width:60px; font-weight:bold; font-size:11px; color:#475569; margin-left:10px;">${t==='return'?'Return':'Amount'}</div>
+            <div class="input-wrapper">
+                ${t==='event'?'<span class="symbol-left">$</span>':''}
+                <input type="${t==='return'?'number':'text'}" class="${t==='return'?'has-right':'has-left'}" 
+                    value="${(vO||(t==='return'?-20:50000)).toLocaleString()}" 
+                    oninput="${t==='return'?'calculate()':'formatCurrencyInput(this)'}">
+                ${t==='return'?'<span class="symbol-right">%</span>':''}
+            </div>
+            <button class="btn" style="color:var(--danger); border:none; font-size:16px;" onclick="this.parentElement.remove();calculate()">×</button>`;
         c.appendChild(div); if (!yO) calculate();
     }
 
