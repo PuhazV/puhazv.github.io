@@ -18,8 +18,16 @@
         .input-group input { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; font-family: monospace; }
         h3 { margin-top: 0; color: #1e293b; font-size: 16px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; margin-top: 20px; }
 
+        /* Sleek UI formatting for symbols inside input boxes */
         .event-row-input { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
         .event-row-input input { margin-bottom: 0; }
+        .input-wrapper { position: relative; width: 100%; display: flex; align-items: center; }
+        .input-wrapper input { width: 100%; }
+        .symbol-right { position: absolute; right: 10px; color: #64748b; font-weight: bold; pointer-events: none; font-size: 13px; }
+        .symbol-left { position: absolute; left: 10px; color: #64748b; font-weight: bold; pointer-events: none; font-size: 13px; }
+        .input-wrapper input.has-left { padding-left: 25px; }
+        .input-wrapper input.has-right { padding-right: 25px; }
+
         .btn-add { background-color: #3b82f6; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; font-size: 13px; margin-bottom: 10px; }
         .btn-add:hover { background-color: #2563eb; }
         .btn-add:disabled { background-color: #94a3b8; cursor: not-allowed; }
@@ -28,7 +36,7 @@
         .btn-add-alt:hover { background-color: #7c3aed; }
         .btn-add-alt:disabled { background-color: #cbd5e1; cursor: not-allowed; }
 
-        .btn-remove { background-color: #ef4444; color: white; border: none; border-radius: 4px; width: 30px; height: 30px; cursor: pointer; font-weight: bold; flex-shrink: 0; }
+        .btn-remove { background-color: #ef4444; color: white; border: none; border-radius: 4px; width: 28px; height: 28px; cursor: pointer; font-weight: bold; flex-shrink: 0; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 14px;}
         .btn-remove:hover { background-color: #dc2626; }
 
         .outputs-section { display: flex; flex-direction: column; gap: 30px; }
@@ -164,14 +172,16 @@
         
         const defaultYear = Number(document.getElementById('startYear').value) + returnCount;
 
+        // Using embedded % symbol via absolute CSS
         row.innerHTML = `
             <input type="number" placeholder="Year" value="${defaultYear}" class="dyn-return-year" oninput="calculate()" style="width: 40%;">
-            <div style="display: flex; align-items: center; width: 60%; gap: 5px;">
-                <input type="number" placeholder="Return" value="-20" step="1" class="dyn-return-pct" oninput="calculate()" style="width: 100%;">
-                <span style="font-weight: bold; color: #475569; padding-right: 5px;">%</span>
+            <div class="input-wrapper" style="width: 60%;">
+                <input type="number" placeholder="Return" value="-20" step="1" class="dyn-return-pct has-right" oninput="calculate()">
+                <span class="symbol-right">%</span>
             </div>
-            <button class="btn-remove" onclick="removeReturnRow(this)" title="Remove Custom Return">X</button>
-        `;       
+            <button class="btn-remove" onclick="removeReturnRow(this)" title="Remove Custom Return">✕</button>
+        `;
+        
         container.appendChild(row);
         returnCount++;
         
@@ -205,10 +215,14 @@
         
         const defaultYear = Number(document.getElementById('startYear').value) + 2 + eventCount;
 
+        // Using embedded $ symbol via absolute CSS
         row.innerHTML = `
             <input type="number" placeholder="Year" value="${defaultYear}" class="dyn-event-year" oninput="calculate()" style="width: 40%;">
-            <input type="text" placeholder="Amount ($)" value="50,000" class="dyn-event-amt" oninput="formatCurrencyInput(this)" style="width: 60%;">
-            <button class="btn-remove" onclick="removeEventRow(this)" title="Remove Event">X</button>
+            <div class="input-wrapper" style="width: 60%;">
+                <span class="symbol-left">$</span>
+                <input type="text" placeholder="Amount" value="50,000" class="dyn-event-amt has-left" oninput="formatCurrencyInput(this)">
+            </div>
+            <button class="btn-remove" onclick="removeEventRow(this)" title="Remove Event">✕</button>
         `;
         
         container.appendChild(row);
@@ -265,7 +279,6 @@
             const fixedIncome = getNum('fixedIncome') * 12; 
             const fixedIncomeYear = getNum('fixedIncomeYear');
 
-            // Gather dynamically added custom returns
             const activeReturns = [];
             document.querySelectorAll('#dynamicReturnsContainer .event-row-input').forEach(row => {
                 const y = Number(row.querySelector('.dyn-return-year').value);
@@ -273,7 +286,6 @@
                 if (y && !isNaN(r)) activeReturns.push({ year: y, returnPct: r });
             });
 
-            // Gather dynamically added events
             const activeEvents = [];
             document.querySelectorAll('#dynamicEventsContainer .event-row-input').forEach(row => {
                 const y = Number(row.querySelector('.dyn-event-year').value);
@@ -324,7 +336,6 @@
                     isDepleted = true;
                 }
                 
-                // Determine Growth: Check for custom return override
                 let currentYearGrowth = stockGrowth;
                 let customReturnApplied = false;
                 activeReturns.forEach(r => {
@@ -346,13 +357,11 @@
                 liquidData.push(endLiquid);
                 reData.push(endHouse);
 
-                // Build table row
                 let tr = document.createElement('tr');
                 if (eventTotalThisYear > 0 || customReturnApplied) tr.classList.add('highlight-row');
                 
                 let liqColor = isDepleted ? 'color:#dc2626; font-weight:bold;' : 'color:#2563eb;';
                 
-                // Add icons to the year string for clarity
                 let yearString = `${currentYear}`;
                 if (eventTotalThisYear > 0) yearString += ' ★';
                 if (customReturnApplied) yearString += currentYearGrowth < 0 ? ' 📉' : ' 📈';
