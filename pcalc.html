@@ -20,9 +20,14 @@
 
         .event-row-input { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
         .event-row-input input { margin-bottom: 0; }
-        .btn-add { background-color: #3b82f6; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; font-size: 13px; }
+        .btn-add { background-color: #3b82f6; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; font-size: 13px; margin-bottom: 10px; }
         .btn-add:hover { background-color: #2563eb; }
         .btn-add:disabled { background-color: #94a3b8; cursor: not-allowed; }
+        
+        .btn-add-alt { background-color: #8b5cf6; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; font-size: 13px; margin-bottom: 10px; }
+        .btn-add-alt:hover { background-color: #7c3aed; }
+        .btn-add-alt:disabled { background-color: #cbd5e1; cursor: not-allowed; }
+
         .btn-remove { background-color: #ef4444; color: white; border: none; border-radius: 4px; width: 30px; height: 30px; cursor: pointer; font-weight: bold; flex-shrink: 0; }
         .btn-remove:hover { background-color: #dc2626; }
 
@@ -36,7 +41,7 @@
         th:first-child, td:first-child { text-align: center; }
         tr:hover { background-color: #f1f5f9; }
         
-        .event-row { background-color: #fef08a !important; } 
+        .highlight-row { background-color: #fef08a !important; } 
         
         @media (max-width: 900px) {
             .dashboard-grid { grid-template-columns: 1fr; }
@@ -64,14 +69,10 @@
                 <input type="text" id="startHouse" value="3,000,000" oninput="formatCurrencyInput(this)">
             </div>
 
-            <h3>Growth & Stress Tests</h3>
+            <h3>Growth & Inflation</h3>
             <div class="input-group">
                 <label>Avg Stock Growth Rate (%)</label>
                 <input type="number" id="stockGrowth" value="7" step="0.1" oninput="calculate()">
-            </div>
-            <div class="input-group">
-                <label>Year 1 Market Drop (%) [Risk Test]</label>
-                <input type="number" id="bearMarket" value="0" step="1" oninput="calculate()">
             </div>
             <div class="input-group">
                 <label>Real Estate Appreciation (%)</label>
@@ -81,6 +82,11 @@
                 <label>Inflation Rate (%)</label>
                 <input type="number" id="inflation" value="4" step="0.1" oninput="calculate()">
             </div>
+
+            <h3>Custom Market Returns (Stress Test)</h3>
+            <div id="dynamicReturnsContainer">
+                </div>
+            <button id="addReturnBtn" class="btn-add-alt" onclick="addReturnRow()">+ Add Custom Market Year (Max 10)</button>
 
             <h3>Base Monthly Withdrawals</h3>
             <div class="input-group">
@@ -146,13 +152,51 @@
     let projectionChartInstance = null; 
     const formatCurrency = (num) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(num);
 
+    // --- Dynamic Custom Returns Logic ---
+    let returnCount = 0;
+    const MAX_RETURNS = 10;
+
+    function addReturnRow() {
+        if (returnCount >= MAX_RETURNS) return;
+        const container = document.getElementById('dynamicReturnsContainer');
+        const row = document.createElement('div');
+        row.className = 'event-row-input';
+        
+        const defaultYear = Number(document.getElementById('startYear').value) + returnCount;
+
+        row.innerHTML = `
+            <input type="number" placeholder="Year" value="${defaultYear}" class="dyn-return-year" oninput="calculate()" style="width: 40%;">
+            <input type="number" placeholder="Return (%)" value="-20" step="1" class="dyn-return-pct" oninput="calculate()" style="width: 60%;">
+            <button class="btn-remove" onclick="removeReturnRow(this)" title="Remove Custom Return">X</button>
+        `;
+        
+        container.appendChild(row);
+        returnCount++;
+        
+        if (returnCount >= MAX_RETURNS) {
+            document.getElementById('addReturnBtn').disabled = true;
+            document.getElementById('addReturnBtn').innerText = 'Max 10 Returns Reached';
+        }
+        calculate(); 
+    }
+
+    function removeReturnRow(btnElem) {
+        const row = btnElem.parentElement;
+        row.remove();
+        returnCount--;
+        
+        document.getElementById('addReturnBtn').disabled = false;
+        document.getElementById('addReturnBtn').innerText = '+ Add Custom Market Year (Max 10)';
+        calculate(); 
+    }
+
+
     // --- Dynamic Events Logic ---
     let eventCount = 0;
     const MAX_EVENTS = 10;
 
     function addEventRow() {
         if (eventCount >= MAX_EVENTS) return;
-        
         const container = document.getElementById('dynamicEventsContainer');
         const row = document.createElement('div');
         row.className = 'event-row-input';
@@ -160,8 +204,8 @@
         const defaultYear = Number(document.getElementById('startYear').value) + 2 + eventCount;
 
         row.innerHTML = `
-            <input type="number" placeholder="Year" value="${defaultYear}" class="dyn-event-year" oninput="calculate()" style="width: 35%;">
-            <input type="text" placeholder="Amount ($)" value="50,000" class="dyn-event-amt" oninput="formatCurrencyInput(this)" style="width: 65%;">
+            <input type="number" placeholder="Year" value="${defaultYear}" class="dyn-event-year" oninput="calculate()" style="width: 40%;">
+            <input type="text" placeholder="Amount ($)" value="50,000" class="dyn-event-amt" oninput="formatCurrencyInput(this)" style="width: 60%;">
             <button class="btn-remove" onclick="removeEventRow(this)" title="Remove Event">X</button>
         `;
         
@@ -208,7 +252,6 @@
             const startHouse = getNum('startHouse');
             
             const stockGrowth = getNum('stockGrowth') / 100;
-            const bearMarket = getNum('bearMarket') / 100; 
             const reApprec = getNum('reApprec') / 100;
             const inflation = getNum('inflation') / 100;
 
@@ -220,8 +263,17 @@
             const fixedIncome = getNum('fixedIncome') * 12; 
             const fixedIncomeYear = getNum('fixedIncomeYear');
 
+            // Gather dynamically added custom returns
+            const activeReturns = [];
+            document.querySelectorAll('#dynamicReturnsContainer .event-row-input').forEach(row => {
+                const y = Number(row.querySelector('.dyn-return-year').value);
+                const r = Number(row.querySelector('.dyn-return-pct').value) / 100;
+                if (y && !isNaN(r)) activeReturns.push({ year: y, returnPct: r });
+            });
+
+            // Gather dynamically added events
             const activeEvents = [];
-            document.querySelectorAll('.event-row-input').forEach(row => {
+            document.querySelectorAll('#dynamicEventsContainer .event-row-input').forEach(row => {
                 const y = Number(row.querySelector('.dyn-event-year').value);
                 const a = getNumFromVal(row.querySelector('.dyn-event-amt').value);
                 if (y && a) activeEvents.push({ year: y, amount: a });
@@ -270,7 +322,16 @@
                     isDepleted = true;
                 }
                 
-                let currentYearGrowth = (i === 0 && bearMarket > 0) ? -bearMarket : stockGrowth;
+                // Determine Growth: Check for custom return override
+                let currentYearGrowth = stockGrowth;
+                let customReturnApplied = false;
+                activeReturns.forEach(r => {
+                    if (r.year === currentYear) {
+                        currentYearGrowth = r.returnPct;
+                        customReturnApplied = true;
+                    }
+                });
+
                 let endLiquid = (currentLiquid - safeWithdrawal) * (1 + currentYearGrowth);
                 if (endLiquid < 0) endLiquid = 0; 
 
@@ -283,12 +344,19 @@
                 liquidData.push(endLiquid);
                 reData.push(endHouse);
 
+                // Build table row
                 let tr = document.createElement('tr');
-                if (eventTotalThisYear > 0) tr.classList.add('event-row');
+                if (eventTotalThisYear > 0 || customReturnApplied) tr.classList.add('highlight-row');
                 
                 let liqColor = isDepleted ? 'color:#dc2626; font-weight:bold;' : 'color:#2563eb;';
+                
+                // Add icons to the year string for clarity
+                let yearString = `${currentYear}`;
+                if (eventTotalThisYear > 0) yearString += ' ★';
+                if (customReturnApplied) yearString += currentYearGrowth < 0 ? ' 📉' : ' 📈';
+
                 tr.innerHTML = `
-                    <td style="text-align:center;">${currentYear} ${eventTotalThisYear > 0 ? '★' : ''}</td>
+                    <td style="text-align:center; font-weight:bold;">${yearString}</td>
                     <td>${formatCurrency(currentLiquid)}</td>
                     <td style="color:#dc2626;">-${formatCurrency(safeWithdrawal)}</td>
                     <td style="${liqColor}">${isDepleted ? '$0' : formatCurrency(endLiquid)}</td>
