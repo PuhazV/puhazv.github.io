@@ -10,7 +10,7 @@
         .container { max-width: 1300px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         h1 { text-align: center; color: #2c3e50; margin-bottom: 30px; }
         
-        .dashboard-grid { display: grid; grid-template-columns: 350px 1fr; gap: 30px; }
+        .dashboard-grid { display: grid; grid-template-columns: 350px 1fr; gap: 30px; align-items: start; }
         
         /* Inputs Section */
         .inputs-section { background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; max-height: 85vh; overflow-y: auto; }
@@ -24,16 +24,31 @@
         .outputs-section { display: flex; flex-direction: column; gap: 30px; }
         .chart-container { background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; height: 400px; }
         
+        /* Table & Expandable Rows */
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
         th { background-color: #2c3e50; color: white; }
-        tr:hover { background-color: #f1f5f9; }
         .currency { text-align: right; font-family: monospace; font-size: 14px; }
         .positive { color: #16a34a; font-weight: bold; }
         .negative { color: #dc2626; }
         
+        .clickable-row { cursor: pointer; transition: background-color 0.2s ease; }
+        .clickable-row:hover { background-color: #e2e8f0; }
+        .clickable-row td:first-child { font-weight: bold; color: #2563eb; }
+        
+        .details-row { display: none; background-color: #f8fafc; border-bottom: 2px solid #cbd5e1; }
+        .details-row.open { display: table-row; }
+        .details-content { padding: 15px 20px; font-size: 13px; color: #475569; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
+        .details-content h4 { margin: 0 0 8px 0; color: #1e293b; font-size: 14px; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; }
+        .details-content ul { margin: 0; padding-left: 20px; }
+        .details-content li { margin-bottom: 4px; }
+        
+        .toggle-icon { display: inline-block; width: 15px; transition: transform 0.2s; font-size: 12px; }
+        .open .toggle-icon { transform: rotate(90deg); }
+
         @media (max-width: 900px) {
             .dashboard-grid { grid-template-columns: 1fr; }
+            .details-content { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -47,7 +62,7 @@
             <h3>Economic & Portfolio Baseline</h3>
             <div class="input-group">
                 <label>Starting Liquid Assets ($)</label>
-                <input type="number" id="startLiquid" value="10000000" oninput="calculate()">
+                <input type="text" id="startLiquid" value="10,000,000" oninput="formatCurrencyInput(this)">
             </div>
             <div class="input-group">
                 <label>Market Return (%)</label>
@@ -71,15 +86,15 @@
             <h3 class="section-divider">Real Estate Values</h3>
             <div class="input-group">
                 <label>WA Home Value ($)</label>
-                <input type="number" id="waHome" value="3000000" oninput="calculate()">
+                <input type="text" id="waHome" value="3,000,000" oninput="formatCurrencyInput(this)">
             </div>
             <div class="input-group">
                 <label>CA Home Value ($)</label>
-                <input type="number" id="caHome" value="1600000" oninput="calculate()">
+                <input type="text" id="caHome" value="1,600,000" oninput="formatCurrencyInput(this)">
             </div>
             <div class="input-group">
                 <label>FL Home Value ($)</label>
-                <input type="number" id="flHome" value="900000" oninput="calculate()">
+                <input type="text" id="flHome" value="900,000" oninput="formatCurrencyInput(this)">
             </div>
 
             <h3 class="section-divider">Appreciation Rates</h3>
@@ -99,11 +114,11 @@
             <h3 class="section-divider">Rental Cash Flow</h3>
             <div class="input-group">
                 <label>WA Monthly Rent ($)</label>
-                <input type="number" id="waRent" value="6500" oninput="calculate()">
+                <input type="text" id="waRent" value="6,500" oninput="formatCurrencyInput(this)">
             </div>
             <div class="input-group">
                 <label>CA Monthly Rent ($)</label>
-                <input type="number" id="caRent" value="6500" oninput="calculate()">
+                <input type="text" id="caRent" value="6,500" oninput="formatCurrencyInput(this)">
             </div>
             <div class="input-group">
                 <label>Property Mgmt Fee (%)</label>
@@ -138,6 +153,7 @@
                 <canvas id="legacyChart"></canvas>
             </div>
             <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <p style="font-size: 13px; color: #64748b; margin-top: 0; margin-bottom: 10px;"><em>Click any row to view detailed calculation breakdown.</em></p>
                 <table id="resultsTable">
                     <thead>
                         <tr>
@@ -160,33 +176,67 @@
     let legacyChartInstance = null; 
     const formatCurrency = (num) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(num);
 
+    // Auto-format currency inputs with commas
+    function formatCurrencyInput(inputElem) {
+        let rawValue = inputElem.value.replace(/,/g, '').replace(/[^\d.]/g, '');
+        if (rawValue !== '') {
+            let parts = rawValue.split('.');
+            parts[0] = Number(parts[0]).toLocaleString('en-US');
+            inputElem.value = parts.join('.');
+        } else {
+            inputElem.value = '';
+        }
+        calculate();
+    }
+
+    // Helper to get raw number from formatted input
+    const getNum = (id) => Number(document.getElementById(id).value.replace(/,/g, ''));
+
+    // Toggle expanding row
+    function toggleRow(index) {
+        const row = document.getElementById(`main-row-${index}`);
+        const detailRow = document.getElementById(`detail-row-${index}`);
+        
+        if (detailRow.classList.contains('open')) {
+            detailRow.classList.remove('open');
+            row.classList.remove('open');
+        } else {
+            // Close all others first
+            document.querySelectorAll('.details-row').forEach(r => r.classList.remove('open'));
+            document.querySelectorAll('.clickable-row').forEach(r => r.classList.remove('open'));
+            
+            detailRow.classList.add('open');
+            row.classList.add('open');
+        }
+    }
+
     function calculate() {
         try {
-            // Fetch inputs
-            const startLiq = Number(document.getElementById('startLiquid').value);
-            const r = Number(document.getElementById('marketReturn').value) / 100;
-            const g = Number(document.getElementById('inflation').value) / 100;
+            // Fetch inputs using the getNum helper to strip commas
+            const startLiq = getNum('startLiquid');
+            const r = getNum('marketReturn') / 100;
+            const g = getNum('inflation') / 100;
             
-            const dpPct = Number(document.getElementById('downPaymentPct').value) / 100;
-            const intRate = Number(document.getElementById('interestRate').value) / 100;
+            const dpPct = getNum('downPaymentPct') / 100;
+            const intRate = getNum('interestRate') / 100;
 
-            const waHome = Number(document.getElementById('waHome').value);
-            const caHome = Number(document.getElementById('caHome').value);
-            const flHome = Number(document.getElementById('flHome').value);
+            const waHome = getNum('waHome');
+            const caHome = getNum('caHome');
+            const flHome = getNum('flHome');
             
-            const waApprec = Number(document.getElementById('waApprec').value) / 100;
-            const caApprec = Number(document.getElementById('caApprec').value) / 100;
-            const flApprec = Number(document.getElementById('flApprec').value) / 100;
+            const waApprec = getNum('waApprec') / 100;
+            const caApprec = getNum('caApprec') / 100;
+            const flApprec = getNum('flApprec') / 100;
 
-            const waRentMonthly = Number(document.getElementById('waRent').value);
-            const caRentMonthly = Number(document.getElementById('caRent').value);
-            const mgmtFee = Number(document.getElementById('mgmtFee').value) / 100;
+            const waRentMonthly = getNum('waRent');
+            const caRentMonthly = getNum('caRent');
+            const mgmtFee = getNum('mgmtFee') / 100;
             
-            const endYear = Number(document.getElementById('endYear').value);
-            const flPurchaseYr = Number(document.getElementById('flPurchaseYr').value);
-            const caPurchaseYrEarly = Number(document.getElementById('caPurchaseYrEarly').value);
-            const caPurchaseYrPath2 = Number(document.getElementById('caPurchaseYrPath2').value);
-            const caPurchaseYrPath5 = Number(document.getElementById('caPurchaseYrPath5').value);
+            const endYear = getNum('endYear');
+            const flPurchaseYr = getNum('flPurchaseYr');
+            const caPurchaseYrEarly = getNum('caPurchaseYrEarly');
+            const caPurchaseYrPath2 = getNum('caPurchaseYrPath2');
+            const caPurchaseYrPath5 = getNum('caPurchaseYrPath5');
 
             // Fixed Costs & Constants
             const baseLife = 300000;
@@ -196,21 +246,22 @@
             const estateExempt = 6140000;
             const estateTaxRate = 0.20;
 
-            // Dynamic Mortgage Calculations (30 Year Fixed)
+            // Dynamic Mortgage Calculations
             const calcAnnualMortgage = (principal, rate) => {
-                if (rate <= 0) return principal / 30; // Handle 0% interest safely
+                if (rate <= 0) return principal / 30; 
                 const rMo = rate / 12;
-                const n = 360; // 30 years
+                const n = 360; 
                 const moPmt = principal * (rMo * Math.pow(1 + rMo, n)) / (Math.pow(1 + rMo, n) - 1);
                 return moPmt * 12;
             };
 
-            // Calculate dynamic carry costs: Mortgage P&I + Static Base
             const caMortgage = calcAnnualMortgage(caHome * (1 - dpPct), intRate);
-            const caCarry = caMortgage + (caHome * 0.0175); // 1.75% for CA Tax/Ins/HOA
+            const caStaticBase = caHome * 0.0175;
+            const caCarry = caMortgage + caStaticBase; 
             
             const flMortgage = calcAnnualMortgage(flHome * (1 - dpPct), intRate);
-            const flCarry = flMortgage + (flHome * 0.0225); // 2.25% for FL Tax/CDD/Ins/HOA
+            const flStaticBase = flHome * 0.0225;
+            const flCarry = flMortgage + flStaticBase; 
 
             // Dynamic Timelines
             const retireStartYear = 2028; 
@@ -224,15 +275,12 @@
             const netRentWA = (waRentMonthly * 12) * (1 - mgmtFee);
             const netRentCA = (caRentMonthly * 12) * (1 - mgmtFee);
 
-            // Robust Formula Helpers (Prevents Division by Zero)
+            // Formula Helpers
             const calcAnnuity = (pmt, n) => {
                 if (n <= 0) return 0;
-                if (Math.abs(r - g) < 0.0001) {
-                    return pmt * n * Math.pow(1 + r, n - 1); // Exact match approximation
-                }
+                if (Math.abs(r - g) < 0.0001) return pmt * n * Math.pow(1 + r, n - 1); 
                 return pmt * ((Math.pow(1 + r, n) - Math.pow(1 + g, n)) / (r - g));
             };
-
             const calcFVRealEstate = (val, apprec, n) => {
                 if (n <= 0) return val;
                 return val * Math.pow(1 + apprec, n);
@@ -251,68 +299,188 @@
             const realEstateData = [];
             const taxData = [];
 
-            // Path 1
+            // --- Pathway 1 ---
             let p1Liq = startLiq * Math.pow(1 + r, years) - calcAnnuity(baseLife, years);
             let p1Estate = fvWa + p1Liq;
             let p1Tax = p1Estate > estateExempt ? (p1Estate - estateExempt) * estateTaxRate : 0;
-            results.push(["Path 1: Stay in WA", p1Liq, fvWa, -p1Tax, p1Estate - p1Tax]);
+            results.push({
+                name: "Path 1: Stay in WA", liq: p1Liq, re: fvWa, tax: -p1Tax, net: p1Estate - p1Tax,
+                details: `
+                    <div>
+                        <h4>Liquid Capital Mechanics</h4>
+                        <ul>
+                            <li><strong>Start:</strong> ${formatCurrency(startLiq)}</li>
+                            <li><strong>Yr 1 Withdrawal:</strong> ${formatCurrency(baseLife)} <em>(Base Life + WA Carry)</em></li>
+                            <li><strong>Compounding:</strong> Withdrawals inflate at ${g*100}%/yr, remaining capital grows at ${r*100}%/yr over ${years} years.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Real Estate & Estate Tax</h4>
+                        <ul>
+                            <li><strong>WA Home FV:</strong> ${formatCurrency(fvWa)} <em>(${formatCurrency(waHome)} appreciating at ${waApprec*100}% for ${years} yrs)</em></li>
+                            <li><strong>Gross Estate:</strong> ${formatCurrency(p1Estate)}</li>
+                            <li><strong>WA Estate Tax:</strong> ${formatCurrency(p1Tax)} <em>((Gross - ${formatCurrency(estateExempt)} Exemption) × ${estateTaxRate*100}%)</em></li>
+                        </ul>
+                    </div>
+                `
+            });
 
-            // Path 2
-            let p2Start = startLiq - caEntryTax - (caHome * dpPct);
+            // --- Pathway 2 ---
+            let caDpAmt = caHome * dpPct;
+            let p2Start = startLiq - caEntryTax - caDpAmt;
             let p2Pmt = caGross + caCarry + waCarry - netRentWA;
             let p2Liq = p2Start * Math.pow(1 + r, years) - calcAnnuity(p2Pmt, years);
             let p2Re = fvWa + fvCaPath2;
-            results.push(["Path 2: Immediate CA", p2Liq, p2Re, 0, p2Liq + p2Re]);
+            results.push({
+                name: "Path 2: Immediate CA", liq: p2Liq, re: p2Re, tax: 0, net: p2Liq + p2Re,
+                details: `
+                    <div>
+                        <h4>Liquid Capital Mechanics</h4>
+                        <ul>
+                            <li><strong>Start:</strong> ${formatCurrency(p2Start)} <em>(Initial minus ${formatCurrency(caEntryTax)} CA Entry Tax & ${formatCurrency(caDpAmt)} CA Downpayment)</em></li>
+                            <li><strong>Yr 1 Withdrawal:</strong> ${formatCurrency(p2Pmt)} <em>(CA Base + CA Carry + WA Carry - WA Net Rent)</em></li>
+                            <li><strong>CA Carry Breakdown:</strong> ${formatCurrency(caCarry)}/yr <em>(Mortgage P&I + Tax/HOA)</em></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Real Estate & Estate Tax</h4>
+                        <ul>
+                            <li><strong>WA Home FV:</strong> ${formatCurrency(fvWa)}</li>
+                            <li><strong>CA Home FV:</strong> ${formatCurrency(fvCaPath2)} <em>(${formatCurrency(caHome)} @ ${caApprec*100}% for ${caHoldPath2Yrs} yrs)</em></li>
+                            <li><strong>WA Estate Tax:</strong> $0 <em>(Domiciled in CA)</em></li>
+                        </ul>
+                    </div>
+                `
+            });
 
-            // Path 3
-            let p3Start = startLiq - (flHome * dpPct);
+            // --- Pathway 3 ---
+            let flDpAmt = flHome * dpPct;
+            let p3Start = startLiq - flDpAmt;
             let p3Pmt = baseLife + flCarry + waCarry - netRentWA;
             let p3Liq = p3Start * Math.pow(1 + r, years) - calcAnnuity(p3Pmt, years);
             let p3Re = fvWa + fvFl;
-            results.push(["Path 3: Immediate FL", p3Liq, p3Re, 0, p3Liq + p3Re]);
+            results.push({
+                name: "Path 3: Immediate FL", liq: p3Liq, re: p3Re, tax: 0, net: p3Liq + p3Re,
+                details: `
+                    <div>
+                        <h4>Liquid Capital Mechanics</h4>
+                        <ul>
+                            <li><strong>Start:</strong> ${formatCurrency(p3Start)} <em>(Initial minus ${formatCurrency(flDpAmt)} FL Downpayment)</em></li>
+                            <li><strong>Yr 1 Withdrawal:</strong> ${formatCurrency(p3Pmt)} <em>(Base Life + FL Carry + WA Carry - WA Net Rent)</em></li>
+                            <li><strong>FL Carry Breakdown:</strong> ${formatCurrency(flCarry)}/yr <em>(Mortgage P&I + Tax/HOA/CDD)</em></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Real Estate & Estate Tax</h4>
+                        <ul>
+                            <li><strong>WA Home FV:</strong> ${formatCurrency(fvWa)}</li>
+                            <li><strong>FL Home FV:</strong> ${formatCurrency(fvFl)} <em>(${formatCurrency(flHome)} @ ${flApprec*100}% for ${flHoldYrs} yrs)</em></li>
+                            <li><strong>WA Estate Tax:</strong> $0 <em>(Domiciled in FL)</em></li>
+                        </ul>
+                    </div>
+                `
+            });
 
-            // Path 4 
-            let p4Start = startLiq - (caHome * dpPct);
+            // --- Pathway 4 ---
+            let p4Start = startLiq - caDpAmt;
             let p4Pmt1 = baseLife + caCarry + waCarry + 32500 - netRentCA;
             let p4Pmt2 = caGross + caCarry + waCarry - netRentWA;
             let p4Liq7 = p4Start * Math.pow(1 + r, 7) - calcAnnuity(p4Pmt1, 7);
             let inflatedP4Pmt2 = p4Pmt2 * Math.pow(1 + g, 7);
             let p4LiqFinal = p4Liq7 * Math.pow(1 + r, years - 7) - calcAnnuity(inflatedP4Pmt2, years - 7);
             let p4Re = fvWa + fvCaEarly;
-            results.push(["Path 4: Delayed CA", p4LiqFinal, p4Re, 0, p4LiqFinal + p4Re]);
+            results.push({
+                name: "Path 4: Delayed CA", liq: p4LiqFinal, re: p4Re, tax: 0, net: p4LiqFinal + p4Re,
+                details: `
+                    <div>
+                        <h4>Liquid Capital Mechanics (Two Phases)</h4>
+                        <ul>
+                            <li><strong>Start:</strong> ${formatCurrency(p4Start)} <em>(Initial minus CA Downpayment)</em></li>
+                            <li><strong>Phase 1 (Yrs 1-7) Net Withdrawal:</strong> ${formatCurrency(p4Pmt1)} <em>(Base + Both Carrys - CA Net Rent + CA Winter Rent)</em></li>
+                            <li><strong>Phase 2 (Yrs 8+) Net Withdrawal:</strong> ${formatCurrency(p4Pmt2)} <em>(Moves to CA Gross Base, WA becomes Rental)</em></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Real Estate & Estate Tax</h4>
+                        <ul>
+                            <li><strong>WA Home FV:</strong> ${formatCurrency(fvWa)}</li>
+                            <li><strong>CA Home FV:</strong> ${formatCurrency(fvCaEarly)} <em>(${formatCurrency(caHome)} @ ${caApprec*100}% for ${caHoldEarlyYrs} yrs)</em></li>
+                            <li><strong>WA Estate Tax:</strong> $0 <em>(Domiciled in CA at end of horizon)</em></li>
+                        </ul>
+                    </div>
+                `
+            });
 
-            // Path 5
-            let p5Start = startLiq - (flHome * dpPct) - (caHome * dpPct);
+            // --- Pathway 5 ---
+            let p5Start = startLiq - flDpAmt - caDpAmt;
             let p5Pmt = baseLife + flCarry + caCarry + waCarry - netRentWA - netRentCA;
             let p5Liq = p5Start * Math.pow(1 + r, years) - calcAnnuity(p5Pmt, years);
             let p5Re = fvWa + fvFl + fvCaPath5;
-            results.push(["Path 5: Hybrid FL/CA", p5Liq, p5Re, 0, p5Liq + p5Re]);
+            results.push({
+                name: "Path 5: Hybrid FL/CA", liq: p5Liq, re: p5Re, tax: 0, net: p5Liq + p5Re,
+                details: `
+                    <div>
+                        <h4>Liquid Capital Mechanics</h4>
+                        <ul>
+                            <li><strong>Start:</strong> ${formatCurrency(p5Start)} <em>(Initial minus FL & CA Downpayments)</em></li>
+                            <li><strong>Yr 1 Withdrawal:</strong> ${formatCurrency(p5Pmt)} <em>(Base + All 3 Carrys - WA & CA Net Rents)</em></li>
+                            <li><strong>Rental Offset:</strong> Generates ${formatCurrency(netRentWA + netRentCA)}/yr to heavily subsidize carry costs.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Real Estate & Estate Tax</h4>
+                        <ul>
+                            <li><strong>WA Home FV:</strong> ${formatCurrency(fvWa)}</li>
+                            <li><strong>FL Home FV:</strong> ${formatCurrency(fvFl)}</li>
+                            <li><strong>CA Home FV:</strong> ${formatCurrency(fvCaPath5)}</li>
+                            <li><strong>WA Estate Tax:</strong> $0 <em>(Domiciled in FL)</em></li>
+                        </ul>
+                    </div>
+                `
+            });
 
-            // Render Table
+            // Render Table & Chart Data
             const tbody = document.querySelector('#resultsTable tbody');
             tbody.innerHTML = '';
-            results.forEach(row => {
-                labels.push(row[0].replace(/Path \d: /, ''));
-                liquidData.push(row[1]);
-                realEstateData.push(row[2]);
-                taxData.push(row[3]); 
+            
+            results.forEach((row, index) => {
+                labels.push(row.name.replace(/Path \d: /, ''));
+                liquidData.push(row.liq);
+                realEstateData.push(row.re);
+                taxData.push(row.tax); 
 
+                // Main Clickable Row
                 let tr = document.createElement('tr');
+                tr.id = `main-row-${index}`;
+                tr.className = 'clickable-row';
+                tr.onclick = () => toggleRow(index);
                 tr.innerHTML = `
-                    <td><strong>${row[0]}</strong></td>
-                    <td class="currency">${formatCurrency(row[1])}</td>
-                    <td class="currency">${formatCurrency(row[2])}</td>
-                    <td class="currency negative">${row[3] === 0 ? '$0' : formatCurrency(row[3])}</td>
-                    <td class="currency positive">${formatCurrency(row[4])}</td>
+                    <td><span class="toggle-icon">►</span> ${row.name}</td>
+                    <td class="currency">${formatCurrency(row.liq)}</td>
+                    <td class="currency">${formatCurrency(row.re)}</td>
+                    <td class="currency negative">${row.tax === 0 ? '$0' : formatCurrency(row.tax)}</td>
+                    <td class="currency positive">${formatCurrency(row.net)}</td>
                 `;
                 tbody.appendChild(tr);
+
+                // Hidden Details Row
+                let detailTr = document.createElement('tr');
+                detailTr.id = `detail-row-${index}`;
+                detailTr.className = 'details-row';
+                detailTr.innerHTML = `
+                    <td colspan="5">
+                        <div class="details-content">
+                            ${row.details}
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(detailTr);
             });
 
             // Attempt to Render Chart
             updateChart(labels, liquidData, realEstateData, taxData);
 
         } catch (error) {
-            // Failsafe: Display the exact error on the screen so you know what broke
             const tbody = document.querySelector('#resultsTable tbody');
             tbody.innerHTML = `<tr><td colspan="5" style="color:red; font-weight:bold;">Calculator Error: ${error.message}</td></tr>`;
             console.error("Calculation failed:", error);
@@ -320,7 +488,6 @@
     }
 
     function updateChart(labels, liquid, realEstate, tax) {
-        // Failsafe: If Chart.js CDN is blocked, gracefully skip the chart
         if (typeof Chart === 'undefined') {
             document.getElementById('chartWrapper').innerHTML = '<p style="color:red; text-align:center; padding-top:150px;"><b>Chart failed to load.</b><br>Check if an ad-blocker or firewall is blocking jsdelivr.com.</p>';
             return;
