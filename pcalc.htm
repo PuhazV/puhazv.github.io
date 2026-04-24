@@ -118,7 +118,7 @@
 <div class="summary-ribbon">
     <div class="stat-group">
         <div class="stat-item"><span class="stat-label">Final Net Worth (Live)</span><span class="stat-value" id="valNW">$0</span></div>
-        <div class="stat-item"><span class="stat-label">Delta vs Baseline</span><span class="stat-value" id="deltaNW">$0</span></div>
+        <div class="stat-item"><span class="stat-label">Difference vs Baseline</span><span class="stat-value" id="deltaNW">$0</span></div>
     </div>
     <div style="display: flex; gap: 25px; align-items: center;">
         <div style="font-size: 12px; font-weight: 800; color: #94a3b8; text-transform: uppercase;">
@@ -271,7 +271,7 @@
         const ctx = document.getElementById('mainChart').getContext('2d');
         if (chartObj) chartObj.destroy();
         const ds = [{ label: 'Portfolio Assets', data: live.map(r => r.endLiq), backgroundColor: 'rgba(59, 130, 246, 0.8)', stack: 'A' }, { label: 'Real Estate Value', data: live.map(r => r.house), backgroundColor: 'rgba(16, 185, 129, 0.8)', stack: 'A' }];
-        if (base) ds.push({ label: 'Baseline Pathway', data: base.map(r => r.total), borderColor: '#94a3b8', borderDash: [6, 4], type: 'line', fill: false, borderWidth: 3 });
+        if (base) ds.push({ label: 'Baseline Scenario', data: base.map(r => r.total), borderColor: '#94a3b8', borderDash: [6, 4], type: 'line', fill: false, borderWidth: 3 });
         chartObj = new Chart(ctx, { type: 'bar', data: { labels: live.map(r => r.yr), datasets: ds }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { stacked: true, ticks: { callback: v => '$' + (v/1e6).toFixed(1) + 'M' } }, x: { stacked: true } }, plugins: { legend: { position: 'bottom' } } } });
     }
 
@@ -282,7 +282,7 @@
             const isEmpty = !scenarios[s];
             const div = document.createElement('div');
             div.className = `scenario-card ${isEmpty ? 'empty' : ''} ${baselineSlot === s ? 'active-baseline' : ''}`;
-            if (isEmpty) { div.innerHTML = `<span>+ Save Path ${s}</span>`; div.onclick = () => saveSlot(s); }
+            if (isEmpty) { div.innerHTML = `<span>+ Save Scenario ${s}</span>`; div.onclick = () => saveSlot(s); }
             else {
                 div.innerHTML = `<div style="font-size:10px; font-weight:900; color:#94a3b8;">Slot ${s}</div><input type="text" class="name-input" id="name-${s}" placeholder="Name..." value="${scenarioNames[s]}" onchange="updateScenarioNames()"><div class="card-actions"><button class="btn" onclick="saveSlot('${s}')">Update</button><button class="btn" onclick="loadSlot('${s}')">Load</button><button class="btn" onclick="clearSlot('${s}')" style="color:var(--danger)">Clear</button></div><button class="btn ${baselineSlot === s ? 'btn-active' : ''}" style="width:100%" onclick="setBaseline('${s}')">${baselineSlot === s ? 'Active' : 'Compare'}</button>`;
             }
