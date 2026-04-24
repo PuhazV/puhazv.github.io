@@ -91,57 +91,27 @@
                 <input type="number" id="inflation" value="4" step="0.1" oninput="calculate()">
             </div>
 
-            <h3>Custom Market Drops (Stress Test)</h3>
+            <h3>Custom Market Returns (Stress Test)</h3>
             <div id="dynamicReturnsContainer">
                 </div>
-            <button id="addReturnBtn" class="btn-add-alt" onclick="addReturnRow()">+ Add Custom Market Drops (Max 10)</button>
+            <button id="addReturnBtn" class="btn-add-alt" onclick="addReturnRow()">+ Add Custom Market Year (Max 10)</button>
 
-            <h3>Base Monthly Withdrawals</h3>
+            <h3>Base Monthly Withdrawals (Inc. Taxes)</h3>
             <div class="input-group">
                 <label>Years 1-10 ($ / month)</label>
-                <input type="text" id="withdraw1" value="30,000" oninput="formatCurrencyInput(this)">
+                <input type="text" id="withdraw1" value="35,000" oninput="formatCurrencyInput(this)">
             </div>
             <div class="input-group">
                 <label>Years 11-20 ($ / month)</label>
-                <input type="text" id="withdraw2" value="25,000" oninput="formatCurrencyInput(this)">
+                <input type="text" id="withdraw2" value="30,000" oninput="formatCurrencyInput(this)">
             </div>
             <div class="input-group">
                 <label>Years 21-30 ($ / month)</label>
-                <input type="text" id="withdraw3" value="25,000" oninput="formatCurrencyInput(this)">
+                <input type="text" id="withdraw3" value="28,000" oninput="formatCurrencyInput(this)">
             </div>
             <div class="input-group">
                 <label>Years 31-40 ($ / month)</label>
-                <input type="text" id="withdraw4" value="25,000" oninput="formatCurrencyInput(this)">
-            </div>
-
-            <h3>Estimated Effective Tax Rate</h3>
-            <div class="input-group">
-                <label>Years 1-10 (%)</label>
-                <div class="input-wrapper">
-                    <input type="number" id="tax1" value="15" step="0.1" class="has-right" oninput="calculate()">
-                    <span class="symbol-right">%</span>
-                </div>
-            </div>
-            <div class="input-group">
-                <label>Years 11-20 (%)</label>
-                <div class="input-wrapper">
-                    <input type="number" id="tax2" value="12" step="0.1" class="has-right" oninput="calculate()">
-                    <span class="symbol-right">%</span>
-                </div>
-            </div>
-            <div class="input-group">
-                <label>Years 21-30 (%)</label>
-                <div class="input-wrapper">
-                    <input type="number" id="tax3" value="10" step="0.1" class="has-right" oninput="calculate()">
-                    <span class="symbol-right">%</span>
-                </div>
-            </div>
-            <div class="input-group">
-                <label>Years 31-40 (%)</label>
-                <div class="input-wrapper">
-                    <input type="number" id="tax4" value="10" step="0.1" class="has-right" oninput="calculate()">
-                    <span class="symbol-right">%</span>
-                </div>
+                <input type="text" id="withdraw4" value="27,000" oninput="formatCurrencyInput(this)">
             </div>
 
             <h3>Social Security / Pension</h3>
@@ -171,8 +141,7 @@
                         <tr>
                             <th>Year</th>
                             <th>Start Liquid</th>
-                            <th>Gross Withdrawal</th>
-                            <th style="color: #ea580c;">Net After Taxes</th>
+                            <th style="color: #dc2626;">Total Withdrawal</th>
                             <th>End Liquid</th>
                             <th>House Value</th>
                             <th>Nominal Net Worth</th>
@@ -304,12 +273,6 @@
             const baseWithdraw3 = getNum('withdraw3') * 12; 
             const baseWithdraw4 = getNum('withdraw4') * 12; 
 
-            // Fetch newly updated % Tax inputs
-            const taxRate1 = getNum('tax1') / 100; 
-            const taxRate2 = getNum('tax2') / 100; 
-            const taxRate3 = getNum('tax3') / 100; 
-            const taxRate4 = getNum('tax4') / 100; 
-
             const fixedIncome = getNum('fixedIncome') * 12; 
             const fixedIncomeYear = getNum('fixedIncomeYear');
 
@@ -342,14 +305,13 @@
             for (let i = 0; i < 40; i++) {
                 const currentYear = startYear + i;
                 
-                // 1. Base Lifestyle & Base Tax Rate
+                // 1. Base Lifestyle (Now inclusive of taxes)
                 let annualBaseWithdrawal = 0;
-                let annualTaxRate = 0;
 
-                if (i < 10) { annualBaseWithdrawal = baseWithdraw1; annualTaxRate = taxRate1; }
-                else if (i < 20) { annualBaseWithdrawal = baseWithdraw2; annualTaxRate = taxRate2; }
-                else if (i < 30) { annualBaseWithdrawal = baseWithdraw3; annualTaxRate = taxRate3; }
-                else { annualBaseWithdrawal = baseWithdraw4; annualTaxRate = taxRate4; }
+                if (i < 10) { annualBaseWithdrawal = baseWithdraw1; }
+                else if (i < 20) { annualBaseWithdrawal = baseWithdraw2; }
+                else if (i < 30) { annualBaseWithdrawal = baseWithdraw3; }
+                else { annualBaseWithdrawal = baseWithdraw4; }
 
                 let actualLifestyleCost = annualBaseWithdrawal * Math.pow(1 + inflation, i);
 
@@ -369,23 +331,16 @@
                     activeFixedIncome = fixedIncome * Math.pow(1 + inflation, safeYrs);
                 }
 
-                // 4. Gross Required (Portfolio Drain)
+                // 4. Gross Required (Total Portfolio Drain)
                 let requiredFromPortfolio = totalExpenses - activeFixedIncome;
                 if (requiredFromPortfolio < 0) requiredFromPortfolio = 0; 
 
-                let safeWithdrawal = Math.min(requiredFromPortfolio, currentLiquid); // Gross amount taken from portfolio
-                
-                // Calculate Net After Taxes based on the % rate
-                let netAfterTaxes = safeWithdrawal * (1 - annualTaxRate);
+                let safeWithdrawal = Math.min(requiredFromPortfolio, currentLiquid); 
                 
                 if (currentLiquid <= 0) {
                     safeWithdrawal = 0;
-                    netAfterTaxes = 0;
                     isDepleted = true;
                 }
-                
-                // Prevent negative display if portfolio is empty
-                if (netAfterTaxes < 0 || isDepleted) netAfterTaxes = 0;
 
                 // 5. Growth
                 let currentYearGrowth = stockGrowth;
@@ -422,8 +377,7 @@
                 tr.innerHTML = `
                     <td style="text-align:center; font-weight:bold;">${yearString}</td>
                     <td>${formatCurrency(currentLiquid)}</td>
-                    <td style="color:#dc2626;">-${formatCurrency(safeWithdrawal)}</td>
-                    <td style="color:#ea580c; font-weight:bold;">${formatCurrency(netAfterTaxes)}</td>
+                    <td style="color:#dc2626; font-weight:bold;">-${formatCurrency(safeWithdrawal)}</td>
                     <td style="${liqColor}">${isDepleted ? '$0' : formatCurrency(endLiquid)}</td>
                     <td style="color:#16a34a;">${formatCurrency(currentHouse)}</td>
                     <td style="font-weight:bold;">${formatCurrency(totalNominalNetWorth)}</td>
