@@ -91,11 +91,11 @@
                 <input type="number" id="inflation" value="4" step="0.1" oninput="calculate()">
             </div>
 
-            <h3>Market Crash Events (Stress Test)</h3>
+            <h3>Custom Market Returns (Stress Test)</h3>
             <div id="dynamicReturnsContainer"></div>
-            <button id="addReturnBtn" class="btn-add-alt" onclick="addReturnRow()">+ Add Custom Market Crashes (Max 10)</button>
+            <button id="addReturnBtn" class="btn-add-alt" onclick="addReturnRow()">+ Add Custom Market Year (Max 10)</button>
 
-            <h3>Net Monthly Spend</h3>
+            <h3>Desired Net Monthly Spend (Take-Home)</h3>
             <div class="input-group">
                 <label>Years 1-10 ($ / month)</label>
                 <input type="text" id="withdraw1" value="30,000" oninput="formatCurrencyInput(this)">
@@ -334,10 +334,8 @@
                 else if (i < 30) { annualBaseNet = baseWithdraw3; annualTaxRate = taxRate3; }
                 else { annualBaseNet = baseWithdraw4; annualTaxRate = taxRate4; }
 
-                // Cap tax rate at 99% to prevent mathematical errors
                 if (annualTaxRate >= 1) annualTaxRate = 0.99;
 
-                // 1. Calculate the inflated NET spend desired
                 let inflatedNetSpend = annualBaseNet * Math.pow(1 + inflation, i);
 
                 let eventTotalThisYear = 0;
@@ -347,7 +345,6 @@
                 
                 let totalNetNeed = inflatedNetSpend + eventTotalThisYear;
 
-                // 2. Subtract external fixed income from the NET need
                 let activeFixedIncome = 0;
                 if (currentYear >= fixedIncomeYear) {
                     const yrsSinceFixedIncome = currentYear - fixedIncomeYear; 
@@ -358,17 +355,16 @@
                 let netRequiredFromPortfolio = totalNetNeed - activeFixedIncome;
                 if (netRequiredFromPortfolio < 0) netRequiredFromPortfolio = 0; 
 
-                // 3. GROSS UP the required net amount to account for taxes
                 let grossWithdrawal = netRequiredFromPortfolio / (1 - annualTaxRate);
                 let taxesPaid = grossWithdrawal - netRequiredFromPortfolio;
                 
-                // Handle portfolio depletion gracefully
                 let safeGrossWithdrawal = Math.min(grossWithdrawal, currentLiquid); 
                 
                 if (currentLiquid <= 0) {
                     safeGrossWithdrawal = 0;
                     taxesPaid = 0;
                     netRequiredFromPortfolio = 0;
+                    grossWithdrawal = 0; // BUG FIX: Firmly cap the gross withdrawal to 0 here
                     isDepleted = true;
                 } else if (safeGrossWithdrawal < grossWithdrawal) {
                     grossWithdrawal = safeGrossWithdrawal;
