@@ -91,11 +91,11 @@
                 <input type="number" id="inflation" value="4" step="0.1" oninput="calculate()">
             </div>
 
-            <h3>Custom Market Returns (Stress Test)</h3>
+            <h3>Market Crash Events (Stress Test)</h3>
             <div id="dynamicReturnsContainer"></div>
-            <button id="addReturnBtn" class="btn-add-alt" onclick="addReturnRow()">+ Add Custom Market Year (Max 10)</button>
+            <button id="addReturnBtn" class="btn-add-alt" onclick="addReturnRow()">+ Add Custom Market Crashes (Max 10)</button>
 
-            <h3>Desired Net Monthly Spend (Take-Home)</h3>
+            <h3>Net Monthly Spend</h3>
             <div class="input-group">
                 <label>Years 1-10 ($ / month)</label>
                 <input type="text" id="withdraw1" value="30,000" oninput="formatCurrencyInput(this)">
