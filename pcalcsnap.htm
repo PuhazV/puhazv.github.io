@@ -11,7 +11,7 @@
         
         .container { max-width: 98vw; margin: auto; padding: 0 20px 20px 20px; }
 
-        /* Summary Ribbon - Fixed at Top */
+        /* Summary Ribbon */
         .summary-ribbon { 
             background: white; padding: 12px 40px; border-bottom: 1px solid #e2e8f0; 
             display: flex; justify-content: space-between; align-items: center; 
@@ -56,15 +56,18 @@
         .chart-container { background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; height: 500px; }
         .table-container { background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: auto; }
         
-        table { width: 100%; border-collapse: collapse; min-width: 1300px; }
+        table { width: 100%; border-collapse: collapse; min-width: 1000px; transition: all 0.3s; }
         th, td { padding: 10px 12px; font-size: 11px; text-align: right; border-bottom: 1px solid #f1f5f9; font-family: monospace; }
         th { background: #f8fafc; font-weight: 700; position: sticky; top: 0; z-index: 5; }
         
+        /* Comparison Column Hiding Logic */
+        .compare-col { display: none; }
+        .compare-active .compare-col { display: table-cell; }
+
         .delta-col { background-color: #fef2f2; color: var(--danger); font-weight: bold; width: 110px; }
         .delta-pos { background-color: #f0fdf4; color: var(--success); }
         .base-col { color: var(--baseline); border-left: 1px solid #f1f5f9; background: #fafafa; }
         
-        /* Buttons */
         .btn { border: 1px solid #cbd5e1; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer; background: white; padding: 6px; transition: 0.2s; }
         .btn:hover:not(:disabled) { background: #f1f5f9; }
         .btn:disabled { opacity: 0.3; cursor: not-allowed; background: #f1f5f9; }
@@ -88,8 +91,7 @@
 </div>
 
 <div class="scenario-drawer" id="drawer">
-    <div class="scenario-grid" id="scenarioGrid">
-        </div>
+    <div class="scenario-grid" id="scenarioGrid"></div>
 </div>
 
 <div class="container">
@@ -125,11 +127,11 @@
                             <th style="text-align: center;">Year</th>
                             <th>Withdraw</th>
                             <th style="color: var(--primary)">Liq (Live)</th>
-                            <th class="base-col">Liq (Base)</th>
-                            <th class="delta-col">Liq Δ</th>
+                            <th class="base-col compare-col">Liq (Base)</th>
+                            <th class="delta-col compare-col">Liq Δ</th>
                             <th>House (Live)</th>
-                            <th class="base-col">House (Base)</th>
-                            <th class="delta-col">House Δ</th>
+                            <th class="base-col compare-col">House (Base)</th>
+                            <th class="delta-col compare-col">House Δ</th>
                             <th>Nominal NW</th>
                             <th style="background:#f0fdf4">Real Power</th>
                         </tr>
@@ -148,9 +150,7 @@
     let chartObj = null;
     const fmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 
-    function toggleDrawer() {
-        document.getElementById('drawer').classList.toggle('expanded');
-    }
+    function toggleDrawer() { document.getElementById('drawer').classList.toggle('expanded'); }
 
     function initGrids() {
         ['spend', 'income', 'tax'].forEach(k => {
@@ -203,28 +203,40 @@
     }
 
     function updateUI(live, base) {
-        const tbody = document.querySelector('#resultsTable tbody');
+        const table = document.getElementById('resultsTable');
+        const tbody = table.querySelector('tbody');
         tbody.innerHTML = '';
+        
+        // Toggle comparison class on table
+        if (base) table.classList.add('compare-active');
+        else table.classList.remove('compare-active');
+
         live.forEach((r, i) => {
             const tr = document.createElement('tr');
             const dLiq = base ? r.endLiq - base[i].endLiq : 0;
             const dHse = base ? r.house - base[i].house : 0;
+            
             tr.innerHTML = `<td style="text-align:center">${r.yr}</td><td>${fmt.format(r.withdrawal)}</td>
                 <td style="font-weight:bold;color:var(--primary)">${fmt.format(r.endLiq)}</td>
-                <td class="base-col">${base ? fmt.format(base[i].endLiq) : '-'}</td>
-                <td class="delta-col ${dLiq >= 0 ? 'delta-pos' : ''}">${base ? (dLiq >= 0 ? '+' : '') + fmt.format(dLiq) : '-'}</td>
+                <td class="base-col compare-col">${base ? fmt.format(base[i].endLiq) : '-'}</td>
+                <td class="delta-col compare-col ${dLiq >= 0 ? 'delta-pos' : ''}">${base ? (dLiq >= 0 ? '+' : '') + fmt.format(dLiq) : '-'}</td>
                 <td>${fmt.format(r.house)}</td>
-                <td class="base-col">${base ? fmt.format(base[i].house) : '-'}</td>
-                <td class="delta-col ${dHse >= 0 ? 'delta-pos' : ''}">${base ? (dHse >= 0 ? '+' : '') + fmt.format(dHse) : '-'}</td>
+                <td class="base-col compare-col">${base ? fmt.format(base[i].house) : '-'}</td>
+                <td class="delta-col compare-col ${dHse >= 0 ? 'delta-pos' : ''}">${base ? (dHse >= 0 ? '+' : '') + fmt.format(dHse) : '-'}</td>
                 <td style="font-weight:bold">${fmt.format(r.total)}</td>
                 <td style="font-weight:bold;color:#166534">${fmt.format(r.total / Math.pow(1 + getInputs().inflation, i))}</td>`;
             tbody.appendChild(tr);
         });
+        
         document.getElementById('valNW').innerText = fmt.format(live[39].total);
+        const deltaEl = document.getElementById('deltaNW');
         if (base) {
             const diff = live[39].total - base[39].total;
-            document.getElementById('deltaNW').innerText = (diff >= 0 ? '+' : '') + fmt.format(diff);
-            document.getElementById('deltaNW').style.color = diff >= 0 ? 'var(--success)' : 'var(--danger)';
+            deltaEl.innerText = (diff >= 0 ? '+' : '') + fmt.format(diff);
+            deltaEl.style.color = diff >= 0 ? 'var(--success)' : 'var(--danger)';
+        } else {
+            deltaEl.innerText = '$0';
+            deltaEl.style.color = 'inherit';
         }
         updateChart(live, base);
     }
@@ -233,11 +245,10 @@
         const ctx = document.getElementById('mainChart').getContext('2d');
         if (chartObj) chartObj.destroy();
         const ds = [{ label: 'Portfolio', data: live.map(r => r.endLiq), backgroundColor: '#3b82f6', stack: 'A' }, { label: 'Real Estate', data: live.map(r => r.house), backgroundColor: '#10b981', stack: 'A' }];
-        if (base) ds.push({ label: 'Baseline', data: base.map(r => r.total), borderColor: '#94a3b8', borderDash: [5, 5], type: 'line', fill: false, borderWidth: 2 });
+        if (base) ds.push({ label: 'Baseline Pathway', data: base.map(r => r.total), borderColor: '#94a3b8', borderDash: [5, 5], type: 'line', fill: false, borderWidth: 2 });
         chartObj = new Chart(ctx, { type: 'bar', data: { labels: live.map(r => r.yr), datasets: ds }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { stacked: true, ticks: { callback: v => '$' + (v/1e6).toFixed(1) + 'M' } }, x: { stacked: true } }, plugins: { legend: { position: 'bottom' } } } });
     }
 
-    // --- Scenario Logic ---
     function updateScenarioCards() {
         const grid = document.getElementById('scenarioGrid');
         grid.innerHTML = '';
@@ -245,9 +256,8 @@
             const isEmpty = !scenarios[s];
             const div = document.createElement('div');
             div.className = `scenario-card ${isEmpty ? 'empty' : ''} ${baselineSlot === s ? 'active-baseline' : ''}`;
-            
             if (isEmpty) {
-                div.innerHTML = `<span>+ Save New Scenario (${s})</span>`;
+                div.innerHTML = `<span>+ Save Current as Scenario ${s}</span>`;
                 div.onclick = () => saveSlot(s);
             } else {
                 div.innerHTML = `
@@ -258,23 +268,14 @@
                         <button class="btn" onclick="loadSlot('${s}')">Load</button>
                         <button class="btn" onclick="clearSlot('${s}')" style="color:var(--danger)">Clear</button>
                     </div>
-                    <button class="btn ${baselineSlot === s ? 'btn-active' : ''}" onclick="setBaseline('${s}')">
-                        ${baselineSlot === s ? 'Active Baseline' : 'Use as Baseline'}
-                    </button>`;
+                    <button class="btn ${baselineSlot === s ? 'btn-active' : ''}" onclick="setBaseline('${s}')">${baselineSlot === s ? 'Active Baseline' : 'Use as Baseline'}</button>`;
             }
             grid.appendChild(div);
         });
         document.getElementById('comparingToText').innerText = baselineSlot ? (scenarioNames[baselineSlot] || `Scenario ${baselineSlot}`) : 'None Selected';
     }
 
-    function saveSlot(s) { 
-        scenarios[s] = getInputs(); 
-        if (!scenarioNames[s]) scenarioNames[s] = `Scenario ${s}`;
-        localStorage.setItem('scenData4', JSON.stringify(scenarios)); 
-        localStorage.setItem('scenNames4', JSON.stringify(scenarioNames)); 
-        updateScenarioCards(); calculate(); 
-    }
-    
+    function saveSlot(s) { scenarios[s] = getInputs(); if (!scenarioNames[s]) scenarioNames[s] = `Scenario ${s}`; localStorage.setItem('scenData4', JSON.stringify(scenarios)); localStorage.setItem('scenNames4', JSON.stringify(scenarioNames)); updateScenarioCards(); calculate(); }
     function loadSlot(s) { 
         const d = scenarios[s]; if (!d) return;
         document.getElementById('startYear').value = d.startYear;
@@ -283,25 +284,12 @@
         document.getElementById('stockGrowth').value = (d.stockGrowth*100).toFixed(1);
         document.getElementById('startHouse').value = d.startHouse.toLocaleString();
         document.getElementById('reApprec').value = (d.reApprec*100).toFixed(1);
-        d.buckets.forEach((b, i) => { 
-            document.getElementById(`spend${i+1}`).value = (b.spend/12).toLocaleString(); 
-            document.getElementById(`income${i+1}`).value = (b.income/12).toLocaleString(); 
-            document.getElementById(`tax${i+1}`).value = (b.tax*100).toFixed(1); 
-        });
+        d.buckets.forEach((b, i) => { document.getElementById(`spend${i+1}`).value = (b.spend/12).toLocaleString(); document.getElementById(`income${i+1}`).value = (b.income/12).toLocaleString(); document.getElementById(`tax${i+1}`).value = (b.tax*100).toFixed(1); });
         document.getElementById('dynamicReturns').innerHTML = ''; d.returns.forEach(r => addRow('return', r.yr, r.val*100));
         document.getElementById('dynamicEvents').innerHTML = ''; d.events.forEach(e => addRow('event', e.yr, e.val));
         calculate();
     }
-
-    function clearSlot(s) { 
-        scenarios[s] = null; scenarioNames[s] = ''; 
-        if (baselineSlot === s) baselineSlot = null;
-        localStorage.setItem('scenData4', JSON.stringify(scenarios)); 
-        localStorage.setItem('scenNames4', JSON.stringify(scenarioNames)); 
-        localStorage.setItem('baseSlot4', baselineSlot);
-        updateScenarioCards(); calculate(); 
-    }
-
+    function clearSlot(s) { scenarios[s] = null; scenarioNames[s] = ''; if (baselineSlot === s) baselineSlot = null; localStorage.setItem('scenData4', JSON.stringify(scenarios)); localStorage.setItem('scenNames4', JSON.stringify(scenarioNames)); localStorage.setItem('baseSlot4', baselineSlot); updateScenarioCards(); calculate(); }
     function setBaseline(s) { baselineSlot = (baselineSlot === s) ? null : s; localStorage.setItem('baseSlot4', baselineSlot); updateScenarioCards(); calculate(); }
     function updateScenarioNames() { ['A', 'B', 'C', 'D'].forEach(s => { const el = document.getElementById(`name-${s}`); if (el) scenarioNames[s] = el.value; }); localStorage.setItem('scenNames4', JSON.stringify(scenarioNames)); updateScenarioCards(); }
 
@@ -311,9 +299,7 @@
         const div = document.createElement('div');
         div.className = 'event-row';
         div.style.display = 'flex'; div.style.gap = '5px'; div.style.marginBottom = '5px'; div.style.alignItems = 'center';
-        div.innerHTML = `<span style="font-size:10px;width:30px">${yr}:</span>
-            <input type="${t==='return'?'number':'text'}" class="${t==='return'?'dyn-ret':'dyn-evt'}" data-yr="${yr}" value="${(vO||(t==='return'?-20:50000)).toLocaleString()}" style="width:100%" oninput="calculate()">
-            <button class="btn" style="color:var(--danger); border:none" onclick="this.parentElement.remove();calculate()">×</button>`;
+        div.innerHTML = `<span style="font-size:10px;width:30px">${yr}:</span><input type="${t==='return'?'number':'text'}" class="${t==='return'?'dyn-ret':'dyn-evt'}" data-yr="${yr}" value="${(vO||(t==='return'?-20:50000)).toLocaleString()}" style="width:100%" oninput="calculate()"><button class="btn" style="color:var(--danger); border:none" onclick="this.parentElement.remove();calculate()">×</button>`;
         c.appendChild(div); if (!yO) calculate();
     }
 
