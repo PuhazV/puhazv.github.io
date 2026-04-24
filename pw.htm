@@ -239,13 +239,14 @@
 
             const baseLife = 300000;
             const caGross = 345000;
-            const waCarry = 42000;
+            const waCarry = 42000; // Static WA taxes/ins since owned outright
             const caEntryTax = 1060000;
             const estateExempt = 6140000;
             const estateTaxRate = 0.20;
 
+            // Proper Annual Mortgage Calc (Fixed, Non-Inflating)
             const calcAnnualMortgage = (principal, rate) => {
-                if (rate <= 0) return principal / 30; 
+                if (rate <= 0) return (principal / 360) * 12; 
                 const rMo = rate / 12;
                 const n = 360; 
                 const moPmt = principal * (rMo * Math.pow(1 + rMo, n)) / (Math.pow(1 + rMo, n) - 1);
@@ -253,12 +254,10 @@
             };
 
             const caMortgage = calcAnnualMortgage(caHome * (1 - dpPct), intRate);
-            const caStaticBase = caHome * 0.0175;
-            const caCarry = caMortgage + caStaticBase; 
+            const caStaticBase = caHome * 0.0175; // Inflating Taxes/HOA
             
             const flMortgage = calcAnnualMortgage(flHome * (1 - dpPct), intRate);
-            const flStaticBase = flHome * 0.0225;
-            const flCarry = flMortgage + flStaticBase; 
+            const flStaticBase = flHome * 0.0225; // Inflating Taxes/HOA
 
             const retireStartYear = 2028; 
             const years = endYear - retireStartYear; 
@@ -268,34 +267,82 @@
             const caHoldPath2Yrs = endYear - caPurchaseYrPath2;
             const caHoldPath5Yrs = endYear - caPurchaseYrPath5;
 
-            const netRentWA = (waRentMonthly * 12) * (1 - mgmtFee);
-            const netRentCA = (caRentMonthly * 12) * (1 - mgmtFee);
+            const netRentWA_Base = (waRentMonthly * 12) * (1 - mgmtFee);
+            const netRentCA_Base = (caRentMonthly * 12) * (1 - mgmtFee);
 
-            const calcAnnuity = (pmt, n) => {
-                if (n <= 0) return 0;
-                if (Math.abs(r - g) < 0.0001) return pmt * n * Math.pow(1 + r, n - 1); 
-                return pmt * ((Math.pow(1 + r, n) - Math.pow(1 + g, n)) / (r - g));
-            };
-            const calcFVRealEstate = (val, apprec, n) => {
-                if (n <= 0) return val;
-                return val * Math.pow(1 + apprec, n);
-            };
-
+            // Real Estate End Values (Exponential matches holding period)
+            const calcFVRealEstate = (val, apprec, n) => n <= 0 ? val : val * Math.pow(1 + apprec, n);
             const fvWa = calcFVRealEstate(waHome, waApprec, years);
             const fvFl = calcFVRealEstate(flHome, flApprec, flHoldYrs);
             const fvCaEarly = calcFVRealEstate(caHome, caApprec, caHoldEarlyYrs);
             const fvCaPath2 = calcFVRealEstate(caHome, caApprec, caHoldPath2Yrs);
             const fvCaPath5 = calcFVRealEstate(caHome, caApprec, caHoldPath5Yrs);
 
+            // Iterative Simulation Setup
+            let caDpAmt = caHome * dpPct;
+            let flDpAmt = flHome * dpPct;
+
+            let p1Liq = startLiq;
+            let p2Liq = startLiq - caEntryTax - caDpAmt;
+            let p3Liq = startLiq - flDpAmt;
+            let p4Liq = startLiq - caDpAmt;
+            let p5Liq = startLiq - flDpAmt - caDpAmt;
+
+            // Master Simulation Loop
+            for(let i=0; i<years; i++) {
+                let inf = Math.pow(1 + g, i);
+
+                // Inflated Variable Costs for the Year
+                let infBaseLife = baseLife * inf;
+                let infCaGross = caGross * inf;
+                let infWaCarry = waCarry * inf;
+                let infCaStatic = caStaticBase * inf;
+                let infFlStatic = flStaticBase * inf;
+                let infWaRent = netRentWA_Base * inf;
+                let infCaRent = netRentCA_Base * inf;
+                let infWaWinter = 32500 * inf;
+
+                // Path 1 Withdrawal
+                let p1Pmt = infBaseLife + infWaCarry;
+                p1Liq = (p1Liq - p1Pmt) * (1 + r);
+
+                // Path 2 Withdrawal
+                let p2Pmt = infCaGross + caMortgage + infCaStatic + infWaCarry - infWaRent;
+                p2Liq = (p2Liq - p2Pmt) * (1 + r);
+
+                // Path 3 Withdrawal
+                let p3Pmt = infBaseLife + flMortgage + infFlStatic + infWaCarry - infWaRent;
+                p3Liq = (p3Liq - p3Pmt) * (1 + r);
+
+                // Path 4 Withdrawal (7 year split handled internally)
+                let p4Pmt = 0;
+                if (i < 7) {
+                    p4Pmt = infBaseLife + caMortgage + infCaStatic + infWaCarry + infWaWinter - infCaRent;
+                } else {
+                    p4Pmt = infCaGross + caMortgage + infCaStatic + infWaCarry - infWaRent;
+                }
+                p4Liq = (p4Liq - p4Pmt) * (1 + r);
+
+                // Path 5 Withdrawal
+                let p5Pmt = infBaseLife + flMortgage + infFlStatic + caMortgage + infCaStatic + infWaCarry - infWaRent - infCaRent;
+                p5Liq = (p5Liq - p5Pmt) * (1 + r);
+
+                // Floor out to prevent negative compounding
+                if(p1Liq < 0) p1Liq = 0;
+                if(p2Liq < 0) p2Liq = 0;
+                if(p3Liq < 0) p3Liq = 0;
+                if(p4Liq < 0) p4Liq = 0;
+                if(p5Liq < 0) p5Liq = 0;
+            }
+
             const results = [];
             const labels = [];
             const liquidData = [];
             const realEstateData = [];
             const taxData = [];
-            const netLegacyData = []; // New array for the combo line chart
+            const netLegacyData = [];
 
             // --- Pathway 1 ---
-            let p1Liq = startLiq * Math.pow(1 + r, years) - calcAnnuity(baseLife, years);
             let p1Estate = fvWa + p1Liq;
             let p1Tax = p1Estate > estateExempt ? (p1Estate - estateExempt) * estateTaxRate : 0;
             results.push({
@@ -308,13 +355,13 @@
                         <h4>Liquid Capital Mechanics</h4>
                         <ul>
                             <li><strong>Starting Portfolio:</strong> ${formatCurrency(startLiq)}</li>
-                            <li><strong>Year 1 Withdrawal Breakdown:</strong> Total ${formatCurrency(baseLife)}
+                            <li><strong>Year 1 Withdrawal Breakdown:</strong>
                                 <ul>
                                     <li>General Living Expenses: ${formatCurrency(baseLife - waCarry)}</li>
-                                    <li>WA Home Carrying Costs: ${formatCurrency(waCarry)} (Taxes, Insurance, HOA)</li>
+                                    <li>WA Home Carrying Costs: ${formatCurrency(waCarry)} (Taxes/Ins - inflates over time)</li>
                                 </ul>
                             </li>
-                            <li><strong>Compounding Engine:</strong> To preserve purchasing power, withdrawals inflate at ${formatPct(g)} annually. The remaining capital in the portfolio grows at ${formatPct(r)} annually over the ${years}-year horizon.</li>
+                            <li><strong>Compounding Engine:</strong> Simulation runs iteratively for ${years} years. Variables inflate at ${formatPct(g)} annually, remaining capital grows at ${formatPct(r)} annually.</li>
                         </ul>
                     </div>
                     <div>
@@ -329,10 +376,6 @@
             });
 
             // --- Pathway 2 ---
-            let caDpAmt = caHome * dpPct;
-            let p2Start = startLiq - caEntryTax - caDpAmt;
-            let p2Pmt = caGross + caCarry + waCarry - netRentWA;
-            let p2Liq = p2Start * Math.pow(1 + r, years) - calcAnnuity(p2Pmt, years);
             let p2Re = fvWa + fvCaPath2;
             results.push({
                 name: "Path 2: Immediate CA", liq: p2Liq, re: p2Re, tax: 0, net: p2Liq + p2Re,
@@ -343,13 +386,14 @@
                     <div>
                         <h4>Liquid Capital Mechanics</h4>
                         <ul>
-                            <li><strong>Starting Portfolio:</strong> ${formatCurrency(p2Start)}<br><em>The initial ${formatCurrency(startLiq)} is permanently reduced by the ${formatCurrency(caEntryTax)} CA Entry Tax (capital gains) and a ${formatCurrency(caDpAmt)} down payment (${formatPct(dpPct)} of the CA home value).</em></li>
-                            <li><strong>Year 1 Withdrawal Breakdown:</strong> Net withdrawal of ${formatCurrency(p2Pmt)}
+                            <li><strong>Starting Portfolio:</strong> ${formatCurrency(startLiq - caEntryTax - caDpAmt)}<br><em>The initial ${formatCurrency(startLiq)} is permanently reduced by the ${formatCurrency(caEntryTax)} CA Entry Tax and a ${formatCurrency(caDpAmt)} down payment.</em></li>
+                            <li><strong>Year 1 Withdrawal Breakdown:</strong>
                                 <ul>
-                                    <li>California Gross Lifestyle: ${formatCurrency(caGross)}</li>
-                                    <li><strong>CA Total Carrying Costs: ${formatCurrency(caCarry)}</strong><br><em>(${formatCurrency(caMortgage)} Mortgage P&I + ${formatCurrency(caStaticBase)} Static Taxes/Ins/HOA)</em></li>
-                                    <li>WA Static Carrying Costs: ${formatCurrency(waCarry)}</li>
-                                    <li><em>Minus</em> WA Net Rental Income: -${formatCurrency(netRentWA)} (After ${formatPct(mgmtFee)} mgmt fee)</li>
+                                    <li>California Gross Lifestyle: ${formatCurrency(caGross)} (Inflates)</li>
+                                    <li>CA Fixed Mortgage P&I: ${formatCurrency(caMortgage)} (Fixed 30Y)</li>
+                                    <li>CA Static Taxes/HOA: ${formatCurrency(caStaticBase)} (Inflates)</li>
+                                    <li>WA Static Carrying Costs: ${formatCurrency(waCarry)} (Inflates)</li>
+                                    <li><em>Minus</em> WA Net Rental: -${formatCurrency(netRentWA_Base)} (Rents inflate)</li>
                                 </ul>
                             </li>
                         </ul>
@@ -359,17 +403,13 @@
                         <ul>
                             <li><strong>WA Home Growth:</strong> ${formatCurrency(fvWa)}</li>
                             <li><strong>CA Home Growth:</strong> ${formatCurrency(fvCaPath2)}<br><em>(${formatCurrency(caHome)} appreciating at ${formatPct(caApprec)} annually for ${caHoldPath2Yrs} years).</em></li>
-                            <li><strong>WA Estate Tax Liability:</strong> $0<br><em>Because you are legally domiciled in California at the time of passing, the punitive Washington state estate tax does not apply.</em></li>
+                            <li><strong>WA Estate Tax Liability:</strong> $0<br><em>Domiciled in California at the time of passing.</em></li>
                         </ul>
                     </div>
                 `
             });
 
             // --- Pathway 3 ---
-            let flDpAmt = flHome * dpPct;
-            let p3Start = startLiq - flDpAmt;
-            let p3Pmt = baseLife + flCarry + waCarry - netRentWA;
-            let p3Liq = p3Start * Math.pow(1 + r, years) - calcAnnuity(p3Pmt, years);
             let p3Re = fvWa + fvFl;
             results.push({
                 name: "Path 3: Immediate FL", liq: p3Liq, re: p3Re, tax: 0, net: p3Liq + p3Re,
@@ -380,13 +420,14 @@
                     <div>
                         <h4>Liquid Capital Mechanics</h4>
                         <ul>
-                            <li><strong>Starting Portfolio:</strong> ${formatCurrency(p3Start)}<br><em>The initial ${formatCurrency(startLiq)} is reduced by a ${formatCurrency(flDpAmt)} down payment (${formatPct(dpPct)} of the FL home value). No entry taxes are triggered.</em></li>
-                            <li><strong>Year 1 Withdrawal Breakdown:</strong> Net withdrawal of ${formatCurrency(p3Pmt)}
+                            <li><strong>Starting Portfolio:</strong> ${formatCurrency(startLiq - flDpAmt)}<br><em>The initial ${formatCurrency(startLiq)} is reduced by a ${formatCurrency(flDpAmt)} down payment. No entry taxes are triggered.</em></li>
+                            <li><strong>Year 1 Withdrawal Breakdown:</strong>
                                 <ul>
-                                    <li>Standard Lifestyle: ${formatCurrency(baseLife)}</li>
-                                    <li><strong>FL Total Carrying Costs: ${formatCurrency(flCarry)}</strong><br><em>(${formatCurrency(flMortgage)} Mortgage P&I + ${formatCurrency(flStaticBase)} Static Taxes/CDD/HOA)</em></li>
-                                    <li>WA Static Carrying Costs: ${formatCurrency(waCarry)}</li>
-                                    <li><em>Minus</em> WA Net Rental Income: -${formatCurrency(netRentWA)}</li>
+                                    <li>Standard Lifestyle: ${formatCurrency(baseLife)} (Inflates)</li>
+                                    <li>FL Fixed Mortgage P&I: ${formatCurrency(flMortgage)} (Fixed 30Y)</li>
+                                    <li>FL Static Taxes/CDD/HOA: ${formatCurrency(flStaticBase)} (Inflates)</li>
+                                    <li>WA Static Carrying Costs: ${formatCurrency(waCarry)} (Inflates)</li>
+                                    <li><em>Minus</em> WA Net Rental: -${formatCurrency(netRentWA_Base)} (Rents inflate)</li>
                                 </ul>
                             </li>
                         </ul>
@@ -396,22 +437,16 @@
                         <ul>
                             <li><strong>WA Home Growth:</strong> ${formatCurrency(fvWa)}</li>
                             <li><strong>FL Home Growth:</strong> ${formatCurrency(fvFl)}<br><em>(${formatCurrency(flHome)} appreciating at ${formatPct(flApprec)} annually for ${flHoldYrs} years).</em></li>
-                            <li><strong>WA Estate Tax Liability:</strong> $0<br><em>Florida does not levy a state income tax or a state estate tax, fully protecting the compounding portfolio and the legacy.</em></li>
+                            <li><strong>WA Estate Tax Liability:</strong> $0<br><em>Florida does not levy a state income tax or a state estate tax.</em></li>
                         </ul>
                     </div>
                 `
             });
 
             // --- Pathway 4 ---
-            let p4Start = startLiq - caDpAmt;
-            let p4Pmt1 = baseLife + caCarry + waCarry + 32500 - netRentCA;
-            let p4Pmt2 = caGross + caCarry + waCarry - netRentWA;
-            let p4Liq7 = p4Start * Math.pow(1 + r, 7) - calcAnnuity(p4Pmt1, 7);
-            let inflatedP4Pmt2 = p4Pmt2 * Math.pow(1 + g, 7);
-            let p4LiqFinal = p4Liq7 * Math.pow(1 + r, years - 7) - calcAnnuity(inflatedP4Pmt2, years - 7);
             let p4Re = fvWa + fvCaEarly;
             results.push({
-                name: "Path 4: Delayed CA", liq: p4LiqFinal, re: p4Re, tax: 0, net: p4LiqFinal + p4Re,
+                name: "Path 4: Delayed CA", liq: p4Liq, re: p4Re, tax: 0, net: p4Liq + p4Re,
                 details: `
                     <div class="details-overview">
                         <strong>Overview:</strong> Purchase a CA property early to lock in real estate appreciation, but delay the official move to CA for several years. This splits time between WA and CA initially, maintaining flexibility before committing to CA domicile.
@@ -419,19 +454,17 @@
                     <div>
                         <h4>Liquid Capital Mechanics (Two Phases)</h4>
                         <ul>
-                            <li><strong>Starting Portfolio:</strong> ${formatCurrency(p4Start)} <em>(Initial minus CA Downpayment)</em></li>
-                            <li><strong>Phase 1 (Yrs 1-7) Net Withdrawal:</strong> ${formatCurrency(p4Pmt1)}
+                            <li><strong>Starting Portfolio:</strong> ${formatCurrency(startLiq - caDpAmt)} <em>(Initial minus CA Downpayment)</em></li>
+                            <li><strong>Phase 1 (Yrs 1-7) Year 1 Breakdown:</strong>
                                 <ul>
-                                    <li>Standard Base (${formatCurrency(baseLife)}) + CA Carry (${formatCurrency(caCarry)}) + WA Carry (${formatCurrency(waCarry)})</li>
-                                    <li><em>Minus</em> CA Net Rent (-${formatCurrency(netRentCA)}) <em>Plus</em> WA Winter Rent Loss ($32,500)</li>
+                                    <li>Standard Base: ${formatCurrency(baseLife)}</li>
+                                    <li>CA Fixed Mortgage: ${formatCurrency(caMortgage)}</li>
+                                    <li>CA Static Taxes: ${formatCurrency(caStaticBase)}</li>
+                                    <li>WA Static Carry: ${formatCurrency(waCarry)}</li>
+                                    <li><em>Minus</em> CA Net Rent (-${formatCurrency(netRentCA_Base)}) <em>Plus</em> WA Winter Rent Loss ($32,500)</li>
                                 </ul>
                             </li>
-                            <li><strong>Phase 2 (Yrs 8-27) Net Withdrawal:</strong> ${formatCurrency(p4Pmt2)}
-                                <ul>
-                                    <li>Moves to CA Gross Base (${formatCurrency(caGross)}) + CA/WA Carry Costs</li>
-                                    <li><em>Minus</em> full-time WA Net Rent (-${formatCurrency(netRentWA)})</li>
-                                </ul>
-                            </li>
+                            <li><strong>Phase 2 (Yrs 8-27):</strong> Moves to CA Gross Base (${formatCurrency(caGross)}) plus standard carrying costs, subsidized by WA full-time rent.</li>
                         </ul>
                     </div>
                     <div>
@@ -446,9 +479,6 @@
             });
 
             // --- Pathway 5 ---
-            let p5Start = startLiq - flDpAmt - caDpAmt;
-            let p5Pmt = baseLife + flCarry + caCarry + waCarry - netRentWA - netRentCA;
-            let p5Liq = p5Start * Math.pow(1 + r, years) - calcAnnuity(p5Pmt, years);
             let p5Re = fvWa + fvFl + fvCaPath5;
             results.push({
                 name: "Path 5: Hybrid FL/CA", liq: p5Liq, re: p5Re, tax: 0, net: p5Liq + p5Re,
@@ -459,12 +489,13 @@
                     <div>
                         <h4>Liquid Capital Mechanics</h4>
                         <ul>
-                            <li><strong>Starting Portfolio:</strong> ${formatCurrency(p5Start)}<br><em>Reduced by the FL down payment (${formatCurrency(flDpAmt)}) and CA down payment (${formatCurrency(caDpAmt)}).</em></li>
-                            <li><strong>Year 1 Withdrawal Breakdown:</strong> Net withdrawal of ${formatCurrency(p5Pmt)}
+                            <li><strong>Starting Portfolio:</strong> ${formatCurrency(startLiq - flDpAmt - caDpAmt)}<br><em>Reduced by the FL down payment (${formatCurrency(flDpAmt)}) and CA down payment (${formatCurrency(caDpAmt)}).</em></li>
+                            <li><strong>Year 1 Withdrawal Breakdown:</strong>
                                 <ul>
                                     <li>Standard Lifestyle: ${formatCurrency(baseLife)}</li>
-                                    <li>Total Carrying Costs: FL (${formatCurrency(flCarry)}) + CA (${formatCurrency(caCarry)}) + WA (${formatCurrency(waCarry)})</li>
-                                    <li><strong>The Dual Rental Offset:</strong> Generating full-time net rent from both WA (-${formatCurrency(netRentWA)}) and CA (-${formatCurrency(netRentCA)}) massively subsidizes the carry costs of owning three properties.</li>
+                                    <li>FL/CA Fixed Mortgages: ${formatCurrency(flMortgage + caMortgage)}</li>
+                                    <li>FL/CA/WA Static Carry (Taxes/HOA): ${formatCurrency(flStaticBase + caStaticBase + waCarry)}</li>
+                                    <li><em>Minus</em> Dual Rental Offset (WA/CA): -${formatCurrency(netRentWA_Base + netRentCA_Base)}</li>
                                 </ul>
                             </li>
                         </ul>
@@ -475,13 +506,12 @@
                             <li><strong>WA Home Growth:</strong> ${formatCurrency(fvWa)}</li>
                             <li><strong>FL Home Growth:</strong> ${formatCurrency(fvFl)}</li>
                             <li><strong>CA Home Growth:</strong> ${formatCurrency(fvCaPath5)}</li>
-                            <li><strong>WA Estate Tax Liability:</strong> $0<br><em>Legally domiciled in Florida, fully shielded from both state income tax and the Washington state estate tax.</em></li>
+                            <li><strong>WA Estate Tax Liability:</strong> $0<br><em>Legally domiciled in Florida.</em></li>
                         </ul>
                     </div>
                 `
             });
 
-            // Render Table & Chart Data
             const tbody = document.querySelector('#resultsTable tbody');
             tbody.innerHTML = '';
             
@@ -490,7 +520,7 @@
                 liquidData.push(row.liq);
                 realEstateData.push(row.re);
                 taxData.push(row.tax); 
-                netLegacyData.push(row.net); // Capture the explicit Net Legacy for the line chart
+                netLegacyData.push(row.net); 
 
                 let tr = document.createElement('tr');
                 tr.id = `main-row-${index}`;
@@ -542,10 +572,10 @@
                 labels: labels,
                 datasets: [
                     { 
-                        type: 'line', // This renders the combo line
+                        type: 'line', 
                         label: 'FINAL NET LEGACY', 
                         data: netLegacy, 
-                        borderColor: '#fbbf24', // Distinct gold line
+                        borderColor: '#fbbf24', 
                         backgroundColor: '#f59e0b',
                         borderWidth: 3,
                         pointRadius: 6,
