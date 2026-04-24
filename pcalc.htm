@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Retirement Pathway Workstation | Premium Edition</title>
+    <title>Retirement Asset Management</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { 
@@ -15,7 +15,6 @@
             --midnight: #0f172a;
             --slate-panel: #1e293b;
             --bg-light: #f1f5f9;
-            --teal-header: #134e4a;
         }
         
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background-color: var(--bg-light); color: #1e293b; padding: 0; margin: 0; }
@@ -48,6 +47,10 @@
         }
         .scenario-card.active-baseline { border: 2px solid var(--primary); background: #f0f7ff; }
         
+        .name-input { width: 100%; border: 1px solid #cbd5e1; border-radius: 4px; padding: 6px; font-weight: bold; font-size: 12px; box-sizing: border-box; }
+        .card-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; }
+
+        /* Sidebar Slate Panel */
         .dashboard-grid { display: grid; grid-template-columns: 440px 1fr; gap: 30px; padding: 25px 0; }
         .inputs-section { 
             background: var(--slate-panel); color: white; padding: 25px; border-radius: 16px; 
@@ -60,13 +63,15 @@
         .input-group label { display: block; font-size: 10px; font-weight: 700; color: #cbd5e1; margin-bottom: 5px; }
         .input-group input { width: 100%; padding: 8px; border: 1px solid #475569; border-radius: 6px; background: #0f172a; color: white; font-size: 13px; font-family: monospace; box-sizing: border-box; }
 
-        /* Uniform Table Styling */
+        /* Uniform Table & Expanded Chart Styling */
+        .outputs-section { display: flex; flex-direction: column; gap: 30px; }
+        .chart-container { background: white; padding: 25px; border-radius: 16px; border: 1px solid #e2e8f0; height: 650px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
         .table-container { background: white; border-radius: 16px; border: 1px solid #e2e8f0; overflow: auto; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        
         table { width: 100%; border-collapse: collapse; min-width: 1300px; }
         
-        /* THE FIXED HEADER */
         th { 
-            background: #334155 !important; /* Uniform dark slate for the whole header */
+            background: #334155 !important; 
             color: #fff; 
             padding: 14px 12px; 
             font-size: 11px; 
@@ -87,25 +92,25 @@
         .col-taxes { color: #f97316 !important; }
         .col-power { background-color: #134e4a !important; color: white !important; font-weight: bold; }
         
-        /* Comparison Colors (Text only in header) */
         .header-live { color: #3b82f6 !important; }
         .header-base { color: #94a3b8 !important; }
         .header-delta { color: #f87171 !important; }
         .header-house { color: #fb923c !important; }
 
-        /* Table Body Comparison Styles */
         .base-col { background: #fafafa; color: var(--baseline); border-left: 1px solid #e2e8f0; }
         .delta-col { font-weight: bold; width: 120px; }
         .delta-neg { background-color: #fef2f2; color: var(--danger); }
         .delta-pos { background-color: #ecfdf5; color: var(--success); }
 
-        /* Buttons & Overrides */
-        .btn { padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; border: none; font-size: 11px; }
+        /* Overrides */
+        .btn { padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; border: none; font-size: 11px; transition: 0.2s; }
         .btn-manage { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 30px; padding: 8px 20px; }
         .btn-crash { background: var(--crash); color: white; width: 100%; margin-top: 10px; height: 40px; }
         .btn-event { background: var(--primary); color: white; width: 100%; margin-top: 10px; height: 40px; }
         .event-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; background: #334155; padding: 10px; border-radius: 8px; }
         .input-wrapper { position: relative; width: 100%; display: flex; align-items: center; }
+        .symbol-right { position: absolute; right: 10px; color: #94a3b8; font-weight: bold; font-size: 12px; }
+        .symbol-left { position: absolute; left: 10px; color: #94a3b8; font-weight: bold; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -116,8 +121,8 @@
         <div class="stat-item"><span class="stat-label">Delta vs Baseline</span><span class="stat-value" id="deltaNW">$0</span></div>
     </div>
     <div style="display: flex; gap: 25px; align-items: center;">
-        <div style="font-size: 12px; font-weight: 800; color: #94a3b8;">
-            Baseline: <span id="comparingToText" style="color: var(--primary)">None</span>
+        <div style="font-size: 12px; font-weight: 800; color: #94a3b8; text-transform: uppercase;">
+            Baseline: <span id="comparingToText" style="color: var(--primary)">None Selected</span>
         </div>
         <button class="btn btn-manage" onclick="toggleDrawer()">⚙️ Manage Scenarios</button>
     </div>
@@ -142,6 +147,7 @@
             <h3>Monthly Spend ($)</h3><div class="input-grid-5" id="spendGrid"></div>
             <h3>Monthly Income ($)</h3><div class="input-grid-5" id="incomeGrid"></div>
             <h3>Tax Estimates (%)</h3><div class="input-grid-5" id="taxGrid"></div>
+            
             <h3>Stress Test & Events</h3>
             <div id="dynamicReturns"></div>
             <button class="btn btn-crash" onclick="addRow('return')">+ Add Market Crash Event</button>
@@ -162,9 +168,9 @@
 </div>
 
 <script>
-    let scenarios = JSON.parse(localStorage.getItem('scenData_v8')) || { A: null, B: null, C: null, D: null };
-    let scenarioNames = JSON.parse(localStorage.getItem('scenNames_v8')) || { A: '', B: '', C: '', D: '' };
-    let baselineSlot = localStorage.getItem('baseSlot_v8') || null;
+    let scenarios = JSON.parse(localStorage.getItem('scenData_v9')) || { A: null, B: null, C: null, D: null };
+    let scenarioNames = JSON.parse(localStorage.getItem('scenNames_v9')) || { A: '', B: '', C: '', D: '' };
+    let baselineSlot = localStorage.getItem('baseSlot_v9') || null;
     let chartObj = null;
     const fmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 
@@ -183,65 +189,22 @@
         });
     }
 
-    function calculate() {
-        const liveIn = getInputs();
-        const live = run(liveIn);
-        const base = run(scenarios[baselineSlot]);
-        updateHeaders(!!base);
-        updateUI(live, base);
+    function formatCurrencyInput(el) {
+        let v = el.value.replace(/,/g, '').replace(/[^\d.]/g, '');
+        if (v) el.value = Number(v).toLocaleString();
+        calculate();
     }
 
-    function updateHeaders(isCompare) {
-        const h = document.getElementById('tableHeaders');
-        if (isCompare) {
-            h.innerHTML = `
-                <th>Year</th>
-                <th>Withdrawal</th>
-                <th class="header-live">End Liq (Live)</th>
-                <th class="header-base">Liq (Base)</th>
-                <th class="header-delta">Liq Δ</th>
-                <th class="header-house">House (Live)</th>
-                <th class="header-base">House (Base)</th>
-                <th class="header-delta">House Δ</th>
-                <th>Total NW</th>
-                <th class="col-power">Real Power</th>`;
-        } else {
-            h.innerHTML = `
-                <th>Year</th>
-                <th>Start Liquid</th>
-                <th class="col-income">Taxable Income</th>
-                <th class="col-withdrawal">Port. Withdrawal</th>
-                <th class="col-taxes">Taxes Paid</th>
-                <th>Net Spendable</th>
-                <th>End Liquid</th>
-                <th>Total Net Worth</th>
-                <th class="col-power">Purchasing Power</th>`;
-        }
-    }
-
-    function updateUI(live, base) {
-        const tbody = document.querySelector('#resultsTable tbody');
-        tbody.innerHTML = '';
-        live.forEach((r, i) => {
-            const tr = document.createElement('tr');
-            if (base) {
-                const dL = r.endLiq - base[i].endLiq;
-                const dH = r.house - base[i].house;
-                tr.innerHTML = `<td>${r.yr}</td><td>${fmt.format(r.withdrawal)}</td><td style="color:var(--primary); font-weight:bold">${fmt.format(r.endLiq)}</td><td class="base-col">${fmt.format(base[i].endLiq)}</td><td class="delta-col ${dL >= 0 ? 'delta-pos' : 'delta-neg'}">${fmt.format(dL)}</td><td style="color:#fb923c">${fmt.format(r.house)}</td><td class="base-col">${fmt.format(base[i].house)}</td><td class="delta-col ${dH >= 0 ? 'delta-pos' : 'delta-neg'}">${fmt.format(dH)}</td><td>${fmt.format(r.total)}</td><td class="col-power">${fmt.format(r.total / Math.pow(1.04, i))}</td>`;
-            } else {
-                tr.innerHTML = `<td>${r.yr}</td><td>${fmt.format(r.sLiq)}</td><td class="col-income">${fmt.format(r.taxableIncome)}</td><td class="col-withdrawal">${fmt.format(r.withdrawal)}</td><td class="col-taxes">${fmt.format(r.taxes)}</td><td>${fmt.format(r.netSpendable)}</td><td>${fmt.format(r.endLiq)}</td><td>${fmt.format(r.total)}</td><td class="col-power">${fmt.format(r.total / Math.pow(1.04, i))}</td>`;
-            }
-            tbody.appendChild(tr);
-        });
-        document.getElementById('valNW').innerText = fmt.format(live[39].total);
-        updateChart(live, base);
-    }
-
-    /* Helper functions for inputs and scenario management... */
     function getInputs() {
         const v = id => Number(document.getElementById(id).value.replace(/,/g, ''));
         const inp = { startYear: v('startYear'), inflation: v('inflation')/100, startLiquid: v('startLiquid'), stockGrowth: v('stockGrowth')/100, startHouse: v('startHouse'), reApprec: v('reApprec')/100, buckets: [], returns: [], events: [] };
         for (let i = 1; i <= 8; i++) inp.buckets.push({ spend: v(`spend${i}`)*12, income: v(`income${i}`)*12, tax: v(`tax${i}`)/100 });
+        document.querySelectorAll('.dyn-ret-yr').forEach((node, idx) => {
+            inp.returns.push({ yr: Number(node.value), val: Number(document.querySelectorAll('.dyn-ret-val')[idx].value)/100 });
+        });
+        document.querySelectorAll('.dyn-evt-yr').forEach((node, idx) => {
+            inp.events.push({ yr: Number(node.value), val: Number(document.querySelectorAll('.dyn-evt-val')[idx].value.replace(/,/g, '')) });
+        });
         return inp;
     }
 
@@ -256,18 +219,60 @@
             let wth = Math.max(0, gross - (b.income * Math.pow(1 + inp.inflation, i)));
             const tx = (wth + (b.income * Math.pow(1 + inp.inflation, i))) * b.tax;
             if (liq <= 0) { liq = 0; wth = 0; } else if (wth > liq) { wth = liq; }
-            liq = Math.max(0, (liq - wth) * (1 + inp.stockGrowth)); hse *= (1 + inp.reApprec);
-            res.push({ yr, sLiq, taxableIncome: b.income*12*Math.pow(1.04,i), withdrawal: wth, taxes: tx, netSpendable: net, endLiq: liq, house: hse, total: liq + hse });
+            let g = inp.returns.find(r => r.yr === yr)?.val ?? inp.stockGrowth;
+            liq = Math.max(0, (liq - wth) * (1 + g)); hse *= (1 + inp.reApprec);
+            res.push({ yr, sLiq, taxableIncome: b.income*12*Math.pow(1 + inp.inflation,i), withdrawal: wth, taxes: tx, netSpendable: net, endLiq: liq, house: hse, total: liq + hse });
         }
         return res;
+    }
+
+    function calculate() {
+        const liveIn = getInputs();
+        const live = run(liveIn);
+        const base = run(scenarios[baselineSlot]);
+        updateHeaders(!!base);
+        updateUI(live, base);
+    }
+
+    function updateHeaders(isCompare) {
+        const h = document.getElementById('tableHeaders');
+        if (isCompare) {
+            h.innerHTML = `<th>Year</th><th>Withdrawal</th><th class="header-live">End Liq (Live)</th><th class="header-base">Liq (Base)</th><th class="header-delta">LIQ DELTA</th><th class="header-house">House (Live)</th><th class="header-base">House (Base)</th><th class="header-delta">HOUSE DELTA</th><th>Total NW</th><th class="col-power">Real Power</th>`;
+        } else {
+            h.innerHTML = `<th>Year</th><th>Start Liquid</th><th class="col-income">Taxable Income</th><th class="col-withdrawal">Port. Withdrawal</th><th class="col-taxes">Taxes Paid</th><th>Net Spendable</th><th>End Liquid</th><th>Total Net Worth</th><th class="col-power">Purchasing Power</th>`;
+        }
+    }
+
+    function updateUI(live, base) {
+        const tbody = document.querySelector('#resultsTable tbody');
+        tbody.innerHTML = '';
+        live.forEach((r, i) => {
+            const tr = document.createElement('tr');
+            if (base) {
+                const dL = r.endLiq - base[i].endLiq;
+                const dH = r.house - base[i].house;
+                tr.innerHTML = `<td>${r.yr}</td><td>${fmt.format(r.withdrawal)}</td><td style="color:var(--primary); font-weight:bold">${fmt.format(r.endLiq)}</td><td class="base-col">${fmt.format(base[i].endLiq)}</td><td class="delta-col ${dL >= 0 ? 'delta-pos' : 'delta-neg'}">${(dL>=0?'+':'')+fmt.format(dL)}</td><td style="color:#fb923c">${fmt.format(r.house)}</td><td class="base-col">${fmt.format(base[i].house)}</td><td class="delta-col ${dH >= 0 ? 'delta-pos' : 'delta-neg'}">${(dH>=0?'+':'')+fmt.format(dH)}</td><td>${fmt.format(r.total)}</td><td class="col-power">${fmt.format(r.total / Math.pow(1 + getInputs().inflation, i))}</td>`;
+            } else {
+                tr.innerHTML = `<td>${r.yr}</td><td>${fmt.format(r.sLiq)}</td><td class="col-income">${fmt.format(r.taxableIncome)}</td><td class="col-withdrawal">${fmt.format(r.withdrawal)}</td><td class="col-taxes">${fmt.format(r.taxes)}</td><td>${fmt.format(r.netSpendable)}</td><td>${fmt.format(r.endLiq)}</td><td>${fmt.format(r.total)}</td><td class="col-power">${fmt.format(r.total / Math.pow(1 + getInputs().inflation, i))}</td>`;
+            }
+            tbody.appendChild(tr);
+        });
+        document.getElementById('valNW').innerText = fmt.format(live[39].total);
+        const deltaEl = document.getElementById('deltaNW');
+        if (base) {
+            const diff = live[39].total - base[39].total;
+            deltaEl.innerText = (diff >= 0 ? '+' : '') + fmt.format(diff);
+            deltaEl.style.color = diff >= 0 ? 'var(--success)' : 'var(--danger)';
+        } else { deltaEl.innerText = '$0'; deltaEl.style.color = '#94a3b8'; }
+        updateChart(live, base);
     }
 
     function updateChart(live, base) {
         const ctx = document.getElementById('mainChart').getContext('2d');
         if (chartObj) chartObj.destroy();
-        const ds = [{ label: 'Live Assets', data: live.map(r => r.endLiq), backgroundColor: 'rgba(59, 130, 246, 0.8)', stack: 'A' }, { label: 'Real Estate', data: live.map(r => r.house), backgroundColor: 'rgba(16, 185, 129, 0.8)', stack: 'A' }];
-        if (base) ds.push({ label: 'Baseline', data: base.map(r => r.total), borderColor: '#94a3b8', borderDash: [6, 4], type: 'line', fill: false, borderWidth: 3 });
-        chartObj = new Chart(ctx, { type: 'bar', data: { labels: live.map(r => r.yr), datasets: ds }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { stacked: true }, x: { stacked: true } }, plugins: { legend: { position: 'bottom' } } } });
+        const ds = [{ label: 'Portfolio Assets', data: live.map(r => r.endLiq), backgroundColor: 'rgba(59, 130, 246, 0.8)', stack: 'A' }, { label: 'Real Estate Value', data: live.map(r => r.house), backgroundColor: 'rgba(16, 185, 129, 0.8)', stack: 'A' }];
+        if (base) ds.push({ label: 'Baseline Pathway', data: base.map(r => r.total), borderColor: '#94a3b8', borderDash: [6, 4], type: 'line', fill: false, borderWidth: 3 });
+        chartObj = new Chart(ctx, { type: 'bar', data: { labels: live.map(r => r.yr), datasets: ds }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { stacked: true, ticks: { callback: v => '$' + (v/1e6).toFixed(1) + 'M' } }, x: { stacked: true } }, plugins: { legend: { position: 'bottom' } } } });
     }
 
     function updateScenarioCards() {
@@ -279,17 +284,47 @@
             div.className = `scenario-card ${isEmpty ? 'empty' : ''} ${baselineSlot === s ? 'active-baseline' : ''}`;
             if (isEmpty) { div.innerHTML = `<span>+ Save Path ${s}</span>`; div.onclick = () => saveSlot(s); }
             else {
-                div.innerHTML = `<div style="font-size:10px; font-weight:900; color:#94a3b8;">Slot ${s}</div><input type="text" class="name-input" id="name-${s}" placeholder="Name..." value="${scenarioNames[s]}" onchange="updateScenarioNames()"><div class="card-actions"><button class="btn" onclick="saveSlot('${s}')">Save</button><button class="btn" onclick="loadSlot('${s}')">Load</button><button class="btn" onclick="clearSlot('${s}')" style="color:var(--danger)">Clear</button></div><button class="btn ${baselineSlot === s ? 'btn-active' : ''}" style="width:100%" onclick="setBaseline('${s}')">${baselineSlot === s ? 'Active' : 'Compare'}</button>`;
+                div.innerHTML = `<div style="font-size:10px; font-weight:900; color:#94a3b8;">Slot ${s}</div><input type="text" class="name-input" id="name-${s}" placeholder="Name..." value="${scenarioNames[s]}" onchange="updateScenarioNames()"><div class="card-actions"><button class="btn" onclick="saveSlot('${s}')">Update</button><button class="btn" onclick="loadSlot('${s}')">Load</button><button class="btn" onclick="clearSlot('${s}')" style="color:var(--danger)">Clear</button></div><button class="btn ${baselineSlot === s ? 'btn-active' : ''}" style="width:100%" onclick="setBaseline('${s}')">${baselineSlot === s ? 'Active' : 'Compare'}</button>`;
             }
             grid.appendChild(div);
         });
         document.getElementById('comparingToText').innerText = baselineSlot ? (scenarioNames[baselineSlot] || `Scenario ${baselineSlot}`) : 'None Selected';
     }
 
-    function saveSlot(s) { scenarios[s] = getInputs(); localStorage.setItem('scenData_v8', JSON.stringify(scenarios)); updateScenarioCards(); calculate(); }
-    function loadSlot(s) { /* Implementation for loading data back to UI */ }
-    function clearSlot(s) { scenarios[s] = null; updateScenarioCards(); calculate(); }
-    function setBaseline(s) { baselineSlot = (baselineSlot === s) ? null : s; updateScenarioCards(); calculate(); }
+    function saveSlot(s) { scenarios[s] = getInputs(); if (!scenarioNames[s]) scenarioNames[s] = `Scenario ${s}`; localStorage.setItem('scenData_v9', JSON.stringify(scenarios)); localStorage.setItem('scenNames_v9', JSON.stringify(scenarioNames)); updateScenarioCards(); calculate(); }
+    
+    function loadSlot(s) { 
+        const d = scenarios[s]; if (!d) return;
+        document.getElementById('startYear').value = d.startYear;
+        document.getElementById('inflation').value = (d.inflation*100).toFixed(1);
+        document.getElementById('startLiquid').value = d.startLiquid.toLocaleString();
+        document.getElementById('stockGrowth').value = (d.stockGrowth*100).toFixed(1);
+        document.getElementById('startHouse').value = d.startHouse.toLocaleString();
+        document.getElementById('reApprec').value = (d.reApprec*100).toFixed(1);
+        d.buckets.forEach((b, i) => { 
+            document.getElementById(`spend${i+1}`).value = (b.spend/12).toLocaleString(); 
+            document.getElementById(`income${i+1}`).value = (b.income/12).toLocaleString(); 
+            document.getElementById(`tax${i+1}`).value = (b.tax*100).toFixed(1); 
+        });
+        document.getElementById('dynamicReturns').innerHTML = ''; d.returns.forEach(r => addRow('return', r.yr, r.val*100));
+        document.getElementById('dynamicEvents').innerHTML = ''; d.events.forEach(e => addRow('event', e.yr, e.val));
+        calculate();
+    }
+
+    function clearSlot(s) { scenarios[s] = null; scenarioNames[s] = ''; if (baselineSlot === s) baselineSlot = null; localStorage.setItem('scenData_v9', JSON.stringify(scenarios)); localStorage.setItem('scenNames_v9', JSON.stringify(scenarioNames)); localStorage.setItem('baseSlot_v9', baselineSlot); updateScenarioCards(); calculate(); }
+    
+    function setBaseline(s) { baselineSlot = (baselineSlot === s) ? null : s; localStorage.setItem('baseSlot_v9', baselineSlot); updateScenarioCards(); calculate(); }
+    
+    function updateScenarioNames() { ['A', 'B', 'C', 'D'].forEach(s => { const el = document.getElementById(`name-${s}`); if (el) scenarioNames[s] = el.value; }); localStorage.setItem('scenNames_v9', JSON.stringify(scenarioNames)); updateScenarioCards(); }
+
+    function addRow(t, yO, vO) {
+        const c = document.getElementById(t === 'return' ? 'dynamicReturns' : 'dynamicEvents');
+        const yr = yO || (Number(document.getElementById('startYear').value) + 2 + c.children.length);
+        const div = document.createElement('div');
+        div.className = 'event-row';
+        div.innerHTML = `<div style="font-size:10px; font-weight:bold; color:#cbd5e1; width:25px;">Yr</div><input type="number" class="${t==='return'?'dyn-ret-yr':'dyn-evt-yr'}" value="${yr}" style="width:55px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" oninput="calculate()"><div style="font-size:10px; font-weight:bold; color:#cbd5e1; margin-left:5px;">${t==='return'?'%':'$'}:</div><div class="input-wrapper">${t==='event'?'<span class="symbol-left">$</span>':''}<input type="${t==='return'?'number':'text'}" class="${t==='return'?'has-right dyn-ret-val':'has-left dyn-evt-val'}" value="${(vO||(t==='return'?-20:50000)).toLocaleString()}" style="background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px; width:100%" oninput="${t==='return'?'calculate()':'formatCurrencyInput(this)'}">${t==='return'?'<span class="symbol-right">%</span>':''}</div><button class="btn" style="color:var(--danger); background:transparent; font-size:16px;" onclick="this.parentElement.remove();calculate()">×</button>`;
+        c.appendChild(div); if (!yO) calculate();
+    }
 
     window.onload = () => { initGrids(); updateScenarioCards(); calculate(); };
 </script>
