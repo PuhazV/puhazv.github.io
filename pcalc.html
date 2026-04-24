@@ -10,17 +10,14 @@
         .container { max-width: 1350px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         h1 { text-align: center; color: #2c3e50; margin-bottom: 30px; }
         
-        /* Align-items: start prevents the columns from stretching weirdly if one is taller */
         .dashboard-grid { display: grid; grid-template-columns: 350px 1fr; gap: 30px; align-items: start; }
         
-        /* Inputs Section - Removed hardcoded heights to allow natural expansion */
         .inputs-section { background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; }
         .input-group { margin-bottom: 12px; }
         .input-group label { display: block; font-weight: bold; margin-bottom: 4px; font-size: 13px; color: #475569; }
         .input-group input { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; font-family: monospace; }
         h3 { margin-top: 0; color: #1e293b; font-size: 16px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; margin-top: 20px; }
 
-        /* Dynamic Events Section */
         .event-row-input { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
         .event-row-input input { margin-bottom: 0; }
         .btn-add { background-color: #3b82f6; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; font-size: 13px; }
@@ -29,12 +26,9 @@
         .btn-remove { background-color: #ef4444; color: white; border: none; border-radius: 4px; width: 30px; height: 30px; cursor: pointer; font-weight: bold; flex-shrink: 0; }
         .btn-remove:hover { background-color: #dc2626; }
 
-        /* Outputs Section */
         .outputs-section { display: flex; flex-direction: column; gap: 30px; }
-        /* Chart container given a bit more room to breathe on tall screens */
         .chart-container { background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; height: 500px; }
         
-        /* Table Container - Removed max-height so all 40 rows are visible without scrolling inside the box */
         .table-container { background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; }
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 10px 8px; text-align: right; border-bottom: 1px solid #e2e8f0; font-size: 13px; font-family: monospace; }
@@ -119,7 +113,7 @@
             <h3>One-Time Lifetime Events</h3>
             <div id="dynamicEventsContainer">
                 </div>
-            <button id="addEventBtn" class="btn-add" onclick="addEventRow()">+ Add Event (Max 6)</button>
+            <button id="addEventBtn" class="btn-add" onclick="addEventRow()">+ Add Event (Max 10)</button>
         </div>
 
         <div class="outputs-section">
@@ -154,7 +148,7 @@
 
     // --- Dynamic Events Logic ---
     let eventCount = 0;
-    const MAX_EVENTS = 6;
+    const MAX_EVENTS = 10;
 
     function addEventRow() {
         if (eventCount >= MAX_EVENTS) return;
@@ -176,7 +170,7 @@
         
         if (eventCount >= MAX_EVENTS) {
             document.getElementById('addEventBtn').disabled = true;
-            document.getElementById('addEventBtn').innerText = 'Max 6 Events Reached';
+            document.getElementById('addEventBtn').innerText = 'Max 10 Events Reached';
         }
         calculate(); 
     }
@@ -187,7 +181,7 @@
         eventCount--;
         
         document.getElementById('addEventBtn').disabled = false;
-        document.getElementById('addEventBtn').innerText = '+ Add Event (Max 6)';
+        document.getElementById('addEventBtn').innerText = '+ Add Event (Max 10)';
         calculate(); 
     }
 
@@ -246,17 +240,14 @@
             for (let i = 0; i < 40; i++) {
                 const currentYear = startYear + i;
                 
-                // Determine base lifestyle cost for the decade
                 let annualBaseWithdrawal = 0;
                 if (i < 10) annualBaseWithdrawal = baseWithdraw1;
                 else if (i < 20) annualBaseWithdrawal = baseWithdraw2;
                 else if (i < 30) annualBaseWithdrawal = baseWithdraw3;
                 else annualBaseWithdrawal = baseWithdraw4;
 
-                // Inflate the lifestyle cost
                 let actualLifestyleCost = annualBaseWithdrawal * Math.pow(1 + inflation, i);
 
-                // Add one-time events for this specific year
                 let eventTotalThisYear = 0;
                 activeEvents.forEach(e => {
                     if (e.year === currentYear) eventTotalThisYear += e.amount;
@@ -264,43 +255,36 @@
                 
                 let totalExpenses = actualLifestyleCost + eventTotalThisYear;
 
-                // Apply Social Security / Pension offset
                 let activeFixedIncome = 0;
                 if (currentYear >= fixedIncomeYear) {
                     const yrsSinceFixedIncome = currentYear - startYear; 
                     activeFixedIncome = fixedIncome * Math.pow(1 + inflation, yrsSinceFixedIncome);
                 }
 
-                // Calculate NET Withdrawal from portfolio
                 let requiredFromPortfolio = totalExpenses - activeFixedIncome;
                 if (requiredFromPortfolio < 0) requiredFromPortfolio = 0; 
 
-                // Check if portfolio survives the withdrawal
                 let safeWithdrawal = Math.min(requiredFromPortfolio, currentLiquid);
                 if (currentLiquid <= 0) {
                     safeWithdrawal = 0;
                     isDepleted = true;
                 }
                 
-                // Apply Growth (Account for Sequence of Returns Risk in Year 1)
                 let currentYearGrowth = (i === 0 && bearMarket > 0) ? -bearMarket : stockGrowth;
                 let endLiquid = (currentLiquid - safeWithdrawal) * (1 + currentYearGrowth);
                 if (endLiquid < 0) endLiquid = 0; 
 
-                // Calculate Real Estate and Net Worth
                 const endHouse = startHouse * Math.pow(1 + reApprec, i + 1);
                 const totalNominalNetWorth = endLiquid + endHouse;
 
-                // Calculate Purchasing Power
                 const realNetWorth = totalNominalNetWorth / Math.pow(1 + inflation, i + 1);
 
                 labels.push(currentYear);
                 liquidData.push(endLiquid);
                 reData.push(endHouse);
 
-                // Build table row
                 let tr = document.createElement('tr');
-                if (eventTotalThisYear > 0) tr.classList.add('event-row'); // Highlight row if event happened
+                if (eventTotalThisYear > 0) tr.classList.add('event-row');
                 
                 let liqColor = isDepleted ? 'color:#dc2626; font-weight:bold;' : 'color:#2563eb;';
                 tr.innerHTML = `
