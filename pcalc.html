@@ -7,7 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f6; color: #333; padding: 20px; }
-        .container { max-width: 1400px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .container { max-width: 1450px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         h1 { text-align: center; color: #2c3e50; margin-bottom: 30px; }
         
         .dashboard-grid { display: grid; grid-template-columns: 350px 1fr; gap: 30px; align-items: start; }
@@ -91,12 +91,11 @@
                 <input type="number" id="inflation" value="4" step="0.1" oninput="calculate()">
             </div>
 
-            <h3> Market Crash Events </h3>
-            <div id="dynamicReturnsContainer">
-                </div>
-            <button id="addReturnBtn" class="btn-add-alt" onclick="addReturnRow()">+ Add Market Crash Events (Max 10)</button>
+            <h3>Market Crash Events (Stress Test)</h3>
+            <div id="dynamicReturnsContainer"></div>
+            <button id="addReturnBtn" class="btn-add-alt" onclick="addReturnRow()">+ Add Custom Market Crashes (Max 10)</button>
 
-            <h3>Base Monthly Withdrawals (Inc. Taxes)</h3>
+            <h3>Desired Net Monthly Spend (Take-Home)</h3>
             <div class="input-group">
                 <label>Years 1-10 ($ / month)</label>
                 <input type="text" id="withdraw1" value="30,000" oninput="formatCurrencyInput(this)">
@@ -114,6 +113,36 @@
                 <input type="text" id="withdraw4" value="25,000" oninput="formatCurrencyInput(this)">
             </div>
 
+            <h3>Estimated Effective Tax Rate</h3>
+            <div class="input-group">
+                <label>Years 1-10 (%)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="tax1" value="15" step="0.1" class="has-right" oninput="calculate()">
+                    <span class="symbol-right">%</span>
+                </div>
+            </div>
+            <div class="input-group">
+                <label>Years 11-20 (%)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="tax2" value="12" step="0.1" class="has-right" oninput="calculate()">
+                    <span class="symbol-right">%</span>
+                </div>
+            </div>
+            <div class="input-group">
+                <label>Years 21-30 (%)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="tax3" value="10" step="0.1" class="has-right" oninput="calculate()">
+                    <span class="symbol-right">%</span>
+                </div>
+            </div>
+            <div class="input-group">
+                <label>Years 31-40 (%)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="tax4" value="10" step="0.1" class="has-right" oninput="calculate()">
+                    <span class="symbol-right">%</span>
+                </div>
+            </div>
+
             <h3>Social Security / Pension</h3>
             <div class="input-group">
                 <label>Fixed Monthly Income ($ / month)</label>
@@ -125,8 +154,7 @@
             </div>
 
             <h3>One-Time Lifetime Events</h3>
-            <div id="dynamicEventsContainer">
-                </div>
+            <div id="dynamicEventsContainer"></div>
             <button id="addEventBtn" class="btn-add" onclick="addEventRow()">+ Add Event (Max 10)</button>
         </div>
 
@@ -141,11 +169,13 @@
                         <tr>
                             <th>Year</th>
                             <th>Start Liquid</th>
-                            <th style="color: #dc2626;">Total Withdrawal</th>
+                            <th style="color: #16a34a;">Net Spendable</th>
+                            <th style="color: #ea580c;">Taxes Paid</th>
+                            <th style="color: #dc2626;">Gross Withdrawal</th>
                             <th>End Liquid</th>
                             <th>House Value</th>
                             <th>Nominal Net Worth</th>
-                            <th style="background-color: #0f766e;">Purchasing Power (Today's $)</th>
+                            <th style="background-color: #0f766e;">Purchasing Power</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -160,7 +190,6 @@
     let projectionChartInstance = null; 
     const formatCurrency = (num) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(num);
 
-    // --- Dynamic Custom Returns Logic ---
     let returnCount = 0;
     const MAX_RETURNS = 10;
 
@@ -169,9 +198,7 @@
         const container = document.getElementById('dynamicReturnsContainer');
         const row = document.createElement('div');
         row.className = 'event-row-input';
-        
         const defaultYear = Number(document.getElementById('startYear').value) + returnCount;
-
         row.innerHTML = `
             <input type="number" placeholder="Year" value="${defaultYear}" class="dyn-return-year" oninput="calculate()" style="width: 40%;">
             <div class="input-wrapper" style="width: 60%;">
@@ -180,10 +207,8 @@
             </div>
             <button class="btn-remove" onclick="removeReturnRow(this)" title="Remove Custom Return">✕</button>
         `;
-        
         container.appendChild(row);
         returnCount++;
-        
         if (returnCount >= MAX_RETURNS) {
             document.getElementById('addReturnBtn').disabled = true;
             document.getElementById('addReturnBtn').innerText = 'Max 10 Returns Reached';
@@ -195,13 +220,11 @@
         const row = btnElem.parentElement;
         row.remove();
         returnCount--;
-        
         document.getElementById('addReturnBtn').disabled = false;
         document.getElementById('addReturnBtn').innerText = '+ Add Custom Market Year (Max 10)';
         calculate(); 
     }
 
-    // --- Dynamic Events Logic ---
     let eventCount = 0;
     const MAX_EVENTS = 10;
 
@@ -210,9 +233,7 @@
         const container = document.getElementById('dynamicEventsContainer');
         const row = document.createElement('div');
         row.className = 'event-row-input';
-        
         const defaultYear = Number(document.getElementById('startYear').value) + 2 + eventCount;
-
         row.innerHTML = `
             <input type="number" placeholder="Year" value="${defaultYear}" class="dyn-event-year" oninput="calculate()" style="width: 40%;">
             <div class="input-wrapper" style="width: 60%;">
@@ -221,10 +242,8 @@
             </div>
             <button class="btn-remove" onclick="removeEventRow(this)" title="Remove Event">✕</button>
         `;
-        
         container.appendChild(row);
         eventCount++;
-        
         if (eventCount >= MAX_EVENTS) {
             document.getElementById('addEventBtn').disabled = true;
             document.getElementById('addEventBtn').innerText = 'Max 10 Events Reached';
@@ -236,13 +255,11 @@
         const row = btnElem.parentElement;
         row.remove();
         eventCount--;
-        
         document.getElementById('addEventBtn').disabled = false;
         document.getElementById('addEventBtn').innerText = '+ Add Event (Max 10)';
         calculate(); 
     }
 
-    // --- Core Calculation Logic ---
     function formatCurrencyInput(inputElem) {
         let rawValue = inputElem.value.replace(/,/g, '').replace(/[^\d.]/g, '');
         if (rawValue !== '') {
@@ -273,6 +290,11 @@
             const baseWithdraw3 = getNum('withdraw3') * 12; 
             const baseWithdraw4 = getNum('withdraw4') * 12; 
 
+            const taxRate1 = getNum('tax1') / 100; 
+            const taxRate2 = getNum('tax2') / 100; 
+            const taxRate3 = getNum('tax3') / 100; 
+            const taxRate4 = getNum('tax4') / 100; 
+
             const fixedIncome = getNum('fixedIncome') * 12; 
             const fixedIncomeYear = getNum('fixedIncomeYear');
 
@@ -297,7 +319,6 @@
             const tbody = document.querySelector('#resultsTable tbody');
             tbody.innerHTML = '';
 
-            // Initialize running balances
             let currentLiquid = startLiquid;
             let currentHouse = startHouse;
             let isDepleted = false;
@@ -305,25 +326,28 @@
             for (let i = 0; i < 40; i++) {
                 const currentYear = startYear + i;
                 
-                // 1. Base Lifestyle (Now inclusive of taxes)
-                let annualBaseWithdrawal = 0;
+                let annualBaseNet = 0;
+                let annualTaxRate = 0;
 
-                if (i < 10) { annualBaseWithdrawal = baseWithdraw1; }
-                else if (i < 20) { annualBaseWithdrawal = baseWithdraw2; }
-                else if (i < 30) { annualBaseWithdrawal = baseWithdraw3; }
-                else { annualBaseWithdrawal = baseWithdraw4; }
+                if (i < 10) { annualBaseNet = baseWithdraw1; annualTaxRate = taxRate1; }
+                else if (i < 20) { annualBaseNet = baseWithdraw2; annualTaxRate = taxRate2; }
+                else if (i < 30) { annualBaseNet = baseWithdraw3; annualTaxRate = taxRate3; }
+                else { annualBaseNet = baseWithdraw4; annualTaxRate = taxRate4; }
 
-                let actualLifestyleCost = annualBaseWithdrawal * Math.pow(1 + inflation, i);
+                // Cap tax rate at 99% to prevent mathematical errors
+                if (annualTaxRate >= 1) annualTaxRate = 0.99;
 
-                // 2. Events
+                // 1. Calculate the inflated NET spend desired
+                let inflatedNetSpend = annualBaseNet * Math.pow(1 + inflation, i);
+
                 let eventTotalThisYear = 0;
                 activeEvents.forEach(e => {
                     if (e.year === currentYear) eventTotalThisYear += e.amount;
                 });
                 
-                let totalExpenses = actualLifestyleCost + eventTotalThisYear;
+                let totalNetNeed = inflatedNetSpend + eventTotalThisYear;
 
-                // 3. Fixed Income
+                // 2. Subtract external fixed income from the NET need
                 let activeFixedIncome = 0;
                 if (currentYear >= fixedIncomeYear) {
                     const yrsSinceFixedIncome = currentYear - fixedIncomeYear; 
@@ -331,18 +355,29 @@
                     activeFixedIncome = fixedIncome * Math.pow(1 + inflation, safeYrs);
                 }
 
-                // 4. Gross Required (Total Portfolio Drain)
-                let requiredFromPortfolio = totalExpenses - activeFixedIncome;
-                if (requiredFromPortfolio < 0) requiredFromPortfolio = 0; 
+                let netRequiredFromPortfolio = totalNetNeed - activeFixedIncome;
+                if (netRequiredFromPortfolio < 0) netRequiredFromPortfolio = 0; 
 
-                let safeWithdrawal = Math.min(requiredFromPortfolio, currentLiquid); 
+                // 3. GROSS UP the required net amount to account for taxes
+                let grossWithdrawal = netRequiredFromPortfolio / (1 - annualTaxRate);
+                let taxesPaid = grossWithdrawal - netRequiredFromPortfolio;
+                
+                // Handle portfolio depletion gracefully
+                let safeGrossWithdrawal = Math.min(grossWithdrawal, currentLiquid); 
                 
                 if (currentLiquid <= 0) {
-                    safeWithdrawal = 0;
+                    safeGrossWithdrawal = 0;
+                    taxesPaid = 0;
+                    netRequiredFromPortfolio = 0;
                     isDepleted = true;
+                } else if (safeGrossWithdrawal < grossWithdrawal) {
+                    grossWithdrawal = safeGrossWithdrawal;
+                    netRequiredFromPortfolio = grossWithdrawal * (1 - annualTaxRate);
+                    taxesPaid = grossWithdrawal - netRequiredFromPortfolio;
+                } else {
+                    grossWithdrawal = safeGrossWithdrawal;
                 }
 
-                // 5. Growth
                 let currentYearGrowth = stockGrowth;
                 let customReturnApplied = false;
                 activeReturns.forEach(r => {
@@ -352,8 +387,7 @@
                     }
                 });
 
-                // End of year iterative calculations
-                let endLiquid = (currentLiquid - safeWithdrawal) * (1 + currentYearGrowth);
+                let endLiquid = (currentLiquid - grossWithdrawal) * (1 + currentYearGrowth);
                 if (endLiquid < 0) endLiquid = 0; 
 
                 currentHouse = currentHouse * (1 + reApprec);
@@ -364,7 +398,6 @@
                 liquidData.push(endLiquid);
                 reData.push(currentHouse);
 
-                // Build table row
                 let tr = document.createElement('tr');
                 if (eventTotalThisYear > 0 || customReturnApplied) tr.classList.add('highlight-row');
                 
@@ -377,7 +410,9 @@
                 tr.innerHTML = `
                     <td style="text-align:center; font-weight:bold;">${yearString}</td>
                     <td>${formatCurrency(currentLiquid)}</td>
-                    <td style="color:#dc2626; font-weight:bold;">-${formatCurrency(safeWithdrawal)}</td>
+                    <td style="color:#16a34a; font-weight:bold;">${formatCurrency(netRequiredFromPortfolio)}</td>
+                    <td style="color:#ea580c;">${formatCurrency(taxesPaid)}</td>
+                    <td style="color:#dc2626; font-weight:bold;">-${formatCurrency(grossWithdrawal)}</td>
                     <td style="${liqColor}">${isDepleted ? '$0' : formatCurrency(endLiquid)}</td>
                     <td style="color:#16a34a;">${formatCurrency(currentHouse)}</td>
                     <td style="font-weight:bold;">${formatCurrency(totalNominalNetWorth)}</td>
