@@ -7,7 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f6; color: #333; padding: 20px; }
-        .container { max-width: 1350px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .container { max-width: 1400px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         h1 { text-align: center; color: #2c3e50; margin-bottom: 30px; }
         
         .dashboard-grid { display: grid; grid-template-columns: 350px 1fr; gap: 30px; align-items: start; }
@@ -42,7 +42,7 @@
         .outputs-section { display: flex; flex-direction: column; gap: 30px; }
         .chart-container { background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; height: 500px; }
         
-        .table-container { background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .table-container { background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 10px 8px; text-align: right; border-bottom: 1px solid #e2e8f0; font-size: 13px; font-family: monospace; }
         th { background-color: #2c3e50; color: white; position: sticky; top: 0; z-index: 10; text-align: right;}
@@ -91,10 +91,10 @@
                 <input type="number" id="inflation" value="4" step="0.1" oninput="calculate()">
             </div>
 
-            <h3>Custom Market Returns (Stress Test)</h3>
+            <h3>Custom Market Drops (Stress Test)</h3>
             <div id="dynamicReturnsContainer">
                 </div>
-            <button id="addReturnBtn" class="btn-add-alt" onclick="addReturnRow()">+ Add Custom Market Year (Max 10)</button>
+            <button id="addReturnBtn" class="btn-add-alt" onclick="addReturnRow()">+ Add Custom Market Drops (Max 10)</button>
 
             <h3>Base Monthly Withdrawals</h3>
             <div class="input-group">
@@ -112,6 +112,36 @@
             <div class="input-group">
                 <label>Years 31-40 ($ / month)</label>
                 <input type="text" id="withdraw4" value="25,000" oninput="formatCurrencyInput(this)">
+            </div>
+
+            <h3>Estimated Effective Tax Rate</h3>
+            <div class="input-group">
+                <label>Years 1-10 (%)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="tax1" value="15" step="0.1" class="has-right" oninput="calculate()">
+                    <span class="symbol-right">%</span>
+                </div>
+            </div>
+            <div class="input-group">
+                <label>Years 11-20 (%)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="tax2" value="12" step="0.1" class="has-right" oninput="calculate()">
+                    <span class="symbol-right">%</span>
+                </div>
+            </div>
+            <div class="input-group">
+                <label>Years 21-30 (%)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="tax3" value="10" step="0.1" class="has-right" oninput="calculate()">
+                    <span class="symbol-right">%</span>
+                </div>
+            </div>
+            <div class="input-group">
+                <label>Years 31-40 (%)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="tax4" value="10" step="0.1" class="has-right" oninput="calculate()">
+                    <span class="symbol-right">%</span>
+                </div>
             </div>
 
             <h3>Social Security / Pension</h3>
@@ -141,7 +171,8 @@
                         <tr>
                             <th>Year</th>
                             <th>Start Liquid</th>
-                            <th>Net Withdrawal</th>
+                            <th>Gross Withdrawal</th>
+                            <th style="color: #ea580c;">Net After Taxes</th>
                             <th>End Liquid</th>
                             <th>House Value</th>
                             <th>Nominal Net Worth</th>
@@ -172,7 +203,6 @@
         
         const defaultYear = Number(document.getElementById('startYear').value) + returnCount;
 
-        // Using embedded % symbol via absolute CSS
         row.innerHTML = `
             <input type="number" placeholder="Year" value="${defaultYear}" class="dyn-return-year" oninput="calculate()" style="width: 40%;">
             <div class="input-wrapper" style="width: 60%;">
@@ -202,7 +232,6 @@
         calculate(); 
     }
 
-
     // --- Dynamic Events Logic ---
     let eventCount = 0;
     const MAX_EVENTS = 10;
@@ -215,7 +244,6 @@
         
         const defaultYear = Number(document.getElementById('startYear').value) + 2 + eventCount;
 
-        // Using embedded $ symbol via absolute CSS
         row.innerHTML = `
             <input type="number" placeholder="Year" value="${defaultYear}" class="dyn-event-year" oninput="calculate()" style="width: 40%;">
             <div class="input-wrapper" style="width: 60%;">
@@ -276,6 +304,12 @@
             const baseWithdraw3 = getNum('withdraw3') * 12; 
             const baseWithdraw4 = getNum('withdraw4') * 12; 
 
+            // Fetch newly updated % Tax inputs
+            const taxRate1 = getNum('tax1') / 100; 
+            const taxRate2 = getNum('tax2') / 100; 
+            const taxRate3 = getNum('tax3') / 100; 
+            const taxRate4 = getNum('tax4') / 100; 
+
             const fixedIncome = getNum('fixedIncome') * 12; 
             const fixedIncomeYear = getNum('fixedIncomeYear');
 
@@ -300,20 +334,26 @@
             const tbody = document.querySelector('#resultsTable tbody');
             tbody.innerHTML = '';
 
+            // Initialize running balances
             let currentLiquid = startLiquid;
+            let currentHouse = startHouse;
             let isDepleted = false;
 
             for (let i = 0; i < 40; i++) {
                 const currentYear = startYear + i;
                 
+                // 1. Base Lifestyle & Base Tax Rate
                 let annualBaseWithdrawal = 0;
-                if (i < 10) annualBaseWithdrawal = baseWithdraw1;
-                else if (i < 20) annualBaseWithdrawal = baseWithdraw2;
-                else if (i < 30) annualBaseWithdrawal = baseWithdraw3;
-                else annualBaseWithdrawal = baseWithdraw4;
+                let annualTaxRate = 0;
+
+                if (i < 10) { annualBaseWithdrawal = baseWithdraw1; annualTaxRate = taxRate1; }
+                else if (i < 20) { annualBaseWithdrawal = baseWithdraw2; annualTaxRate = taxRate2; }
+                else if (i < 30) { annualBaseWithdrawal = baseWithdraw3; annualTaxRate = taxRate3; }
+                else { annualBaseWithdrawal = baseWithdraw4; annualTaxRate = taxRate4; }
 
                 let actualLifestyleCost = annualBaseWithdrawal * Math.pow(1 + inflation, i);
 
+                // 2. Events
                 let eventTotalThisYear = 0;
                 activeEvents.forEach(e => {
                     if (e.year === currentYear) eventTotalThisYear += e.amount;
@@ -321,21 +361,33 @@
                 
                 let totalExpenses = actualLifestyleCost + eventTotalThisYear;
 
+                // 3. Fixed Income
                 let activeFixedIncome = 0;
                 if (currentYear >= fixedIncomeYear) {
-                    const yrsSinceFixedIncome = currentYear - startYear; 
-                    activeFixedIncome = fixedIncome * Math.pow(1 + inflation, yrsSinceFixedIncome);
+                    const yrsSinceFixedIncome = currentYear - fixedIncomeYear; 
+                    const safeYrs = yrsSinceFixedIncome >= 0 ? yrsSinceFixedIncome : 0;
+                    activeFixedIncome = fixedIncome * Math.pow(1 + inflation, safeYrs);
                 }
 
+                // 4. Gross Required (Portfolio Drain)
                 let requiredFromPortfolio = totalExpenses - activeFixedIncome;
                 if (requiredFromPortfolio < 0) requiredFromPortfolio = 0; 
 
-                let safeWithdrawal = Math.min(requiredFromPortfolio, currentLiquid);
+                let safeWithdrawal = Math.min(requiredFromPortfolio, currentLiquid); // Gross amount taken from portfolio
+                
+                // Calculate Net After Taxes based on the % rate
+                let netAfterTaxes = safeWithdrawal * (1 - annualTaxRate);
+                
                 if (currentLiquid <= 0) {
                     safeWithdrawal = 0;
+                    netAfterTaxes = 0;
                     isDepleted = true;
                 }
                 
+                // Prevent negative display if portfolio is empty
+                if (netAfterTaxes < 0 || isDepleted) netAfterTaxes = 0;
+
+                // 5. Growth
                 let currentYearGrowth = stockGrowth;
                 let customReturnApplied = false;
                 activeReturns.forEach(r => {
@@ -345,18 +397,19 @@
                     }
                 });
 
+                // End of year iterative calculations
                 let endLiquid = (currentLiquid - safeWithdrawal) * (1 + currentYearGrowth);
                 if (endLiquid < 0) endLiquid = 0; 
 
-                const endHouse = startHouse * Math.pow(1 + reApprec, i + 1);
-                const totalNominalNetWorth = endLiquid + endHouse;
-
-                const realNetWorth = totalNominalNetWorth / Math.pow(1 + inflation, i + 1);
+                currentHouse = currentHouse * (1 + reApprec);
+                const totalNominalNetWorth = endLiquid + currentHouse;
+                const realNetWorth = totalNominalNetWorth / Math.pow(1 + inflation, i);
 
                 labels.push(currentYear);
                 liquidData.push(endLiquid);
-                reData.push(endHouse);
+                reData.push(currentHouse);
 
+                // Build table row
                 let tr = document.createElement('tr');
                 if (eventTotalThisYear > 0 || customReturnApplied) tr.classList.add('highlight-row');
                 
@@ -370,8 +423,9 @@
                     <td style="text-align:center; font-weight:bold;">${yearString}</td>
                     <td>${formatCurrency(currentLiquid)}</td>
                     <td style="color:#dc2626;">-${formatCurrency(safeWithdrawal)}</td>
+                    <td style="color:#ea580c; font-weight:bold;">${formatCurrency(netAfterTaxes)}</td>
                     <td style="${liqColor}">${isDepleted ? '$0' : formatCurrency(endLiquid)}</td>
-                    <td style="color:#16a34a;">${formatCurrency(endHouse)}</td>
+                    <td style="color:#16a34a;">${formatCurrency(currentHouse)}</td>
                     <td style="font-weight:bold;">${formatCurrency(totalNominalNetWorth)}</td>
                     <td style="color:#0f766e; font-weight:bold;">${formatCurrency(realNetWorth)}</td>
                 `;
