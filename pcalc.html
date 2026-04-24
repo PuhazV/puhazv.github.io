@@ -10,10 +10,11 @@
         .container { max-width: 1350px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         h1 { text-align: center; color: #2c3e50; margin-bottom: 30px; }
         
-        .dashboard-grid { display: grid; grid-template-columns: 350px 1fr; gap: 30px; }
+        /* Align-items: start prevents the columns from stretching weirdly if one is taller */
+        .dashboard-grid { display: grid; grid-template-columns: 350px 1fr; gap: 30px; align-items: start; }
         
-        /* Inputs Section */
-        .inputs-section { background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; height: 950px; overflow-y: auto;}
+        /* Inputs Section - Removed hardcoded heights to allow natural expansion */
+        .inputs-section { background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; }
         .input-group { margin-bottom: 12px; }
         .input-group label { display: block; font-weight: bold; margin-bottom: 4px; font-size: 13px; color: #475569; }
         .input-group input { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; font-family: monospace; }
@@ -30,20 +31,21 @@
 
         /* Outputs Section */
         .outputs-section { display: flex; flex-direction: column; gap: 30px; }
-        .chart-container { background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; height: 450px; }
+        /* Chart container given a bit more room to breathe on tall screens */
+        .chart-container { background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; height: 500px; }
         
-        .table-container { background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; max-height: 470px; overflow-y: auto; }
+        /* Table Container - Removed max-height so all 40 rows are visible without scrolling inside the box */
+        .table-container { background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; }
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 10px 8px; text-align: right; border-bottom: 1px solid #e2e8f0; font-size: 13px; font-family: monospace; }
         th { background-color: #2c3e50; color: white; position: sticky; top: 0; z-index: 10; text-align: right;}
         th:first-child, td:first-child { text-align: center; }
         tr:hover { background-color: #f1f5f9; }
         
-        .event-row { background-color: #fef08a !important; } /* Highlight rows with one-time events */
+        .event-row { background-color: #fef08a !important; } 
         
         @media (max-width: 900px) {
             .dashboard-grid { grid-template-columns: 1fr; }
-            .inputs-section { height: auto; max-height: 500px; }
         }
     </style>
 </head>
@@ -241,7 +243,6 @@
             let currentLiquid = startLiquid;
             let isDepleted = false;
 
-            // Updated loop for 40 years
             for (let i = 0; i < 40; i++) {
                 const currentYear = startYear + i;
                 
