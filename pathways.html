@@ -10,10 +10,17 @@
         .container { max-width: 1400px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         h1 { text-align: center; color: #2c3e50; margin-bottom: 30px; }
         
-        .dashboard-grid { display: grid; grid-template-columns: 350px 1fr; gap: 30px; align-items: start; }
+        
+        .dashboard-grid { display: grid; grid-template-columns: 650px 1fr; gap: 30px; align-items: start; }
         
         .inputs-section { background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; max-height: 85vh; overflow-y: auto; }
+        
+        .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .input-group-box { background: white; padding: 15px; border-radius: 6px; border: 1px solid #cbd5e1; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .input-group-box h3 { margin-top: 0; color: #0f172a; font-size: 14px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+
         .input-group { margin-bottom: 12px; }
+
         .input-group label { display: block; font-weight: bold; margin-bottom: 4px; font-size: 13px; color: #475569; }
         .input-group input { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; font-family: monospace; }
         
@@ -73,157 +80,185 @@
     <h1>Advanced Retirement Pathways Projection (2055)</h1>
     
     <div class="dashboard-grid">
+        
         <div class="inputs-section">
-            <h3>Economic & Portfolio Baseline</h3>
-            <div class="input-group">
-                <label>Starting Year</label>
-                <input type="number" id="startYear" value="2028" oninput="calculate()">
-            </div>
-            <div class="input-group">
-                <label>Starting Liquid Assets ($)</label>
-                <input type="text" id="startLiquid" value="10,000,000" oninput="formatCurrencyInput(this)">
-            </div>
-            <div class="input-group">
-                <label>Market Return (%)</label>
-                <input type="number" id="marketReturn" value="7" step="0.1" oninput="calculate()">
-            </div>
-            <div class="input-group">
-                <label>Inflation Rate (%)</label>
-                <input type="number" id="inflation" value="3" step="0.1" oninput="calculate()">
-            </div>
-
-            <h3 class="section-divider">Monthly Spend (Excluding RE)</h3>
-            <div class="input-group">
-                <label>Years 1-10 ($ / month)</label>
-                <input type="text" id="withdraw1" value="25,000" oninput="formatCurrencyInput(this)">
-            </div>
-            <div class="input-group">
-                <label>Years 11-20 ($ / month)</label>
-                <input type="text" id="withdraw2" value="20,000" oninput="formatCurrencyInput(this)">
-            </div>
-            <div class="input-group">
-                <label>Years 21-30+ ($ / month)</label>
-                <input type="text" id="withdraw3" value="20,000" oninput="formatCurrencyInput(this)">
-            </div>
-
-            <h3 class="section-divider">Estimated Effective Tax Rates</h3>
-            <div class="input-group">
-                <label>Federal Tax: Years 1-10 (%)</label>
-                <div class="input-wrapper">
-                    <input type="number" id="tax1" value="15" step="0.1" class="has-right" oninput="calculate()">
-                    <span class="symbol-right">%</span>
+            <div class="input-grid">
+                <!-- Box 1: Baseline -->
+                <div class="input-group-box">
+                    <h3>Economic Baseline</h3>
+                    <div class="input-group">
+                        <label>Starting Year</label>
+                        <input type="number" id="startYear" value="2028" oninput="calculate()">
+                    </div>
+                    <div class="input-group">
+                        <label>Starting Liquid Assets ($)</label>
+                        <input type="text" id="startLiquid" value="10,000,000" oninput="formatCurrencyInput(this)">
+                    </div>
+                    <div class="input-group">
+                        <label>Market Return (%)</label>
+                        <input type="number" id="marketReturn" value="7" step="0.1" oninput="calculate()">
+                    </div>
+                    <div class="input-group">
+                        <label>Inflation Rate (%)</label>
+                        <input type="number" id="inflation" value="3" step="0.1" oninput="calculate()">
+                    </div>
                 </div>
-            </div>
-            <div class="input-group">
-                <label>Federal Tax: Years 11-20 (%)</label>
-                <div class="input-wrapper">
-                    <input type="number" id="tax2" value="12" step="0.1" class="has-right" oninput="calculate()">
-                    <span class="symbol-right">%</span>
+
+                <!-- Box 2: Lifestyle Spend -->
+                <div class="input-group-box">
+                    <h3>Monthly Spend (Excl. RE)</h3>
+                    <div class="input-group">
+                        <label>Years 1-10 ($ / month)</label>
+                        <input type="text" id="withdraw1" value="25,000" oninput="formatCurrencyInput(this)">
+                    </div>
+                    <div class="input-group">
+                        <label>Years 11-20 ($ / month)</label>
+                        <input type="text" id="withdraw2" value="20,000" oninput="formatCurrencyInput(this)">
+                    </div>
+                    <div class="input-group">
+                        <label>Years 21-30+ ($ / month)</label>
+                        <input type="text" id="withdraw3" value="20,000" oninput="formatCurrencyInput(this)">
+                    </div>
                 </div>
-            </div>
-            <div class="input-group">
-                <label>Federal Tax: Years 21-30+ (%)</label>
-                <div class="input-wrapper">
-                    <input type="number" id="tax3" value="10" step="0.1" class="has-right" oninput="calculate()">
-                    <span class="symbol-right">%</span>
+
+                <!-- Box 3: Tax Rates -->
+                <div class="input-group-box">
+                    <h3>Effective Tax Rates</h3>
+                    <div class="input-group">
+                        <label>Federal Tax: Years 1-10 (%)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="tax1" value="15" step="0.1" class="has-right" oninput="calculate()">
+                            <span class="symbol-right">%</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Federal Tax: Years 11-20 (%)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="tax2" value="12" step="0.1" class="has-right" oninput="calculate()">
+                            <span class="symbol-right">%</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Federal Tax: Years 21-30+ (%)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="tax3" value="10" step="0.1" class="has-right" oninput="calculate()">
+                            <span class="symbol-right">%</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>CA State Tax Premium (%)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="caStateTax" value="9.3" step="0.1" class="has-right" oninput="calculate()">
+                            <span class="symbol-right">%</span>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="input-group">
-                <label>CA State Tax Premium (%)</label>
-                <div class="input-wrapper">
-                    <input type="number" id="caStateTax" value="9.3" step="0.1" class="has-right" oninput="calculate()">
-                    <span class="symbol-right">%</span>
+
+                <!-- Box 4: Mortgages -->
+                <div class="input-group-box">
+                    <h3>Mortgage Terms</h3>
+                    <div class="input-group">
+                        <label>Mortgage Interest Rate (%)</label>
+                        <input type="number" id="interestRate" value="6.5" step="0.1" oninput="calculate()">
+                    </div>
+                    <div class="input-group">
+                        <label>CA Down Payment (%)</label>
+                        <input type="number" id="caDownPaymentPct" value="20" step="1" oninput="calculate()">
+                    </div>
+                    <div class="input-group">
+                        <label>FL Down Payment (%)</label>
+                        <input type="number" id="flDownPaymentPct" value="20" step="1" oninput="calculate()">
+                    </div>
                 </div>
-            </div>
 
-            <h3 class="section-divider">Mortgage Terms</h3>
-            <div class="input-group">
-                <label>CA Down Payment (%)</label>
-                <input type="number" id="caDownPaymentPct" value="20" step="1" oninput="calculate()">
-            </div>
-            <div class="input-group">
-                <label>FL Down Payment (%)</label>
-                <input type="number" id="flDownPaymentPct" value="20" step="1" oninput="calculate()">
-            </div>
-            <div class="input-group">
-                <label>Mortgage Interest Rate (%)</label>
-                <input type="number" id="interestRate" value="6.5" step="0.1" oninput="calculate()">
-            </div>
+                <!-- Box 5: Real Estate Values & Growth -->
+                <div class="input-group-box" style="grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                    <div style="grid-column: 1 / -1;"><h3>Real Estate Values & Appreciation</h3></div>
+                    <div>
+                        <div class="input-group">
+                            <label>WA Home ($)</label>
+                            <input type="text" id="waHome" value="3,000,000" oninput="formatCurrencyInput(this)">
+                        </div>
+                        <div class="input-group">
+                            <label>WA Apprec (%)</label>
+                            <input type="number" id="waApprec" value="6" step="0.1" oninput="calculate()">
+                        </div>
+                    </div>
+                    <div>
+                        <div class="input-group">
+                            <label>CA Home ($)</label>
+                            <input type="text" id="caHome" value="1,600,000" oninput="formatCurrencyInput(this)">
+                        </div>
+                        <div class="input-group">
+                            <label>CA Apprec (%)</label>
+                            <input type="number" id="caApprec" value="6" step="0.1" oninput="calculate()">
+                        </div>
+                    </div>
+                    <div>
+                        <div class="input-group">
+                            <label>FL Home ($)</label>
+                            <input type="text" id="flHome" value="900,000" oninput="formatCurrencyInput(this)">
+                        </div>
+                        <div class="input-group">
+                            <label>FL Apprec (%)</label>
+                            <input type="number" id="flApprec" value="4" step="0.1" oninput="calculate()">
+                        </div>
+                    </div>
+                </div>
 
-            <h3 class="section-divider">Real Estate Values</h3>
-            <div class="input-group">
-                <label>WA Home Value ($)</label>
-                <input type="text" id="waHome" value="3,000,000" oninput="formatCurrencyInput(this)">
-            </div>
-            <div class="input-group">
-                <label>CA Home Value ($)</label>
-                <input type="text" id="caHome" value="1,600,000" oninput="formatCurrencyInput(this)">
-            </div>
-            <div class="input-group">
-                <label>FL Home Value ($)</label>
-                <input type="text" id="flHome" value="900,000" oninput="formatCurrencyInput(this)">
-            </div>
+                <!-- Box 6: Rentals -->
+                <div class="input-group-box">
+                    <h3>Rental Income & Costs</h3>
+                    <div class="input-group">
+                        <label>WA Monthly Rent ($)</label>
+                        <input type="text" id="waRent" value="6,500" oninput="formatCurrencyInput(this)">
+                    </div>
+                    <div class="input-group">
+                        <label>CA Monthly Rent ($)</label>
+                        <input type="text" id="caRent" value="6,500" oninput="formatCurrencyInput(this)">
+                    </div>
+                    <div class="input-group">
+                        <label>Property Mgmt Fee (%)</label>
+                        <input type="number" id="mgmtFee" value="7" step="0.1" oninput="calculate()">
+                    </div>
+                    <div class="input-group" style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #cbd5e1;">
+                        <label>Path 4: CA Rent during WA Winter ($/mo)</label>
+                        <input type="text" id="caWinterRentCost" value="6,500" oninput="formatCurrencyInput(this)">
+                    </div>
+                    <div class="input-group">
+                        <label>Path 4: WA Winter months in CA</label>
+                        <input type="number" id="waWinterMonths" value="5" oninput="calculate()">
+                    </div>
+                </div>
 
-            <h3 class="section-divider">Appreciation & Mgmt</h3>
-            <div class="input-group">
-                <label>WA Appreciation (%)</label>
-                <input type="number" id="waApprec" value="6" step="0.1" oninput="calculate()">
-            </div>
-            <div class="input-group">
-                <label>CA Appreciation (%)</label>
-                <input type="number" id="caApprec" value="6" step="0.1" oninput="calculate()">
-            </div>
-            <div class="input-group">
-                <label>FL Appreciation (%)</label>
-                <input type="number" id="flApprec" value="4" step="0.1" oninput="calculate()">
-            </div>
-            <div class="input-group">
-                <label>Property Mgmt Fee (%)</label>
-                <input type="number" id="mgmtFee" value="7" step="0.1" oninput="calculate()">
-            </div>
-
-            <h3 class="section-divider">Rental Cash Flow</h3>
-            <div class="input-group">
-                <label>WA Monthly Rent ($)</label>
-                <input type="text" id="waRent" value="6,500" oninput="formatCurrencyInput(this)">
-            </div>
-            <div class="input-group">
-                <label>CA Monthly Rent ($)</label>
-                <input type="text" id="caRent" value="6,500" oninput="formatCurrencyInput(this)">
-            </div>
-            <div class="input-group">
-                <label>Path 4: CA Rental during WA Winter ($/mo)</label>
-                <input type="text" id="caWinterRentCost" value="6,500" oninput="formatCurrencyInput(this)">
-            </div>
-            <div class="input-group">
-                <label>Path 4: WA Winter months in CA</label>
-                <input type="number" id="waWinterMonths" value="5" oninput="calculate()">
-            </div>
-
-            <h3 class="section-divider">Timelines & Scenarios</h3>
-            <div class="input-group">
-                <label>End Year (Projection Horizon)</label>
-                <input type="number" id="endYear" value="2055" oninput="calculate()">
-            </div>
-            <div class="input-group">
-                <label>Path 2: CA Purchase Year</label>
-                <input type="number" id="caPurchaseYrPath2" value="2026" oninput="calculate()">
-            </div>
-            <div class="input-group">
-                <label>Path 3, 5: FL Purchase Year</label>
-                <input type="number" id="flPurchaseYr" value="2026" oninput="calculate()">
-            </div>
-            <div class="input-group">
-                <label>Path 4: CA Purchase Year</label>
-                <input type="number" id="caPurchaseYrPath4" value="2026" oninput="calculate()">
-            </div>
-            <div class="input-group">
-                <label>Path 4: Years Delayed in WA</label>
-                <input type="number" id="delayedCaYears" value="7" oninput="calculate()">
-            </div>
-            <div class="input-group">
-                <label>Path 5: CA Purchase Year</label>
-                <input type="number" id="caPurchaseYrPath5" value="2028" oninput="calculate()">
+                <!-- Box 7: Timelines -->
+                <div class="input-group-box">
+                    <h3>Timelines & Scenarios</h3>
+                    <div class="input-group">
+                        <label>End Year (Projection Horizon)</label>
+                        <input type="number" id="endYear" value="2055" oninput="calculate()">
+                    </div>
+                    <div class="input-group">
+                        <label>Path 2: CA Purchase Year</label>
+                        <input type="number" id="caPurchaseYrPath2" value="2026" oninput="calculate()">
+                    </div>
+                    <div class="input-group">
+                        <label>Path 3, 5: FL Purchase Year</label>
+                        <input type="number" id="flPurchaseYr" value="2026" oninput="calculate()">
+                    </div>
+                    <div class="input-group">
+                        <label>Path 4: CA Purchase Year</label>
+                        <input type="number" id="caPurchaseYrPath4" value="2026" oninput="calculate()">
+                    </div>
+                    <div class="input-group">
+                        <label>Path 4: Years Delayed in WA</label>
+                        <input type="number" id="delayedCaYears" value="7" oninput="calculate()">
+                    </div>
+                    <div class="input-group">
+                        <label>Path 5: CA Purchase Year</label>
+                        <input type="number" id="caPurchaseYrPath5" value="2028" oninput="calculate()">
+                    </div>
+                </div>
             </div>
         </div>
 
