@@ -166,10 +166,12 @@
 
         row.innerHTML = `
             <input type="number" placeholder="Year" value="${defaultYear}" class="dyn-return-year" oninput="calculate()" style="width: 40%;">
-            <input type="number" placeholder="Return (%)" value="-20" step="1" class="dyn-return-pct" oninput="calculate()" style="width: 60%;">
+            <div style="display: flex; align-items: center; width: 60%; gap: 5px;">
+                <input type="number" placeholder="Return" value="-20" step="1" class="dyn-return-pct" oninput="calculate()" style="width: 100%;">
+                <span style="font-weight: bold; color: #475569; padding-right: 5px;">%</span>
+            </div>
             <button class="btn-remove" onclick="removeReturnRow(this)" title="Remove Custom Return">X</button>
-        `;
-        
+        `;       
         container.appendChild(row);
         returnCount++;
         
