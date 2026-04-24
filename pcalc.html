@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>30-Year Retirement Projection</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f6; color: #333; padding: 20px; }
+        .container { max-width: 1300px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #2c3e50; margin-bottom: 30px; }
+        
+        .dashboard-grid { display: grid; grid-template-columns: 350px 1fr; gap: 30px; }
+        
+        /* Inputs Section */
+        .inputs-section { background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .input-group { margin-bottom: 12px; }
+        .input-group label { display: block; font-weight: bold; margin-bottom: 4px; font-size: 13px; color: #475569; }
+        .input-group input { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; font-family: monospace; }
+        h3 { margin-top: 0; color: #1e293b; font-size: 16px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; }
+        .section-divider { margin: 20px 0 10px 0; }
+
+        /* Outputs Section */
+        .outputs-section { display: flex; flex-direction: column; gap: 30px; }
+        .chart-container { background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; height: 400px; }
+        
+        .table-container { background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; max-height: 600px; overflow-y: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px; text-align: right; border-bottom: 1px solid #e2e8f0; font-size: 14px; font-family: monospace; }
+        th { background-color: #2c3e50; color: white; position: sticky; top: 0; z-index: 10; text-align: right;}
+        th:first-child, td:first-child { text-align: center; }
+        tr:hover { background-color: #f1f5f9; }
+        
+        @media (max-width: 900px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>30-Year Retirement Asset Projection</h1>
+    
+    <div class="dashboard-grid">
+        <div class="inputs-section">
+            <h3>Initial Assets & Timeline</h3>
+            <div class="input-group">
+                <label>Retirement Year</label>
+                <input type="number" id="retireYear" value="2028" oninput="calculate()">
+            </div>
+            <div class="input-group">
+                <label>Stock Investments ($)</label>
+                <input type="number" id="startLiquid" value="10000000" oninput="calculate()">
+            </div>
+            <div class="input-group">
+                <label>House Investment ($)</label>
+                <input type="number" id="startHouse" value="3000000" oninput="calculate()">
+            </div>
+
+            <h3 class="section-divider">Growth & Inflation</h3>
+            <div class="input-group">
+                <label>Stock Growth Rate (%)</label>
+                <input type="number" id="stockGrowth" value="7" step="0.1" oninput="calculate()">
+            </div>
+            <div class="input-group">
+                <label>Real Estate Appreciation (%)</label>
+                <input type="number" id="reApprec" value="4" step="0.1" oninput="calculate()">
+            </div>
+            <div class="input-group">
+                <label>Inflation Rate (%)</label>
+                <input type="number" id="inflation" value="4" step="0.1" oninput="calculate()">
+            </div>
+
+            <h3 class="section-divider">Base Monthly Withdrawals</h3>
+            <div class="input-group">
+                <label>Years 1-10 ($ / month)</label>
+                <input type="number" id="withdraw1" value="25000" oninput="calculate()">
+            </div>
+            <div class="input-group">
+                <label>Years 11-20 ($ / month)</label>
+                <input type="number" id="withdraw2" value="25000" oninput="calculate()">
+            </div>
+            <div class="input-group">
+                <label>Years 21-30 ($ / month)</label>
+                <input type="number" id="withdraw3" value="25000" oninput="calculate()">
+            </div>
+        </div>
+
+        <div class="outputs-section">
+            <div class="chart-container" id="chartWrapper">
+                <canvas id="projectionChart"></canvas>
+            </div>
+            
+            <div class="table-container">
+                <table id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th>Year</th>
+                            <th>Start Liquid</th>
+                            <th>Withdrawal (Inflated)</th>
+                            <th>End Liquid</th>
+                            <th>Real Estate Value</th>
+                            <th>Total Net Worth</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let projectionChartInstance = null; 
+    const formatCurrency = (num) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(num);
+
+    function calculate() {
+        try {
+            // Fetch inputs
+            const retireYear = Number(document.getElementById('retireYear').value);
+            const startLiquid = Number(document.getElementById('startLiquid').value);
+            const startHouse = Number(document.getElementById('startHouse').value);
+            
+            const stockGrowth = Number(document.getElementById('stockGrowth').value) / 100;
+            const reApprec = Number(document.getElementById('reApprec').value) / 100;
+            const inflation = Number(document.getElementById('inflation').value) / 100;
+
+            const baseWithdraw1 = Number(document.getElementById('withdraw1').value) * 12; // Annualize
+            const baseWithdraw2 = Number(document.getElementById('withdraw2').value) * 12; // Annualize
+            const baseWithdraw3 = Number(document.getElementById('withdraw3').value) * 12; // Annualize
+
+            const labels = [];
+            const liquidData = [];
+            const reData = [];
+            
+            const tbody = document.querySelector('#resultsTable tbody');
+            tbody.innerHTML = '';
+
+            let currentLiquid = startLiquid;
+
+            for (let i = 0; i < 30; i++) {
+                const currentYear = retireYear + i;
+                
+                // Determine base withdrawal for the current decade
+                let annualBaseWithdrawal = 0;
+                if (i < 10) {
+                    annualBaseWithdrawal = baseWithdraw1;
+                } else if (i < 20) {
+                    annualBaseWithdrawal = baseWithdraw2;
+                } else {
+                    annualBaseWithdrawal = baseWithdraw3;
+                }
+
+                // Apply cumulative inflation to the base withdrawal
+                const actualWithdrawal = annualBaseWithdrawal * Math.pow(1 + inflation, i);
+
+                // Prevent portfolio from dropping below zero
+                const safeWithdrawal = Math.min(actualWithdrawal, currentLiquid);
+                
+                // Calculate end liquid (matching the spreadsheet logic: subtract withdrawal, then apply growth)
+                let endLiquid = (currentLiquid - safeWithdrawal) * (1 + stockGrowth);
+                if (endLiquid < 0) endLiquid = 0; // Failsafe
+
+                // Calculate Real Estate Value for this year
+                const endHouse = startHouse * Math.pow(1 + reApprec, i + 1);
+
+                const totalNetWorth = endLiquid + endHouse;
+
+                // Push data for chart
+                labels.push(currentYear);
+                liquidData.push(endLiquid);
+                reData.push(endHouse);
+
+                // Build table row
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="text-align:center;">${currentYear}</td>
+                    <td>${formatCurrency(currentLiquid)}</td>
+                    <td style="color:#dc2626;">-${formatCurrency(safeWithdrawal)}</td>
+                    <td style="color:#2563eb;">${formatCurrency(endLiquid)}</td>
+                    <td style="color:#16a34a;">${formatCurrency(endHouse)}</td>
+                    <td style="font-weight:bold;">${formatCurrency(totalNetWorth)}</td>
+                `;
+                tbody.appendChild(tr);
+
+                // Set up next year's start liquid
+                currentLiquid = endLiquid;
+            }
+
+            // Update Chart
+            updateChart(labels, liquidData, reData);
+
+        } catch (error) {
+            console.error("Calculation failed:", error);
+        }
+    }
+
+    function updateChart(labels, liquid, realEstate) {
+        if (typeof Chart === 'undefined') {
+            document.getElementById('chartWrapper').innerHTML = '<p style="color:red; text-align:center; padding-top:150px;"><b>Chart failed to load.</b></p>';
+            return;
+        }
+
+        const ctx = document.getElementById('projectionChart').getContext('2d');
+        if (projectionChartInstance) { projectionChartInstance.destroy(); }
+
+        projectionChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'Stock / Liquid Assets ($)', data: liquid, backgroundColor: '#3b82f6', stack: 'Stack 0' },
+                    { label: 'Real Estate Value ($)', data: realEstate, backgroundColor: '#10b981', stack: 'Stack 0' }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    title: { display: true, text: '30-Year Asset Projection', font: { size: 16 } },
+                    tooltip: { 
+                        callbacks: { 
+                            label: function(context) { 
+                                return context.dataset.label + ': ' + new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(context.parsed.y); 
+                            } 
+                        } 
+                    }
+                },
+                scales: { 
+                    x: { stacked: true }, 
+                    y: { 
+                        stacked: true, 
+                        ticks: { callback: function(value) { return '$' + (value / 1000000).toFixed(1) + 'M'; } } 
+                    } 
+                }
+            }
+        });
+    }
+
+    window.onload = calculate;
+</script>
+</body>
+</html>
