@@ -172,7 +172,6 @@
         
         const defaultYear = Number(document.getElementById('startYear').value) + returnCount;
 
-        // Using embedded % symbol via absolute CSS
         row.innerHTML = `
             <input type="number" placeholder="Year" value="${defaultYear}" class="dyn-return-year" oninput="calculate()" style="width: 40%;">
             <div class="input-wrapper" style="width: 60%;">
@@ -202,7 +201,6 @@
         calculate(); 
     }
 
-
     // --- Dynamic Events Logic ---
     let eventCount = 0;
     const MAX_EVENTS = 10;
@@ -215,7 +213,6 @@
         
         const defaultYear = Number(document.getElementById('startYear').value) + 2 + eventCount;
 
-        // Using embedded $ symbol via absolute CSS
         row.innerHTML = `
             <input type="number" placeholder="Year" value="${defaultYear}" class="dyn-event-year" oninput="calculate()" style="width: 40%;">
             <div class="input-wrapper" style="width: 60%;">
@@ -300,12 +297,15 @@
             const tbody = document.querySelector('#resultsTable tbody');
             tbody.innerHTML = '';
 
+            // Initialize running balances
             let currentLiquid = startLiquid;
+            let currentHouse = startHouse;
             let isDepleted = false;
 
             for (let i = 0; i < 40; i++) {
                 const currentYear = startYear + i;
                 
+                // 1. Base Lifestyle (Inflated from Start Year)
                 let annualBaseWithdrawal = 0;
                 if (i < 10) annualBaseWithdrawal = baseWithdraw1;
                 else if (i < 20) annualBaseWithdrawal = baseWithdraw2;
@@ -314,6 +314,7 @@
 
                 let actualLifestyleCost = annualBaseWithdrawal * Math.pow(1 + inflation, i);
 
+                // 2. Events
                 let eventTotalThisYear = 0;
                 activeEvents.forEach(e => {
                     if (e.year === currentYear) eventTotalThisYear += e.amount;
@@ -321,12 +322,16 @@
                 
                 let totalExpenses = actualLifestyleCost + eventTotalThisYear;
 
+                // 3. Fixed Income (Bug Fix: Inflate from fixedIncomeYear, not startYear)
                 let activeFixedIncome = 0;
                 if (currentYear >= fixedIncomeYear) {
-                    const yrsSinceFixedIncome = currentYear - startYear; 
-                    activeFixedIncome = fixedIncome * Math.pow(1 + inflation, yrsSinceFixedIncome);
+                    const yrsSinceFixedIncome = currentYear - fixedIncomeYear; 
+                    // Safely handle if user puts fixed income start year in the past
+                    const safeYrs = yrsSinceFixedIncome >= 0 ? yrsSinceFixedIncome : 0;
+                    activeFixedIncome = fixedIncome * Math.pow(1 + inflation, safeYrs);
                 }
 
+                // 4. Net Required
                 let requiredFromPortfolio = totalExpenses - activeFixedIncome;
                 if (requiredFromPortfolio < 0) requiredFromPortfolio = 0; 
 
@@ -336,6 +341,7 @@
                     isDepleted = true;
                 }
                 
+                // 5. Growth
                 let currentYearGrowth = stockGrowth;
                 let customReturnApplied = false;
                 activeReturns.forEach(r => {
@@ -345,18 +351,23 @@
                     }
                 });
 
+                // End of year iterative calculations
                 let endLiquid = (currentLiquid - safeWithdrawal) * (1 + currentYearGrowth);
                 if (endLiquid < 0) endLiquid = 0; 
 
-                const endHouse = startHouse * Math.pow(1 + reApprec, i + 1);
-                const totalNominalNetWorth = endLiquid + endHouse;
+                // Bug Fix: Iterative real estate calculation perfectly matches liquid timing
+                currentHouse = currentHouse * (1 + reApprec);
+                
+                const totalNominalNetWorth = endLiquid + currentHouse;
 
-                const realNetWorth = totalNominalNetWorth / Math.pow(1 + inflation, i + 1);
+                // Bug Fix: Index aligned to 'i' so Year 1 Nominal = Year 1 Real purchasing power
+                const realNetWorth = totalNominalNetWorth / Math.pow(1 + inflation, i);
 
                 labels.push(currentYear);
                 liquidData.push(endLiquid);
-                reData.push(endHouse);
+                reData.push(currentHouse);
 
+                // Build table row
                 let tr = document.createElement('tr');
                 if (eventTotalThisYear > 0 || customReturnApplied) tr.classList.add('highlight-row');
                 
@@ -371,7 +382,7 @@
                     <td>${formatCurrency(currentLiquid)}</td>
                     <td style="color:#dc2626;">-${formatCurrency(safeWithdrawal)}</td>
                     <td style="${liqColor}">${isDepleted ? '$0' : formatCurrency(endLiquid)}</td>
-                    <td style="color:#16a34a;">${formatCurrency(endHouse)}</td>
+                    <td style="color:#16a34a;">${formatCurrency(currentHouse)}</td>
                     <td style="font-weight:bold;">${formatCurrency(totalNominalNetWorth)}</td>
                     <td style="color:#0f766e; font-weight:bold;">${formatCurrency(realNetWorth)}</td>
                 `;
