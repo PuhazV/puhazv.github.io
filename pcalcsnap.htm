@@ -6,21 +6,22 @@
     <title>Retirement Multi-Pathway Workstation</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --primary: #3b82f6; --baseline: #94a3b8; --success: #10b981; --danger: #ef4444; --bg: #f8fafc; }
+        :root { --primary: #3b82f6; --baseline: #94a3b8; --success: #10b981; --danger: #ef4444; --bg: #f8fafc; --title-bar: #1e293b; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background-color: #f1f5f9; color: #1e293b; padding: 0; margin: 0; }
         
         .container { max-width: 98vw; margin: auto; padding: 0 20px 20px 20px; }
 
-        /* Summary Ribbon */
+        /* Professional Slate Title Bar */
         .summary-ribbon { 
-            background: white; padding: 12px 40px; border-bottom: 1px solid #e2e8f0; 
+            background: var(--title-bar); padding: 15px 40px; border-bottom: 1px solid #0f172a; 
             display: flex; justify-content: space-between; align-items: center; 
-            position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
+            position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+            color: white;
         }
         .stat-group { display: flex; gap: 40px; }
         .stat-item { display: flex; flex-direction: column; }
-        .stat-label { font-size: 10px; color: #64748b; font-weight: 800; text-transform: uppercase; }
-        .stat-value { font-size: 18px; font-weight: 800; font-family: monospace; }
+        .stat-label { font-size: 10px; color: #94a3b8; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-value { font-size: 20px; font-weight: 800; font-family: monospace; color: white; }
 
         /* Collapsible Scenario Drawer */
         .scenario-drawer { 
@@ -32,7 +33,7 @@
         .scenario-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; padding: 0 40px; }
         .scenario-card { 
             background: white; border: 2px solid #e2e8f0; padding: 12px; border-radius: 8px; 
-            transition: all 0.2s; display: flex; flex-direction: column; gap: 8px;
+            transition: all 0.2s; display: flex; flex-direction: column; gap: 8px; color: #333;
         }
         .scenario-card.empty { border: 2px dashed #cbd5e1; background: transparent; justify-content: center; align-items: center; cursor: pointer; color: #94a3b8; }
         .scenario-card.empty:hover { border-color: var(--primary); color: var(--primary); }
@@ -43,24 +44,21 @@
 
         /* Core Layout */
         .dashboard-grid { display: grid; grid-template-columns: 420px 1fr; gap: 20px; padding: 20px 0; }
-        .inputs-section { background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; position: sticky; top: 70px; max-height: calc(100vh - 100px); overflow-y: auto; }
+        .inputs-section { background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; position: sticky; top: 85px; max-height: calc(100vh - 110px); overflow-y: auto; }
         
         h3 { font-size: 12px; margin-top: 15px; border-bottom: 1px solid #f1f5f9; padding-bottom: 5px; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; }
         .input-grid-5 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 10px; }
         .input-group label { display: block; font-size: 10px; font-weight: bold; color: #64748b; margin-bottom: 3px; }
-        
-        /* Fixed Input Sizes */
         .input-group input { width: 100%; min-width: 60px; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px; font-family: monospace; box-sizing: border-box; }
 
         .outputs-section { display: flex; flex-direction: column; gap: 20px; }
         .chart-container { background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; height: 500px; }
         .table-container { background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: auto; }
         
-        table { width: 100%; border-collapse: collapse; min-width: 1000px; transition: all 0.3s; }
+        table { width: 100%; border-collapse: collapse; min-width: 1000px; }
         th, td { padding: 10px 12px; font-size: 11px; text-align: right; border-bottom: 1px solid #f1f5f9; font-family: monospace; }
         th { background: #f8fafc; font-weight: 700; position: sticky; top: 0; z-index: 5; }
         
-        /* Comparison Column Hiding Logic */
         .compare-col { display: none; }
         .compare-active .compare-col { display: table-cell; }
 
@@ -70,9 +68,9 @@
         
         .btn { border: 1px solid #cbd5e1; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer; background: white; padding: 6px; transition: 0.2s; }
         .btn:hover:not(:disabled) { background: #f1f5f9; }
-        .btn:disabled { opacity: 0.3; cursor: not-allowed; background: #f1f5f9; }
         .btn-active { background: var(--primary) !important; color: white !important; border-color: var(--primary); }
-        .btn-manage { background: #f1f5f9; border: 1px solid #cbd5e1; font-size: 11px; padding: 6px 12px; }
+        .btn-manage { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); font-size: 11px; padding: 6px 12px; color: white; }
+        .btn-manage:hover { background: rgba(255,255,255,0.2); }
     </style>
 </head>
 <body>
@@ -83,7 +81,7 @@
         <div class="stat-item"><span class="stat-label">NW Difference</span><span class="stat-value" id="deltaNW">$0</span></div>
     </div>
     <div style="display: flex; gap: 20px; align-items: center;">
-        <div style="font-size: 11px; font-weight: bold; color: #64748b;">
+        <div style="font-size: 11px; font-weight: bold; color: #94a3b8;">
             Baseline: <span id="comparingToText" style="color: var(--primary)">None Selected</span>
         </div>
         <button class="btn btn-manage" onclick="toggleDrawer()">⚙️ Manage Scenarios</button>
@@ -100,10 +98,10 @@
             <h3>Fundamentals</h3>
             <div class="input-grid-5" style="grid-template-columns: 1fr 1fr;">
                 <div class="input-group"><label>Start Year</label><input type="number" id="startYear" value="2028" oninput="calculate()"></div>
-                <div class="input-group"><label>Inflation %</label><input type="number" id="inflation" value="3.5" step="0.1" oninput="calculate()"></div>
-                <div class="input-group"><label>Investments $</label><input type="text" id="startLiquid" value="5,000,000" oninput="formatCurrencyInput(this)"></div>
+                <div class="input-group"><label>Inflation %</label><input type="number" id="inflation" value="4.0" step="0.1" oninput="calculate()"></div>
+                <div class="input-group"><label>Investments $</label><input type="text" id="startLiquid" value="10,000,000" oninput="formatCurrencyInput(this)"></div>
                 <div class="input-group"><label>Growth %</label><input type="number" id="stockGrowth" value="7.0" step="0.1" oninput="calculate()"></div>
-                <div class="input-group"><label>House $</label><input type="text" id="startHouse" value="1,500,000" oninput="formatCurrencyInput(this)"></div>
+                <div class="input-group"><label>House $</label><input type="text" id="startHouse" value="3,000,000" oninput="formatCurrencyInput(this)"></div>
                 <div class="input-group"><label>Apprec %</label><input type="number" id="reApprec" value="4.0" step="0.1" oninput="calculate()"></div>
             </div>
 
@@ -111,7 +109,7 @@
             <h3>Monthly Income ($)</h3><div class="input-grid-5" id="incomeGrid"></div>
             <h3>Tax Rates (%)</h3><div class="input-grid-5" id="taxGrid"></div>
 
-            <h3>One-Time Overrides</h3>
+            <h3>Overrides</h3>
             <div id="dynamicReturns"></div>
             <button class="btn" style="width:100%; margin-bottom:10px" onclick="addRow('return')">+ Growth Year Override</button>
             <div id="dynamicEvents"></div>
@@ -155,8 +153,19 @@
     function initGrids() {
         ['spend', 'income', 'tax'].forEach(k => {
             const container = document.getElementById(k + 'Grid');
-            const def = k === 'tax' ? 15 : (k === 'spend' ? 15000 : 0);
             for (let i = 1; i <= 8; i++) {
+                let def;
+                if (k === 'spend') {
+                    if (i <= 2) def = 25000;      // Yrs 1-10
+                    else if (i <= 4) def = 20000; // Yrs 11-20
+                    else def = 15000;             // Yrs 21-40
+                } else if (k === 'tax') {
+                    if (i <= 2) def = 15;         // Yrs 1-10
+                    else if (i <= 4) def = 12;     // Yrs 11-20
+                    else if (i <= 6) def = 10;     // Yrs 21-30
+                    else def = 8;                 // Yrs 31-40
+                } else def = 0;
+
                 const div = document.createElement('div');
                 div.className = 'input-group';
                 div.innerHTML = `<label>${(i-1)*5+1}-${i*5}</label><input type="${k==='tax'?'number':'text'}" id="${k}${i}" value="${def.toLocaleString()}" oninput="${k==='tax'?'calculate()':'formatCurrencyInput(this)'}">`;
@@ -165,6 +174,7 @@
         });
     }
 
+    // Logic remains consistent with previous robust version
     function formatCurrencyInput(el) {
         let v = el.value.replace(/,/g, '').replace(/[^\d.]/g, '');
         if (v) el.value = Number(v).toLocaleString();
@@ -206,16 +216,12 @@
         const table = document.getElementById('resultsTable');
         const tbody = table.querySelector('tbody');
         tbody.innerHTML = '';
-        
-        // Toggle comparison class on table
-        if (base) table.classList.add('compare-active');
-        else table.classList.remove('compare-active');
+        if (base) table.classList.add('compare-active'); else table.classList.remove('compare-active');
 
         live.forEach((r, i) => {
             const tr = document.createElement('tr');
             const dLiq = base ? r.endLiq - base[i].endLiq : 0;
             const dHse = base ? r.house - base[i].house : 0;
-            
             tr.innerHTML = `<td style="text-align:center">${r.yr}</td><td>${fmt.format(r.withdrawal)}</td>
                 <td style="font-weight:bold;color:var(--primary)">${fmt.format(r.endLiq)}</td>
                 <td class="base-col compare-col">${base ? fmt.format(base[i].endLiq) : '-'}</td>
@@ -227,17 +233,13 @@
                 <td style="font-weight:bold;color:#166534">${fmt.format(r.total / Math.pow(1 + getInputs().inflation, i))}</td>`;
             tbody.appendChild(tr);
         });
-        
         document.getElementById('valNW').innerText = fmt.format(live[39].total);
         const deltaEl = document.getElementById('deltaNW');
         if (base) {
             const diff = live[39].total - base[39].total;
             deltaEl.innerText = (diff >= 0 ? '+' : '') + fmt.format(diff);
             deltaEl.style.color = diff >= 0 ? 'var(--success)' : 'var(--danger)';
-        } else {
-            deltaEl.innerText = '$0';
-            deltaEl.style.color = 'inherit';
-        }
+        } else { deltaEl.innerText = '$0'; deltaEl.style.color = 'inherit'; }
         updateChart(live, base);
     }
 
@@ -262,9 +264,9 @@
             } else {
                 div.innerHTML = `
                     <div class="stat-label">Scenario ${s}</div>
-                    <input type="text" class="name-input" id="name-${s}" placeholder="Name scenario..." value="${scenarioNames[s]}" onchange="updateScenarioNames()">
+                    <input type="text" class="name-input" id="name-${s}" placeholder="Name..." value="${scenarioNames[s]}" onchange="updateScenarioNames()">
                     <div class="card-actions">
-                        <button class="btn" onclick="saveSlot('${s}')">Overwrt</button>
+                        <button class="btn" onclick="saveSlot('${s}')">Save</button>
                         <button class="btn" onclick="loadSlot('${s}')">Load</button>
                         <button class="btn" onclick="clearSlot('${s}')" style="color:var(--danger)">Clear</button>
                     </div>
