@@ -7,9 +7,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f6; color: #333; padding: 20px; }
-        .container { max-width: 1400px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .container { max-width: 98%; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         h1 { text-align: center; color: #2c3e50; margin-bottom: 30px; }
-        
         
         .dashboard-grid { display: grid; grid-template-columns: 650px 1fr; gap: 30px; align-items: start; }
         
@@ -20,7 +19,6 @@
         .input-group-box h3 { margin-top: 0; color: #0f172a; font-size: 14px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
 
         .input-group { margin-bottom: 12px; }
-
         .input-group label { display: block; font-weight: bold; margin-bottom: 4px; font-size: 13px; color: #475569; }
         .input-group input { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; font-family: monospace; }
         
@@ -28,9 +26,6 @@
         .input-wrapper input { width: 100%; }
         .symbol-right { position: absolute; right: 10px; color: #64748b; font-weight: bold; pointer-events: none; font-size: 13px; }
         .input-wrapper input.has-right { padding-right: 25px; }
-
-        h3 { margin-top: 0; color: #1e293b; font-size: 16px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; }
-        .section-divider { margin: 25px 0 10px 0; }
 
         .outputs-section { display: flex; flex-direction: column; gap: 30px; }
         .chart-container { background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; height: 400px; }
@@ -80,7 +75,6 @@
     <h1>Advanced Retirement Pathways Projection (2055)</h1>
     
     <div class="dashboard-grid">
-        
         <div class="inputs-section">
             <div class="input-grid">
                 <!-- Box 1: Baseline -->
@@ -104,24 +98,7 @@
                     </div>
                 </div>
 
-                <!-- Box 2: Lifestyle Spend -->
-                <div class="input-group-box">
-                    <h3>Monthly Spend (Excl. RE)</h3>
-                    <div class="input-group">
-                        <label>Years 1-10 ($ / month)</label>
-                        <input type="text" id="withdraw1" value="25,000" oninput="formatCurrencyInput(this)">
-                    </div>
-                    <div class="input-group">
-                        <label>Years 11-20 ($ / month)</label>
-                        <input type="text" id="withdraw2" value="20,000" oninput="formatCurrencyInput(this)">
-                    </div>
-                    <div class="input-group">
-                        <label>Years 21-30+ ($ / month)</label>
-                        <input type="text" id="withdraw3" value="20,000" oninput="formatCurrencyInput(this)">
-                    </div>
-                </div>
-
-                <!-- Box 3: Tax Rates -->
+                <!-- Box 2: Tax Rates -->
                 <div class="input-group-box">
                     <h3>Effective Tax Rates</h3>
                     <div class="input-group">
@@ -154,7 +131,29 @@
                     </div>
                 </div>
 
-                <!-- Box 4: Mortgages -->
+                <!-- Box 3: Lifestyle Spend -->
+                <div class="input-group-box">
+                    <h3>Monthly Spend (Excl. RE)</h3>
+                    <div class="input-group"><label>Years 1-5 ($ / month)</label><input type="text" id="w1_5" value="25,000" oninput="formatCurrencyInput(this)"></div>
+                    <div class="input-group"><label>Years 6-10 ($ / month)</label><input type="text" id="w6_10" value="25,000" oninput="formatCurrencyInput(this)"></div>
+                    <div class="input-group"><label>Years 11-15 ($ / month)</label><input type="text" id="w11_15" value="20,000" oninput="formatCurrencyInput(this)"></div>
+                    <div class="input-group"><label>Years 16-20 ($ / month)</label><input type="text" id="w16_20" value="20,000" oninput="formatCurrencyInput(this)"></div>
+                    <div class="input-group"><label>Years 21-25 ($ / month)</label><input type="text" id="w21_25" value="20,000" oninput="formatCurrencyInput(this)"></div>
+                    <div class="input-group"><label>Years 26-30+ ($ / month)</label><input type="text" id="w26_30" value="20,000" oninput="formatCurrencyInput(this)"></div>
+                </div>
+
+                <!-- Box 4: Pre-Tax Income -->
+                <div class="input-group-box">
+                    <h3>Pre-Tax Monthly Income</h3>
+                    <div class="input-group"><label>Years 1-5 ($ / month)</label><input type="text" id="i1_5" value="0" oninput="formatCurrencyInput(this)"></div>
+                    <div class="input-group"><label>Years 6-10 ($ / month)</label><input type="text" id="i6_10" value="0" oninput="formatCurrencyInput(this)"></div>
+                    <div class="input-group"><label>Years 11-15 ($ / month)</label><input type="text" id="i11_15" value="0" oninput="formatCurrencyInput(this)"></div>
+                    <div class="input-group"><label>Years 16-20 ($ / month)</label><input type="text" id="i16_20" value="0" oninput="formatCurrencyInput(this)"></div>
+                    <div class="input-group"><label>Years 21-25 ($ / month)</label><input type="text" id="i21_25" value="0" oninput="formatCurrencyInput(this)"></div>
+                    <div class="input-group"><label>Years 26-30+ ($ / month)</label><input type="text" id="i26_30" value="0" oninput="formatCurrencyInput(this)"></div>
+                </div>
+
+                <!-- Box 5: Mortgages -->
                 <div class="input-group-box">
                     <h3>Mortgage Terms</h3>
                     <div class="input-group">
@@ -171,7 +170,32 @@
                     </div>
                 </div>
 
-                <!-- Box 5: Real Estate Values & Growth -->
+                <!-- Box 6: Rentals -->
+                <div class="input-group-box">
+                    <h3>Rental Income & Costs</h3>
+                    <div class="input-group">
+                        <label>WA Monthly Rent ($)</label>
+                        <input type="text" id="waRent" value="6,500" oninput="formatCurrencyInput(this)">
+                    </div>
+                    <div class="input-group">
+                        <label>CA Monthly Rent ($)</label>
+                        <input type="text" id="caRent" value="6,500" oninput="formatCurrencyInput(this)">
+                    </div>
+                    <div class="input-group">
+                        <label>Property Mgmt Fee (%)</label>
+                        <input type="number" id="mgmtFee" value="7" step="0.1" oninput="calculate()">
+                    </div>
+                    <div class="input-group" style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #cbd5e1;">
+                        <label>Path 4: CA Rent during WA Winter ($/mo)</label>
+                        <input type="text" id="caWinterRentCost" value="6,500" oninput="formatCurrencyInput(this)">
+                    </div>
+                    <div class="input-group">
+                        <label>Path 4: WA Winter months in CA</label>
+                        <input type="number" id="waWinterMonths" value="5" oninput="calculate()">
+                    </div>
+                </div>
+
+                <!-- Box 7: Real Estate Values & Growth -->
                 <div class="input-group-box" style="grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
                     <div style="grid-column: 1 / -1;"><h3>Real Estate Values & Appreciation</h3></div>
                     <div>
@@ -206,57 +230,38 @@
                     </div>
                 </div>
 
-                <!-- Box 6: Rentals -->
-                <div class="input-group-box">
-                    <h3>Rental Income & Costs</h3>
-                    <div class="input-group">
-                        <label>WA Monthly Rent ($)</label>
-                        <input type="text" id="waRent" value="6,500" oninput="formatCurrencyInput(this)">
+                <!-- Box 8: Timelines -->
+                <div class="input-group-box" style="grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                    <div style="grid-column: 1 / -1;"><h3>Timelines & Scenarios</h3></div>
+                    <div>
+                        <div class="input-group">
+                            <label>End Year (Projection Horizon)</label>
+                            <input type="number" id="endYear" value="2055" oninput="calculate()">
+                        </div>
+                        <div class="input-group">
+                            <label>Path 4: Years Delayed in WA</label>
+                            <input type="number" id="delayedCaYears" value="7" oninput="calculate()">
+                        </div>
                     </div>
-                    <div class="input-group">
-                        <label>CA Monthly Rent ($)</label>
-                        <input type="text" id="caRent" value="6,500" oninput="formatCurrencyInput(this)">
+                    <div>
+                        <div class="input-group">
+                            <label>Path 2: CA Purchase Year</label>
+                            <input type="number" id="caPurchaseYrPath2" value="2026" oninput="calculate()">
+                        </div>
+                        <div class="input-group">
+                            <label>Path 4: CA Purchase Year</label>
+                            <input type="number" id="caPurchaseYrPath4" value="2026" oninput="calculate()">
+                        </div>
                     </div>
-                    <div class="input-group">
-                        <label>Property Mgmt Fee (%)</label>
-                        <input type="number" id="mgmtFee" value="7" step="0.1" oninput="calculate()">
-                    </div>
-                    <div class="input-group" style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #cbd5e1;">
-                        <label>Path 4: CA Rent during WA Winter ($/mo)</label>
-                        <input type="text" id="caWinterRentCost" value="6,500" oninput="formatCurrencyInput(this)">
-                    </div>
-                    <div class="input-group">
-                        <label>Path 4: WA Winter months in CA</label>
-                        <input type="number" id="waWinterMonths" value="5" oninput="calculate()">
-                    </div>
-                </div>
-
-                <!-- Box 7: Timelines -->
-                <div class="input-group-box">
-                    <h3>Timelines & Scenarios</h3>
-                    <div class="input-group">
-                        <label>End Year (Projection Horizon)</label>
-                        <input type="number" id="endYear" value="2055" oninput="calculate()">
-                    </div>
-                    <div class="input-group">
-                        <label>Path 2: CA Purchase Year</label>
-                        <input type="number" id="caPurchaseYrPath2" value="2026" oninput="calculate()">
-                    </div>
-                    <div class="input-group">
-                        <label>Path 3, 5: FL Purchase Year</label>
-                        <input type="number" id="flPurchaseYr" value="2026" oninput="calculate()">
-                    </div>
-                    <div class="input-group">
-                        <label>Path 4: CA Purchase Year</label>
-                        <input type="number" id="caPurchaseYrPath4" value="2026" oninput="calculate()">
-                    </div>
-                    <div class="input-group">
-                        <label>Path 4: Years Delayed in WA</label>
-                        <input type="number" id="delayedCaYears" value="7" oninput="calculate()">
-                    </div>
-                    <div class="input-group">
-                        <label>Path 5: CA Purchase Year</label>
-                        <input type="number" id="caPurchaseYrPath5" value="2028" oninput="calculate()">
+                    <div>
+                        <div class="input-group">
+                            <label>Path 3, 5: FL Purchase Year</label>
+                            <input type="number" id="flPurchaseYr" value="2026" oninput="calculate()">
+                        </div>
+                        <div class="input-group">
+                            <label>Path 5: CA Purchase Year</label>
+                            <input type="number" id="caPurchaseYrPath5" value="2028" oninput="calculate()">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -336,7 +341,7 @@
                     <thead style="position: sticky; top: 0; background-color: #cbd5e1; z-index: 1;">
                         <tr>
                             <th style="padding: 8px; text-align: center; border-bottom: 1px solid #94a3b8;">Year</th>
-                            <th style="padding: 8px; border-bottom: 1px solid #94a3b8;">Net Cash Needed</th>
+                            <th style="padding: 8px; border-bottom: 1px solid #94a3b8;">Net Shortfall</th>
                             <th style="padding: 8px; border-bottom: 1px solid #94a3b8;">Taxes Paid</th>
                             <th style="padding: 8px; border-bottom: 1px solid #94a3b8;">Gross Withdrawal</th>
                             <th style="padding: 8px; border-bottom: 1px solid #94a3b8;">End Liquid Bal</th>
@@ -392,9 +397,23 @@
             const waWinterMonths = getNum('waWinterMonths');
             const mgmtFee = getNum('mgmtFee') / 100;
             
-            const baseW1 = getNum('withdraw1') * 12;
-            const baseW2 = getNum('withdraw2') * 12;
-            const baseW3 = getNum('withdraw3') * 12;
+            const getSpend = (i) => {
+                if(i < 5) return getNum('w1_5') * 12;
+                if(i < 10) return getNum('w6_10') * 12;
+                if(i < 15) return getNum('w11_15') * 12;
+                if(i < 20) return getNum('w16_20') * 12;
+                if(i < 25) return getNum('w21_25') * 12;
+                return getNum('w26_30') * 12;
+            };
+
+            const getInc = (i) => {
+                if(i < 5) return getNum('i1_5') * 12;
+                if(i < 10) return getNum('i6_10') * 12;
+                if(i < 15) return getNum('i11_15') * 12;
+                if(i < 20) return getNum('i16_20') * 12;
+                if(i < 25) return getNum('i21_25') * 12;
+                return getNum('i26_30') * 12;
+            };
 
             const tax1 = getNum('tax1') / 100;
             const tax2 = getNum('tax2') / 100;
@@ -407,7 +426,6 @@
             const delayedCaYears = getNum('delayedCaYears');
             const caPurchaseYrPath5 = getNum('caPurchaseYrPath5');
 
-            // Baseline fixed assumption for existing WA home
             const waCarry = 42000; 
             const waWinterRentLoss = caWinterRentCost * waWinterMonths;
             const caEntryTax = 1060000;
@@ -423,10 +441,10 @@
             };
 
             const caMortgage = calcAnnualMortgage(caHome * (1 - caDpPct), intRate);
-            const caStaticBase = caHome * 0.0175; // 1.75%
+            const caStaticBase = caHome * 0.0175; 
             
             const flMortgage = calcAnnualMortgage(flHome * (1 - flDpPct), intRate);
-            const flStaticBase = flHome * 0.0225; // 2.25%
+            const flStaticBase = flHome * 0.0225; 
 
             const netRentWA_Base = (waRentMonthly * 12) * (1 - mgmtFee);
             const netRentCA_Base = (caRentMonthly * 12) * (1 - mgmtFee);
@@ -450,15 +468,17 @@
             let p1Hist = [], p2Hist = [], p3Hist = [], p4Hist = [], p5Hist = [];
 
             for(let i=0; i<years; i++) {
-                let currentDecade = Math.floor(i / 10);
-                let annualBaseNet = 0, annualTaxRate = 0;
+                let annualBaseNet = getSpend(i);
+                let annualPreTaxInc = getInc(i);
+                let annualTaxRate = 0;
                 
-                if(currentDecade === 0) { annualBaseNet = baseW1; annualTaxRate = tax1; }
-                else if(currentDecade === 1) { annualBaseNet = baseW2; annualTaxRate = tax2; }
-                else { annualBaseNet = baseW3; annualTaxRate = tax3; }
+                if(i < 10) annualTaxRate = tax1;
+                else if(i < 20) annualTaxRate = tax2;
+                else annualTaxRate = tax3;
 
                 let inf = Math.pow(1 + g, i);
                 let infBaseLife = annualBaseNet * inf;
+                let infInc = annualPreTaxInc * inf;
                 
                 let infWaCarry = waCarry * inf;
                 let infCaStatic = caStaticBase * inf;
@@ -467,51 +487,65 @@
                 let infCaRent = netRentCA_Base * inf;
                 let infWaWinter = waWinterRentLoss * inf;
 
+                // Function to process shortfall correctly
+                const processShortfall = (liq, shortfall, taxRate) => {
+                    let gross = 0, tax = 0;
+                    if(shortfall > 0) {
+                        gross = shortfall / (1 - taxRate);
+                        tax = gross - shortfall;
+                    } else {
+                        gross = shortfall; // Negative, surplus saved
+                        tax = 0;
+                    }
+                    liq = (liq - gross) * (1 + r);
+                    if (liq < 0) { liq = 0; gross = 0; shortfall = 0; }
+                    return { liq, gross, tax, shortfall };
+                };
+
                 // Path 1
-                let p1NetNeed = infBaseLife + infWaCarry;
                 let p1TaxR = Math.min(annualTaxRate, 0.99);
-                let p1Gross = p1NetNeed / (1 - p1TaxR);
-                p1Liq = (p1Liq - p1Gross) * (1 + r);
-                if(p1Liq < 0) { p1Liq = 0; p1Gross = 0; p1NetNeed = 0; }
-                p1Hist.push({ year: startYear + i, netNeed: p1NetNeed, gross: p1Gross, tax: p1Gross - p1NetNeed, liq: p1Liq });
+                let p1NetInc = infInc * (1 - p1TaxR);
+                let p1Exp = infBaseLife + infWaCarry;
+                let p1Res = processShortfall(p1Liq, p1Exp - p1NetInc, p1TaxR);
+                p1Liq = p1Res.liq;
+                p1Hist.push({ year: startYear + i, netNeed: p1Res.shortfall, tax: p1Res.tax, gross: p1Res.gross, liq: p1Liq });
 
                 // Path 2
-                let p2NetNeed = infBaseLife + caMortgage + infCaStatic + infWaCarry - infWaRent;
                 let p2TaxR = Math.min(annualTaxRate + caStateTax, 0.99);
-                let p2Gross = p2NetNeed / (1 - p2TaxR);
-                p2Liq = (p2Liq - p2Gross) * (1 + r);
-                if(p2Liq < 0) { p2Liq = 0; p2Gross = 0; p2NetNeed = 0; }
-                p2Hist.push({ year: startYear + i, netNeed: p2NetNeed, gross: p2Gross, tax: p2Gross - p2NetNeed, liq: p2Liq });
+                let p2NetInc = infInc * (1 - p2TaxR);
+                let p2Exp = infBaseLife + caMortgage + infCaStatic + infWaCarry - infWaRent;
+                let p2Res = processShortfall(p2Liq, p2Exp - p2NetInc, p2TaxR);
+                p2Liq = p2Res.liq;
+                p2Hist.push({ year: startYear + i, netNeed: p2Res.shortfall, tax: p2Res.tax, gross: p2Res.gross, liq: p2Liq });
 
                 // Path 3
-                let p3NetNeed = infBaseLife + flMortgage + infFlStatic + infWaCarry - infWaRent;
                 let p3TaxR = Math.min(annualTaxRate, 0.99);
-                let p3Gross = p3NetNeed / (1 - p3TaxR);
-                p3Liq = (p3Liq - p3Gross) * (1 + r);
-                if(p3Liq < 0) { p3Liq = 0; p3Gross = 0; p3NetNeed = 0; }
-                p3Hist.push({ year: startYear + i, netNeed: p3NetNeed, gross: p3Gross, tax: p3Gross - p3NetNeed, liq: p3Liq });
+                let p3NetInc = infInc * (1 - p3TaxR);
+                let p3Exp = infBaseLife + flMortgage + infFlStatic + infWaCarry - infWaRent;
+                let p3Res = processShortfall(p3Liq, p3Exp - p3NetInc, p3TaxR);
+                p3Liq = p3Res.liq;
+                p3Hist.push({ year: startYear + i, netNeed: p3Res.shortfall, tax: p3Res.tax, gross: p3Res.gross, liq: p3Liq });
 
                 // Path 4
-                let p4NetNeed = 0, p4TaxR = 0;
+                let p4TaxR = Math.min((i < delayedCaYears) ? annualTaxRate : annualTaxRate + caStateTax, 0.99);
+                let p4NetInc = infInc * (1 - p4TaxR);
+                let p4Exp = 0;
                 if (i < delayedCaYears) {
-                    p4NetNeed = infBaseLife + caMortgage + infCaStatic + infWaCarry + infWaWinter - infCaRent;
-                    p4TaxR = Math.min(annualTaxRate, 0.99);
+                    p4Exp = infBaseLife + caMortgage + infCaStatic + infWaCarry + infWaWinter - infCaRent;
                 } else {
-                    p4NetNeed = infBaseLife + caMortgage + infCaStatic + infWaCarry - infWaRent;
-                    p4TaxR = Math.min(annualTaxRate + caStateTax, 0.99);
+                    p4Exp = infBaseLife + caMortgage + infCaStatic + infWaCarry - infWaRent;
                 }
-                let p4Gross = p4NetNeed / (1 - p4TaxR);
-                p4Liq = (p4Liq - p4Gross) * (1 + r);
-                if(p4Liq < 0) { p4Liq = 0; p4Gross = 0; p4NetNeed = 0; }
-                p4Hist.push({ year: startYear + i, netNeed: p4NetNeed, gross: p4Gross, tax: p4Gross - p4NetNeed, liq: p4Liq });
+                let p4Res = processShortfall(p4Liq, p4Exp - p4NetInc, p4TaxR);
+                p4Liq = p4Res.liq;
+                p4Hist.push({ year: startYear + i, netNeed: p4Res.shortfall, tax: p4Res.tax, gross: p4Res.gross, liq: p4Liq });
 
                 // Path 5
-                let p5NetNeed = infBaseLife + flMortgage + infFlStatic + caMortgage + infCaStatic + infWaCarry - infWaRent - infCaRent;
                 let p5TaxR = Math.min(annualTaxRate, 0.99);
-                let p5Gross = p5NetNeed / (1 - p5TaxR);
-                p5Liq = (p5Liq - p5Gross) * (1 + r);
-                if(p5Liq < 0) { p5Liq = 0; p5Gross = 0; p5NetNeed = 0; }
-                p5Hist.push({ year: startYear + i, netNeed: p5NetNeed, gross: p5Gross, tax: p5Gross - p5NetNeed, liq: p5Liq });
+                let p5NetInc = infInc * (1 - p5TaxR);
+                let p5Exp = infBaseLife + flMortgage + infFlStatic + caMortgage + infCaStatic + infWaCarry - infWaRent - infCaRent;
+                let p5Res = processShortfall(p5Liq, p5Exp - p5NetInc, p5TaxR);
+                p5Liq = p5Res.liq;
+                p5Hist.push({ year: startYear + i, netNeed: p5Res.shortfall, tax: p5Res.tax, gross: p5Res.gross, liq: p5Liq });
             }
 
             const results = [];
@@ -520,6 +554,15 @@
             const realEstateData = [];
             const taxData = [];
             const netLegacyData = [];
+
+            let y1Spend = getSpend(0);
+            let y1Inc = getInc(0);
+
+            // Path 1 details
+            let p1NetInc = y1Inc * (1 - tax1);
+            let p1Exp = y1Spend + waCarry;
+            let p1Short = p1Exp - p1NetInc;
+            let p1GrossW = p1Short > 0 ? p1Short / (1 - tax1) : p1Short;
 
             let p1Estate = fvWa + p1Liq;
             let p1Tax = p1Estate > estateExempt ? (p1Estate - estateExempt) * estateTaxRate : 0;
@@ -531,21 +574,27 @@
                     </div>
                     <div>
                         <h4>Liquid Capital & Compounding Mechanics</h4>
-                        <p>Our liquid portfolio operates on an iterative, year-by-year compounding engine. Our starting capital is <strong>${formatCurrency(startLiq)}</strong>. Every year, the simulation first withdraws our living expenses and property taxes, and then compounds the remaining balance by our assumed <strong>${formatPct(r)}</strong> market return.</p>
+                        <p>Our liquid portfolio operates on an iterative, year-by-year compounding engine. Our starting capital is <strong>${formatCurrency(startLiq)}</strong>. Every year, the simulation offsets our living expenses with any active income, withdraws the net shortfall from our portfolio, and then compounds the remaining balance by our assumed <strong>${formatPct(r)}</strong> market return.</p>
                         
                         <h5>Year 1 Detailed Calculation Formulas:</h5>
                         <div class="math-box">
-                            + Base Spend: ${formatCurrency(baseW1)}
-                            <span class="math-subtext">($${numToCommas(baseW1/12)}/mo × 12 months)</span>
+                            + Base Spend: ${formatCurrency(y1Spend)}
+                            <span class="math-subtext">($${numToCommas(y1Spend/12)}/mo × 12 months)</span>
                             
                             + WA Carry: ${formatCurrency(waCarry)}
                             <span class="math-subtext">(Fixed baseline estimate for property taxes & insurance on our paid-off $3M home)</span>
                             
                             ---------------------------------------------------------<br>
-                            = <strong>Net Required: ${formatCurrency(baseW1 + waCarry)}</strong><br><br>
+                            = <strong>Total Expenses: ${formatCurrency(p1Exp)}</strong><br><br>
+                            
+                            - Net Income: -${formatCurrency(p1NetInc)}
+                            <span class="math-subtext">(Pre-tax $${numToCommas(y1Inc/12)}/mo × 12 months, minus ${formatPct(tax1)} Fed Tax)</span><br>
+
+                            ---------------------------------------------------------<br>
+                            = <strong>Net Portfolio Shortfall: ${formatCurrency(p1Short)}</strong><br><br>
                             
                             ÷ (1 - ${formatPct(tax1)} Federal Tax Rate)<br>
-                            = <strong>Gross Withdrawal: ${formatCurrency((baseW1 + waCarry) / (1 - tax1))}</strong>
+                            = <strong>Gross Withdrawal: ${formatCurrency(p1GrossW)}</strong>
                         </div>
                         <p><em>Note: Variables like property taxes and base spend inflate automatically at <strong>${formatPct(g)}</strong> each year, constantly increasing our gross withdrawal requirement.</em></p>
                     </div>
@@ -566,6 +615,12 @@
                 `
             });
 
+            let p2TaxR = Math.min(tax1 + caStateTax, 0.99);
+            let p2NetInc = y1Inc * (1 - p2TaxR);
+            let p2Exp = y1Spend + caMortgage + caStaticBase + waCarry - netRentWA_Base;
+            let p2Short = p2Exp - p2NetInc;
+            let p2GrossW = p2Short > 0 ? p2Short / (1 - p2TaxR) : p2Short;
+
             let p2Re = fvWa + fvCaPath2;
             results.push({
                 name: "Path 2: Immediate CA", liq: p2Liq, re: p2Re, tax: 0, net: p2Liq + p2Re,
@@ -582,8 +637,8 @@
                             Starting Portfolio: ${formatCurrency(startLiq - caEntryTax - caDpAmt)}
                             <span class="math-subtext">(${formatCurrency(startLiq)} initial - ${formatCurrency(caEntryTax)} Entry Tax - ${formatCurrency(caDpAmt)} CA Down Payment)</span><br>
                             
-                            + Base Spend: ${formatCurrency(baseW1)}
-                            <span class="math-subtext">($${numToCommas(baseW1/12)}/mo × 12 months)</span>
+                            + Base Spend: ${formatCurrency(y1Spend)}
+                            <span class="math-subtext">($${numToCommas(y1Spend/12)}/mo × 12 months)</span>
                             
                             + CA Mortgage P&I: ${formatCurrency(caMortgage)}
                             <span class="math-subtext">(${formatCurrency(caHome - caDpAmt)} principal loan amortized at ${formatPct(intRate)} over 30 years)</span>
@@ -594,14 +649,20 @@
                             + WA Carry: ${formatCurrency(waCarry)}
                             <span class="math-subtext">(Taxes & insurance to maintain the empty WA home)</span>
                             
-                            - WA LTR Income (Net): -${formatCurrency(netRentWA_Base)}
+                            - WA LTR Income (Gross Offset): -${formatCurrency(netRentWA_Base)}
                             <span class="math-subtext">($${numToCommas(waRentMonthly)}/mo × 12 months, minus ${formatPct(mgmtFee)} Property Mgmt Fee)</span>
                             
                             ---------------------------------------------------------<br>
-                            = <strong>Net Required: ${formatCurrency(baseW1 + caMortgage + caStaticBase + waCarry - netRentWA_Base)}</strong><br><br>
+                            = <strong>Total Expenses: ${formatCurrency(p2Exp)}</strong><br><br>
+
+                            - Net Income: -${formatCurrency(p2NetInc)}
+                            <span class="math-subtext">(Pre-tax $${numToCommas(y1Inc/12)}/mo × 12 months, minus ${formatPct(p2TaxR)} Fed+CA Tax)</span><br>
+
+                            ---------------------------------------------------------<br>
+                            = <strong>Net Portfolio Shortfall: ${formatCurrency(p2Short)}</strong><br><br>
                             
-                            ÷ (1 - ${formatPct(tax1 + caStateTax)} Combined Fed + CA State Tax Rate)<br>
-                            = <strong>Gross Withdrawal: ${formatCurrency((baseW1 + caMortgage + caStaticBase + waCarry - netRentWA_Base) / (1 - (tax1 + caStateTax)))}</strong>
+                            ÷ (1 - ${formatPct(p2TaxR)} Combined Fed + CA State Tax Rate)<br>
+                            = <strong>Gross Withdrawal: ${formatCurrency(p2GrossW)}</strong>
                         </div>
                     </div>
                     <div>
@@ -616,6 +677,12 @@
                     ${buildHistoryTable(p2Hist)}
                 `
             });
+
+            let p3TaxR = Math.min(tax1, 0.99);
+            let p3NetInc = y1Inc * (1 - p3TaxR);
+            let p3Exp = y1Spend + flMortgage + flStaticBase + waCarry - netRentWA_Base;
+            let p3Short = p3Exp - p3NetInc;
+            let p3GrossW = p3Short > 0 ? p3Short / (1 - p3TaxR) : p3Short;
 
             let p3Re = fvWa + fvFl;
             results.push({
@@ -633,8 +700,8 @@
                             Starting Portfolio: ${formatCurrency(startLiq - flDpAmt)}
                             <span class="math-subtext">(${formatCurrency(startLiq)} initial - ${formatCurrency(flDpAmt)} FL Down Payment. Zero Entry Tax.)</span><br>
                             
-                            + Base Spend: ${formatCurrency(baseW1)}
-                            <span class="math-subtext">($${numToCommas(baseW1/12)}/mo × 12 months)</span>
+                            + Base Spend: ${formatCurrency(y1Spend)}
+                            <span class="math-subtext">($${numToCommas(y1Spend/12)}/mo × 12 months)</span>
                             
                             + FL Mortgage P&I: ${formatCurrency(flMortgage)}
                             <span class="math-subtext">(${formatCurrency(flHome - flDpAmt)} principal loan amortized at ${formatPct(intRate)} over 30 years)</span>
@@ -645,14 +712,20 @@
                             + WA Carry: ${formatCurrency(waCarry)}
                             <span class="math-subtext">(Taxes & insurance to maintain the empty WA home)</span>
                             
-                            - WA LTR Income (Net): -${formatCurrency(netRentWA_Base)}
+                            - WA LTR Income (Gross Offset): -${formatCurrency(netRentWA_Base)}
                             <span class="math-subtext">($${numToCommas(waRentMonthly)}/mo × 12 months, minus ${formatPct(mgmtFee)} Property Mgmt Fee)</span>
                             
                             ---------------------------------------------------------<br>
-                            = <strong>Net Required: ${formatCurrency(baseW1 + flMortgage + flStaticBase + waCarry - netRentWA_Base)}</strong><br><br>
+                            = <strong>Total Expenses: ${formatCurrency(p3Exp)}</strong><br><br>
+
+                            - Net Income: -${formatCurrency(p3NetInc)}
+                            <span class="math-subtext">(Pre-tax $${numToCommas(y1Inc/12)}/mo × 12 months, minus ${formatPct(p3TaxR)} Fed Tax)</span><br>
+
+                            ---------------------------------------------------------<br>
+                            = <strong>Net Portfolio Shortfall: ${formatCurrency(p3Short)}</strong><br><br>
                             
-                            ÷ (1 - ${formatPct(tax1)} Federal Tax Only - 0% FL State Tax)<br>
-                            = <strong>Gross Withdrawal: ${formatCurrency((baseW1 + flMortgage + flStaticBase + waCarry - netRentWA_Base) / (1 - tax1))}</strong>
+                            ÷ (1 - ${formatPct(p3TaxR)} Federal Tax Only - 0% FL State Tax)<br>
+                            = <strong>Gross Withdrawal: ${formatCurrency(p3GrossW)}</strong>
                         </div>
                     </div>
                     <div>
@@ -667,6 +740,12 @@
                     ${buildHistoryTable(p3Hist)}
                 `
             });
+
+            let p4TaxR = Math.min(tax1, 0.99); // Phase 1 WA
+            let p4NetInc = y1Inc * (1 - p4TaxR);
+            let p4Exp = y1Spend + caMortgage + caStaticBase + waCarry + waWinterRentLoss - netRentCA_Base;
+            let p4Short = p4Exp - p4NetInc;
+            let p4GrossW = p4Short > 0 ? p4Short / (1 - p4TaxR) : p4Short;
 
             let p4Re = fvWa + fvCaPath4;
             results.push({
@@ -684,8 +763,8 @@
                             Starting Portfolio: ${formatCurrency(startLiq - caDpAmt)}
                             <span class="math-subtext">(${formatCurrency(startLiq)} initial - ${formatCurrency(caDpAmt)} CA Down Payment. Zero Entry Tax.)</span><br>
 
-                            + Base Spend: ${formatCurrency(baseW1)}
-                            <span class="math-subtext">($${numToCommas(baseW1/12)}/mo × 12 months)</span>
+                            + Base Spend: ${formatCurrency(y1Spend)}
+                            <span class="math-subtext">($${numToCommas(y1Spend/12)}/mo × 12 months)</span>
                             
                             + CA Mortgage P&I: ${formatCurrency(caMortgage)}
                             <span class="math-subtext">(${formatCurrency(caHome - caDpAmt)} principal loan amortized at ${formatPct(intRate)} over 30 years)</span>
@@ -699,14 +778,20 @@
                             + WA Winter Rent Loss: ${formatCurrency(waWinterRentLoss)}
                             <span class="math-subtext">(Housing cost to rent a place in CA for ${waWinterMonths} months at $${numToCommas(caWinterRentCost)}/mo)</span>
                             
-                            - CA LTR Income (Net): -${formatCurrency(netRentCA_Base)}
+                            - CA LTR Income (Gross Offset): -${formatCurrency(netRentCA_Base)}
                             <span class="math-subtext">($${numToCommas(caRentMonthly)}/mo from owned CA home × 12 months, minus ${formatPct(mgmtFee)} Property Mgmt Fee)</span>
                             
                             ---------------------------------------------------------<br>
-                            = <strong>Net Required: ${formatCurrency(baseW1 + caMortgage + caStaticBase + waCarry + waWinterRentLoss - netRentCA_Base)}</strong><br><br>
+                            = <strong>Total Expenses: ${formatCurrency(p4Exp)}</strong><br><br>
+
+                            - Net Income: -${formatCurrency(p4NetInc)}
+                            <span class="math-subtext">(Pre-tax $${numToCommas(y1Inc/12)}/mo × 12 months, minus ${formatPct(p4TaxR)} Fed Tax)</span><br>
+
+                            ---------------------------------------------------------<br>
+                            = <strong>Net Portfolio Shortfall: ${formatCurrency(p4Short)}</strong><br><br>
                             
-                            ÷ (1 - ${formatPct(tax1)} Fed Tax Only - WA residency)<br>
-                            = <strong>Gross Withdrawal: ${formatCurrency((baseW1 + caMortgage + caStaticBase + waCarry + waWinterRentLoss - netRentCA_Base)/(1 - tax1))}</strong>
+                            ÷ (1 - ${formatPct(p4TaxR)} Fed Tax Only - WA residency)<br>
+                            = <strong>Gross Withdrawal: ${formatCurrency(p4GrossW)}</strong>
                         </div>
                         
                         <h5>Phase 2: CA Domicile (Years ${delayedCaYears + 1}+):</h5>
@@ -722,6 +807,12 @@
                     ${buildHistoryTable(p4Hist)}
                 `
             });
+
+            let p5TaxR = Math.min(tax1, 0.99); // FL residency
+            let p5NetInc = y1Inc * (1 - p5TaxR);
+            let p5Exp = y1Spend + flMortgage + caMortgage + flStaticBase + caStaticBase + waCarry - netRentWA_Base - netRentCA_Base;
+            let p5Short = p5Exp - p5NetInc;
+            let p5GrossW = p5Short > 0 ? p5Short / (1 - p5TaxR) : p5Short;
 
             let p5Re = fvWa + fvFl + fvCaPath5;
             results.push({
@@ -739,8 +830,8 @@
                             Starting Portfolio: ${formatCurrency(startLiq - flDpAmt - caDpAmt)}
                             <span class="math-subtext">(${formatCurrency(startLiq)} initial - ${formatCurrency(flDpAmt)} FL DP - ${formatCurrency(caDpAmt)} CA DP. Zero Entry Tax.)</span><br>
                             
-                            + Base Spend: ${formatCurrency(baseW1)}
-                            <span class="math-subtext">($${numToCommas(baseW1/12)}/mo × 12 months)</span>
+                            + Base Spend: ${formatCurrency(y1Spend)}
+                            <span class="math-subtext">($${numToCommas(y1Spend/12)}/mo × 12 months)</span>
                             
                             + FL Mortgage P&I: ${formatCurrency(flMortgage)}
                             <span class="math-subtext">(${formatCurrency(flHome - flDpAmt)} principal loan amortized at ${formatPct(intRate)} over 30 years)</span>
@@ -751,17 +842,23 @@
                             + Combined Prop Taxes/HOA: ${formatCurrency(flStaticBase + caStaticBase + waCarry)}
                             <span class="math-subtext">(Static bases: FL 2.25% + CA 1.75% + WA $42k Baseline)</span>
                             
-                            - WA LTR Income (Net): -${formatCurrency(netRentWA_Base)}
+                            - WA LTR Income (Gross Offset): -${formatCurrency(netRentWA_Base)}
                             <span class="math-subtext">($${numToCommas(waRentMonthly)}/mo × 12 months, minus ${formatPct(mgmtFee)} Property Mgmt Fee)</span>
                             
-                            - CA LTR Income (Net): -${formatCurrency(netRentCA_Base)}
+                            - CA LTR Income (Gross Offset): -${formatCurrency(netRentCA_Base)}
                             <span class="math-subtext">($${numToCommas(caRentMonthly)}/mo × 12 months, minus ${formatPct(mgmtFee)} Property Mgmt Fee)</span>
                             
                             ---------------------------------------------------------<br>
-                            = <strong>Net Required: ${formatCurrency(baseW1 + flMortgage + caMortgage + flStaticBase + caStaticBase + waCarry - netRentWA_Base - netRentCA_Base)}</strong><br><br>
+                            = <strong>Total Expenses: ${formatCurrency(p5Exp)}</strong><br><br>
+
+                            - Net Income: -${formatCurrency(p5NetInc)}
+                            <span class="math-subtext">(Pre-tax $${numToCommas(y1Inc/12)}/mo × 12 months, minus ${formatPct(p5TaxR)} Fed Tax)</span><br>
+
+                            ---------------------------------------------------------<br>
+                            = <strong>Net Portfolio Shortfall: ${formatCurrency(p5Short)}</strong><br><br>
                             
-                            ÷ (1 - ${formatPct(tax1)} Federal Tax Only - 0% FL State Tax)<br>
-                            = <strong>Gross Withdrawal: ${formatCurrency((baseW1 + flMortgage + caMortgage + flStaticBase + caStaticBase + waCarry - netRentWA_Base - netRentCA_Base) / (1 - tax1))}</strong>
+                            ÷ (1 - ${formatPct(p5TaxR)} Federal Tax Only - 0% FL State Tax)<br>
+                            = <strong>Gross Withdrawal: ${formatCurrency(p5GrossW)}</strong>
                         </div>
                     </div>
                     <div>
