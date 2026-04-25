@@ -158,12 +158,16 @@
                             <span class="symbol-right">%</span>
                         </div>
                     </div>
-                    <div class="input-group" style="grid-column: 1 / -1;">
+                    <div class="input-group">
                         <label>Portfolio Liquidation Tax (%)</label>
                         <div class="input-wrapper">
                             <input type="number" id="liquidationTaxRate" value="10.6" step="0.1" class="has-right" oninput="calculate()">
                             <span class="symbol-right">%</span>
                         </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Upfront P2 CA Reset ($)</label>
+                        <input type="text" id="caResetAmt" value="4,000,000" oninput="formatCurrencyInput(this)">
                     </div>
                 </div>
 
@@ -480,7 +484,6 @@
             const waWinterMonths = getNum('waWinterMonths');
             const mgmtFee = getNum('mgmtFee') / 100;
             
-            // Path 6 Specific Inputs
             const flHomeP6 = getNum('flHomeP6');
             const flApprecP6 = getNum('flApprecP6') / 100;
             const flPurchaseYrP6 = getNum('flPurchaseYrP6');
@@ -511,9 +514,14 @@
             const tax3 = getNum('tax3') / 100;
             const caStateTax = getNum('caStateTax') / 100;
             
+            // New Dynamic Liquidation Tax Logic
             const liquidationTaxRateInput = getNum('liquidationTaxRate');
             const liquidationTaxRate = liquidationTaxRateInput / 100;
-            const caEntryTax = startLiq * liquidationTaxRate;
+            const caResetAmtInput = getNum('caResetAmt');
+            
+            // Cannot reset more than we actually have
+            const caResetAmt = Math.min(caResetAmtInput, startLiq); 
+            const caEntryTax = caResetAmt * liquidationTaxRate;
             
             const caPurchaseYrPath2 = getNum('caPurchaseYrPath2');
             const flPurchaseYr = getNum('flPurchaseYr');
@@ -539,7 +547,6 @@
             const flMortgage = calcAnnualMortgage(flHome * (1 - flDpPct), intRate);
             const flStaticBase = flHome * 0.0225; 
 
-            // Path 6 Property Calcs
             const flDpAmtP6 = flHomeP6 * flDpPctP6;
             const flMortgageP6 = calcAnnualMortgage(flHomeP6 - flDpAmtP6, intRate);
             const flStaticBaseP6 = flHomeP6 * 0.0225;
@@ -570,13 +577,55 @@
             let p3Liq = startLiq - flDpAmt;
             let p4Liq = startLiq - caDpAmt;
             let p5Liq = startLiq - flDpAmt - caDpAmt;
-            let p6Liq = startLiq - flDpAmtP6; // Path 6 avoids massive liquidation tax on start
+            let p6Liq = startLiq - flDpAmtP6; 
+
+            // Create the high-basis, tax-free bucket for Path 2. 
+            // If the reset amount was smaller than the DP + Tax, the bucket is 0.
+            let p2TaxFreeBasis = Math.max(0, caResetAmt - caEntryTax - caDpAmt);
 
             let p1Hist = [], p2Hist = [], p3Hist = [], p4Hist = [], p5Hist = [], p6Hist = [];
             
             let tsLabels = [], tsP1 = [], tsP2 = [], tsP3 = [], tsP4 = [], tsP5 = [], tsP6 = [];
             let p1CumTax = 0, p2CumTax = 0, p3CumTax = 0, p4CumTax = 0, p5CumTax = 0, p6CumTax = 0;
             let p1PeakSWR = 0, p2PeakSWR = 0, p3PeakSWR = 0, p4PeakSWR = 0, p5PeakSWR = 0, p6PeakSWR = 0;
+
+            // Updated Process Shortfall to handle Tax-Free Bucket depletion
+            const processShortfall = (liqStart, shortfall, taxRate, pathNum, taxFreeBucket = 0) => {
+                let gross = 0, tax = 0, newTaxFreeBucket = taxFreeBucket;
+                
+                if(shortfall > 0) {
+                    if (taxFreeBucket >= shortfall) {
+                        // Entire shortfall is covered by the tax-free bucket
+                        gross = shortfall;
+                        tax = 0;
+                        newTaxFreeBucket -= shortfall;
+                    } else {
+                        // Bucket covers a portion, the rest is taxed normally
+                        let taxableShortfall = shortfall - taxFreeBucket;
+                        let taxableGross = taxableShortfall / (1 - taxRate);
+                        tax = taxableGross - taxableShortfall;
+                        gross = taxFreeBucket + taxableGross;
+                        newTaxFreeBucket = 0;
+                    }
+                } else {
+                    gross = shortfall; 
+                    tax = 0;
+                }
+                
+                if(liqStart > 0 && gross > 0) {
+                    let swr = gross / liqStart;
+                    if(pathNum === 1 && swr > p1PeakSWR) p1PeakSWR = swr;
+                    if(pathNum === 2 && swr > p2PeakSWR) p2PeakSWR = swr;
+                    if(pathNum === 3 && swr > p3PeakSWR) p3PeakSWR = swr;
+                    if(pathNum === 4 && swr > p4PeakSWR) p4PeakSWR = swr;
+                    if(pathNum === 5 && swr > p5PeakSWR) p5PeakSWR = swr;
+                    if(pathNum === 6 && swr > p6PeakSWR) p6PeakSWR = swr;
+                }
+
+                let liq = (liqStart - gross) * (1 + r);
+                if (liq < 0) { liq = 0; gross = 0; shortfall = 0; }
+                return { liq, gross, tax, shortfall, newTaxFreeBucket };
+            };
 
             for(let i=0; i<years; i++) {
                 let curYr = startYear + i;
@@ -604,31 +653,6 @@
                 let infFlStaticP6 = flStaticBaseP6 * inf;
                 let infFlRentP6 = netRentFL_BaseP6 * inf;
 
-                const processShortfall = (liqStart, shortfall, taxRate, pathNum) => {
-                    let gross = 0, tax = 0;
-                    if(shortfall > 0) {
-                        gross = shortfall / (1 - taxRate);
-                        tax = gross - shortfall;
-                    } else {
-                        gross = shortfall; 
-                        tax = 0;
-                    }
-                    
-                    if(liqStart > 0 && gross > 0) {
-                        let swr = gross / liqStart;
-                        if(pathNum === 1 && swr > p1PeakSWR) p1PeakSWR = swr;
-                        if(pathNum === 2 && swr > p2PeakSWR) p2PeakSWR = swr;
-                        if(pathNum === 3 && swr > p3PeakSWR) p3PeakSWR = swr;
-                        if(pathNum === 4 && swr > p4PeakSWR) p4PeakSWR = swr;
-                        if(pathNum === 5 && swr > p5PeakSWR) p5PeakSWR = swr;
-                        if(pathNum === 6 && swr > p6PeakSWR) p6PeakSWR = swr;
-                    }
-
-                    let liq = (liqStart - gross) * (1 + r);
-                    if (liq < 0) { liq = 0; gross = 0; shortfall = 0; }
-                    return { liq, gross, tax, shortfall };
-                };
-
                 // Path 1
                 let p1TaxR = Math.min(annualTaxRate, 0.99);
                 let p1NetInc = infInc * (1 - p1TaxR);
@@ -637,12 +661,12 @@
                 p1Liq = p1Res.liq; p1CumTax += p1Res.tax;
                 p1Hist.push({ year: curYr, netNeed: p1Res.shortfall, tax: p1Res.tax, gross: p1Res.gross, liq: p1Liq });
 
-                // Path 2
+                // Path 2 (Passes in the tracking tax-free bucket)
                 let p2TaxR = Math.min(annualTaxRate + caStateTax, 0.99);
                 let p2NetInc = infInc * (1 - p2TaxR);
                 let p2Exp = infBaseLife + caMortgage + infCaStatic + infWaCarry - infWaRent;
-                let p2Res = processShortfall(p2Liq, p2Exp - p2NetInc, p2TaxR, 2);
-                p2Liq = p2Res.liq; p2CumTax += p2Res.tax;
+                let p2Res = processShortfall(p2Liq, p2Exp - p2NetInc, p2TaxR, 2, p2TaxFreeBasis);
+                p2Liq = p2Res.liq; p2CumTax += p2Res.tax; p2TaxFreeBasis = p2Res.newTaxFreeBucket;
                 p2Hist.push({ year: curYr, netNeed: p2Res.shortfall, tax: p2Res.tax, gross: p2Res.gross, liq: p2Liq });
 
                 // Path 3
@@ -674,15 +698,13 @@
                 p5Liq = p5Res.liq; p5CumTax += p5Res.tax;
                 p5Hist.push({ year: curYr, netNeed: p5Res.shortfall, tax: p5Res.tax, gross: p5Res.gross, liq: p5Liq });
 
-                // Path 6: Delayed FL
-                let p6TaxR = Math.min(annualTaxRate, 0.99); // Fed tax only (WA has no state inc tax, FL has no state inc tax)
+                // Path 6
+                let p6TaxR = Math.min(annualTaxRate, 0.99);
                 let p6NetInc = infInc * (1 - p6TaxR);
                 let p6Exp = 0;
                 if (i < delayedFlYears) {
-                    // Phase 1: Live in WA, FL is rented
                     p6Exp = infBaseLife + flMortgageP6 + infFlStaticP6 + infWaCarry - infFlRentP6;
                 } else {
-                    // Phase 2: Live in FL, WA is rented
                     p6Exp = infBaseLife + flMortgageP6 + infFlStaticP6 + infWaCarry - infWaRent;
                 }
                 let p6Res = processShortfall(p6Liq, p6Exp - p6NetInc, p6TaxR, 6);
@@ -730,7 +752,16 @@
             let p2NetInc = y1Inc * (1 - p2TaxR);
             let p2Exp = y1Spend + caMortgage + caStaticBase + waCarry - netRentWA_Base;
             let p2Short = p2Exp - p2NetInc;
-            let p2GrossW = p2Short > 0 ? p2Short / (1 - p2TaxR) : p2Short;
+            
+            // Detail display calculation for Path 2 Tax Free handling in Y1
+            let initialTaxFreeBucket = Math.max(0, caResetAmt - caEntryTax - caDpAmt);
+            let p2GrossW = 0;
+            if (initialTaxFreeBucket >= p2Short) {
+                p2GrossW = p2Short;
+            } else {
+                let taxablePortion = p2Short - initialTaxFreeBucket;
+                p2GrossW = initialTaxFreeBucket + (taxablePortion / (1 - p2TaxR));
+            }
             p2CumTax += caEntryTax; 
             let p2Re = fvWa + fvCaPath2;
 
@@ -767,7 +798,6 @@
             let p6Re = fvWa + fvFlP6;
 
 
-            // Push objects to results array with fully formatted detail strings
             results.push({ 
                 name: "P1: Stay in WA", liq: p1Liq, re: fvWa, tax: -p1Tax, net: p1Estate - p1Tax, 
                 details: `
@@ -793,15 +823,15 @@
             results.push({ 
                 name: "P2: Immediate CA", liq: p2Liq, re: p2Re, tax: 0, net: p2Liq + p2Re, 
                 details: `
-                    <div class="details-overview"><strong>Overview:</strong> Relocate permanently to California early in retirement. Establishing legal domicile in CA shields our entire legacy from WA estate taxes, but incurs a higher ongoing lifestyle cost and a significant upfront tax hit if we liquidate stock assets to move.</div>
-                    <div><h4>Liquid Capital & Compounding Mechanics</h4><p>Liquidating assets to fund the move potentially subjects our portfolio to a <strong>${formatCurrency(caEntryTax)} Capital Gains Tax (${formatPct(liquidationTaxRate)})</strong>. Because of this initial drain, our compounding engine is reduced from Day 1.</p>
+                    <div class="details-overview"><strong>Overview:</strong> Relocate permanently to California early in retirement. We perform a "Partial Basis Reset" by liquidating a set amount of assets while still in WA. This locks in the WA capital gains rate and creates a tax-free runway for our early years in CA.</div>
+                    <div><h4>Liquid Capital & Compounding Mechanics</h4><p>Liquidating a portion of assets (${formatCurrency(caResetAmt)}) to fund the move subjects us to a <strong>${formatCurrency(caEntryTax)} Capital Gains Tax (${formatPct(liquidationTaxRate)})</strong>. This creates a High-Basis/Tax-Free Bucket of <strong>${formatCurrency(initialTaxFreeBucket)}</strong> (after paying the tax and CA Down Payment). We withdraw from this bucket tax-free until it runs dry, at which point CA taxes apply.</p>
                         <h5>Year 1 Detailed Calculation Formulas:</h5>
                         <div class="math-box">Starting Portfolio: ${formatCurrency(startLiq - caEntryTax - caDpAmt)} <span class="math-subtext">(${formatCurrency(startLiq)} initial - ${formatCurrency(caEntryTax)} Capital Gains Tax - ${formatCurrency(caDpAmt)} CA Down Payment)</span><br>
                             + Base Spend: ${formatCurrency(y1Spend)} <br>+ CA Mortgage P&I: ${formatCurrency(caMortgage)} <br>+ CA Taxes/HOA: ${formatCurrency(caStaticBase)} <br>+ WA Carry: ${formatCurrency(waCarry)} <br>- WA LTR Income: -${formatCurrency(netRentWA_Base)}
                             <br>---------------------------------------------------------<br>= <strong>Total Expenses: ${formatCurrency(p2Exp)}</strong><br><br>
                             - Net Income: -${formatCurrency(p2NetInc)} <span class="math-subtext">(minus ${formatPct(Math.min(tax1 + caStateTax, 0.99))} Fed+CA Tax)</span><br>
                             ---------------------------------------------------------<br>= <strong>Net Portfolio Shortfall: ${formatCurrency(p2Short)}</strong><br><br>
-                            ÷ (1 - ${formatPct(Math.min(tax1 + caStateTax, 0.99))} Combined Tax)<br>= <strong>Gross Withdrawal: ${formatCurrency(p2GrossW)}</strong>
+                            Withdrawal Source: ${initialTaxFreeBucket >= p2Short ? '100% Tax-Free Bucket (No CA Tax Applied)' : 'Tax-Free Bucket Empty. Normal CA tax rates applied.'}<br>= <strong>Gross Withdrawal: ${formatCurrency(p2GrossW)}</strong>
                         </div></div>
                     <div><h4>Real Estate & Estate Shielding</h4><ul><li><strong>WA Home Growth (${years} years):</strong> ${formatCurrency(fvWa)}</li><li><strong>CA Home Growth (${endYear - caPurchaseYrPath2} years):</strong> ${formatCurrency(fvCaPath2)}.</li><li><strong>Total Tax Forfeited at Death:</strong> $0.</li></ul></div>
                     ${buildHistoryTable(p2Hist)}
