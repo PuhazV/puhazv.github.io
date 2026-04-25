@@ -110,7 +110,7 @@
         .input-wrapper { position: relative; width: 100%; display: flex; align-items: center; }
         .symbol-right { position: absolute; right: 10px; color: #94a3b8; font-weight: bold; font-size: 12px; }
         .symbol-left { position: absolute; left: 10px; color: #94a3b8; font-weight: bold; font-size: 12px; }
-        .inline-label { font-size:9px; color:#cbd5e1; margin-right:4px; font-weight: bold; }
+        .inline-label { font-size:10px; color:#cbd5e1; margin-right:4px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -275,7 +275,6 @@
                 }
             }
             
-            // If difference couldn't be absorbed (e.g. user entered 500)
             if (diff < 0) {
                el.value = Number(el.value) + diff; 
             }
@@ -413,7 +412,6 @@
         live.forEach((r, i) => {
             const tr = document.createElement('tr');
             
-            // Build Icons based on events
             let icons = '';
             if (r.hasCustomReturn) icons += ' <span title="Custom Return Applied">📉</span>';
             if (r.hasCashEvent) icons += ' <span title="Cash Event Applied">💵</span>';
@@ -533,11 +531,11 @@
             const tp = rO ? (rO.t || 0.2) * 100 : 20;
             const csh = rO ? rO.c * 100 : 10;
             content += `
-                <div style="flex-grow:1; display:flex; gap:8px; margin-left:10px; align-items:center;">
-                    <div style="display:flex; align-items:center;"><span class="inline-label">Stk%</span><input type="number" class="dyn-reb-s" value="${s}" style="width:35px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" onchange="adjustRebalance(this, 's')"></div>
-                    <div style="display:flex; align-items:center;"><span class="inline-label">Bnd%</span><input type="number" class="dyn-reb-b" value="${b}" style="width:35px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" onchange="adjustRebalance(this, 'b')"></div>
-                    <div style="display:flex; align-items:center;"><span class="inline-label">Tip%</span><input type="number" class="dyn-reb-t" value="${tp}" style="width:35px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" onchange="adjustRebalance(this, 't')"></div>
-                    <div style="display:flex; align-items:center;"><span class="inline-label">Csh%</span><input type="number" class="dyn-reb-c" value="${csh}" style="width:35px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" onchange="adjustRebalance(this, 'c')"></div>
+                <div style="flex-grow:1; display:grid; grid-template-columns: 1fr 1fr; gap:6px 12px; margin-left:10px;">
+                    <div style="display:flex; justify-content: space-between; align-items:center;"><span class="inline-label">Stk%</span><input type="number" class="dyn-reb-s" value="${s}" style="width:45px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" onchange="adjustRebalance(this, 's')"></div>
+                    <div style="display:flex; justify-content: space-between; align-items:center;"><span class="inline-label">Bnd%</span><input type="number" class="dyn-reb-b" value="${b}" style="width:45px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" onchange="adjustRebalance(this, 'b')"></div>
+                    <div style="display:flex; justify-content: space-between; align-items:center;"><span class="inline-label">Tip%</span><input type="number" class="dyn-reb-t" value="${tp}" style="width:45px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" onchange="adjustRebalance(this, 't')"></div>
+                    <div style="display:flex; justify-content: space-between; align-items:center;"><span class="inline-label">Csh%</span><input type="number" class="dyn-reb-c" value="${csh}" style="width:45px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" onchange="adjustRebalance(this, 'c')"></div>
                 </div>`;
         } else {
             content += `
