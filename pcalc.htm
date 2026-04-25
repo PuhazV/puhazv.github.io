@@ -198,9 +198,9 @@
 </div>
 
 <script>
-    let scenarios = JSON.parse(localStorage.getItem('scenData_v11')) || { A: null, B: null, C: null, D: null };
-    let scenarioNames = JSON.parse(localStorage.getItem('scenNames_v11')) || { A: '', B: '', C: '', D: '' };
-    let baselineSlot = localStorage.getItem('baseSlot_v11');
+    let scenarios = JSON.parse(localStorage.getItem('scenData_v12')) || { A: null, B: null, C: null, D: null };
+    let scenarioNames = JSON.parse(localStorage.getItem('scenNames_v12')) || { A: '', B: '', C: '', D: '' };
+    let baselineSlot = localStorage.getItem('baseSlot_v12');
     
     if (baselineSlot === "null" || baselineSlot === null) baselineSlot = null;
 
@@ -232,6 +232,54 @@
     function formatCurrencyInput(el) {
         let v = el.value.replace(/,/g, '').replace(/[^\d.]/g, '');
         if (v) el.value = Number(v).toLocaleString();
+        calculate();
+    }
+
+    // Auto-adjusts the rebalance inputs so they always equal 100%
+    function adjustRebalance(el, changedType) {
+        const row = el.closest('.event-row');
+        const sEl = row.querySelector('.dyn-reb-s');
+        const bEl = row.querySelector('.dyn-reb-b');
+        const tEl = row.querySelector('.dyn-reb-t');
+        const cEl = row.querySelector('.dyn-reb-c');
+
+        let s = Number(sEl.value);
+        let b = Number(bEl.value);
+        let t = Number(tEl.value);
+        let c = Number(cEl.value);
+
+        let total = s + b + t + c;
+        let diff = 100 - total;
+
+        if (diff !== 0) {
+            // Waterfall absorption priority
+            let order = [
+                { type: 'c', el: cEl, get val() { return Number(this.el.value); } },
+                { type: 't', el: tEl, get val() { return Number(this.el.value); } },
+                { type: 'b', el: bEl, get val() { return Number(this.el.value); } },
+                { type: 's', el: sEl, get val() { return Number(this.el.value); } }
+            ];
+
+            for (let item of order) {
+                if (item.type !== changedType && diff !== 0) {
+                    let currentVal = item.val;
+                    let newVal = currentVal + diff;
+                    
+                    if (newVal >= 0) {
+                        item.el.value = newVal;
+                        diff = 0; 
+                    } else {
+                        item.el.value = 0;
+                        diff = newVal; 
+                    }
+                }
+            }
+            
+            // If difference couldn't be absorbed (e.g. user entered 500)
+            if (diff < 0) {
+               el.value = Number(el.value) + diff; 
+            }
+        }
         calculate();
     }
 
@@ -286,7 +334,10 @@
                 }
             }
 
-            const eventThisYear = inp.events.find(e => e.yr === yr)?.val || 0;
+            const cRet = inp.returns.find(r => r.yr === yr);
+            const evt = inp.events.find(e => e.yr === yr);
+
+            const eventThisYear = evt?.val || 0;
             const net = (b.spend * Math.pow(1 + inp.inflation, i)) + eventThisYear;
             const gross = net / (1 - Math.min(0.95, b.tax));
             
@@ -309,7 +360,7 @@
 
             let actualWth = reqWth - remainingWth;
 
-            let sg = inp.returns.find(r => r.yr === yr)?.val ?? inp.stockGrowth;
+            let sg = cRet?.val ?? inp.stockGrowth;
             st *= (1 + sg);
             bd *= (1 + inp.bondYield);
             tp *= (1 + inp.tipsYield);
@@ -320,6 +371,9 @@
 
             res.push({ 
                 yr, 
+                hasRebalance: !!reb,
+                hasCustomReturn: !!cRet,
+                hasCashEvent: !!evt,
                 taxableIncome: b.income * 12 * Math.pow(1 + inp.inflation, i), 
                 withdrawal: actualWth, 
                 taxes: tx, 
@@ -358,12 +412,20 @@
         tbody.innerHTML = '';
         live.forEach((r, i) => {
             const tr = document.createElement('tr');
+            
+            // Build Icons based on events
+            let icons = '';
+            if (r.hasCustomReturn) icons += ' <span title="Custom Return Applied">📉</span>';
+            if (r.hasCashEvent) icons += ' <span title="Cash Event Applied">💵</span>';
+            if (r.hasRebalance) icons += ' <span title="Portfolio Rebalanced">⚖️</span>';
+            const yearStr = `<td style="white-space:nowrap;">${r.yr} <span style="font-size:12px">${icons}</span></td>`;
+
             if (base) {
                 const dL = r.endLiq - base[i].endLiq;
                 const dH = r.house - base[i].house;
-                tr.innerHTML = `<td>${r.yr}</td><td>${fmt.format(r.withdrawal)}</td><td style="color:var(--primary); font-weight:bold">${fmt.format(r.endLiq)}</td><td class="base-col">${fmt.format(base[i].endLiq)}</td><td class="delta-col ${dL >= 0 ? 'delta-pos' : 'delta-neg'}">${(dL>=0?'+':'')+fmt.format(dL)}</td><td style="color:#fb923c">${fmt.format(r.house)}</td><td class="base-col">${fmt.format(base[i].house)}</td><td class="delta-col ${dH >= 0 ? 'delta-pos' : 'delta-neg'}">${(dH>=0?'+':'')+fmt.format(dH)}</td><td>${fmt.format(r.total)}</td><td class="col-power">${fmt.format(r.total / Math.pow(1 + getInputs().inflation, i))}</td>`;
+                tr.innerHTML = `${yearStr}<td>${fmt.format(r.withdrawal)}</td><td style="color:var(--primary); font-weight:bold">${fmt.format(r.endLiq)}</td><td class="base-col">${fmt.format(base[i].endLiq)}</td><td class="delta-col ${dL >= 0 ? 'delta-pos' : 'delta-neg'}">${(dL>=0?'+':'')+fmt.format(dL)}</td><td style="color:#fb923c">${fmt.format(r.house)}</td><td class="base-col">${fmt.format(base[i].house)}</td><td class="delta-col ${dH >= 0 ? 'delta-pos' : 'delta-neg'}">${(dH>=0?'+':'')+fmt.format(dH)}</td><td>${fmt.format(r.total)}</td><td class="col-power">${fmt.format(r.total / Math.pow(1 + getInputs().inflation, i))}</td>`;
             } else {
-                tr.innerHTML = `<td>${r.yr}</td><td class="col-withdrawal">${fmt.format(r.withdrawal)}</td><td class="col-taxes">${fmt.format(r.taxes)}</td><td>${fmt.format(r.netSpendable)}</td><td style="color:#94a3b8">${fmt.format(r.endCash)}</td><td style="color:#f59e0b">${fmt.format(r.endTips)}</td><td style="color:#a855f7">${fmt.format(r.endBonds)}</td><td style="color:#3b82f6">${fmt.format(r.endStocks)}</td><td style="font-weight:bold">${fmt.format(r.endLiq)}</td><td>${fmt.format(r.total)}</td><td class="col-power">${fmt.format(r.total / Math.pow(1 + getInputs().inflation, i))}</td>`;
+                tr.innerHTML = `${yearStr}<td class="col-withdrawal">${fmt.format(r.withdrawal)}</td><td class="col-taxes">${fmt.format(r.taxes)}</td><td>${fmt.format(r.netSpendable)}</td><td style="color:#94a3b8">${fmt.format(r.endCash)}</td><td style="color:#f59e0b">${fmt.format(r.endTips)}</td><td style="color:#a855f7">${fmt.format(r.endBonds)}</td><td style="color:#3b82f6">${fmt.format(r.endStocks)}</td><td style="font-weight:bold">${fmt.format(r.endLiq)}</td><td>${fmt.format(r.total)}</td><td class="col-power">${fmt.format(r.total / Math.pow(1 + getInputs().inflation, i))}</td>`;
             }
             tbody.appendChild(tr);
         });
@@ -417,7 +479,7 @@
         }
     }
 
-    function saveSlot(s) { scenarios[s] = getInputs(); if (!scenarioNames[s]) scenarioNames[s] = `Scenario ${s}`; localStorage.setItem('scenData_v11', JSON.stringify(scenarios)); localStorage.setItem('scenNames_v11', JSON.stringify(scenarioNames)); updateScenarioCards(); calculate(); }
+    function saveSlot(s) { scenarios[s] = getInputs(); if (!scenarioNames[s]) scenarioNames[s] = `Scenario ${s}`; localStorage.setItem('scenData_v12', JSON.stringify(scenarios)); localStorage.setItem('scenNames_v12', JSON.stringify(scenarioNames)); updateScenarioCards(); calculate(); }
     
     function loadSlot(s) { 
         const d = scenarios[s]; if (!d) return;
@@ -449,9 +511,9 @@
         if(fundContent.classList.contains('collapsed')) { toggleSection('fundamentals'); }
     }
 
-    function clearSlot(s) { scenarios[s] = null; scenarioNames[s] = ''; if (baselineSlot === s) baselineSlot = null; localStorage.setItem('scenData_v11', JSON.stringify(scenarios)); localStorage.setItem('scenNames_v11', JSON.stringify(scenarioNames)); localStorage.setItem('baseSlot_v11', baselineSlot); updateScenarioCards(); calculate(); }
-    function setBaseline(s) { baselineSlot = (baselineSlot === s) ? null : s; localStorage.setItem('baseSlot_v11', baselineSlot); updateScenarioCards(); calculate(); }
-    function updateScenarioNames() { ['A', 'B', 'C', 'D'].forEach(s => { const el = document.getElementById(`name-${s}`); if (el) scenarioNames[s] = el.value; }); localStorage.setItem('scenNames_v11', JSON.stringify(scenarioNames)); updateScenarioCards(); }
+    function clearSlot(s) { scenarios[s] = null; scenarioNames[s] = ''; if (baselineSlot === s) baselineSlot = null; localStorage.setItem('scenData_v12', JSON.stringify(scenarios)); localStorage.setItem('scenNames_v12', JSON.stringify(scenarioNames)); localStorage.setItem('baseSlot_v12', baselineSlot); updateScenarioCards(); calculate(); }
+    function setBaseline(s) { baselineSlot = (baselineSlot === s) ? null : s; localStorage.setItem('baseSlot_v12', baselineSlot); updateScenarioCards(); calculate(); }
+    function updateScenarioNames() { ['A', 'B', 'C', 'D'].forEach(s => { const el = document.getElementById(`name-${s}`); if (el) scenarioNames[s] = el.value; }); localStorage.setItem('scenNames_v12', JSON.stringify(scenarioNames)); updateScenarioCards(); }
 
     function addRow(t, yO, vO, rO) {
         let c, yr;
@@ -472,10 +534,10 @@
             const csh = rO ? rO.c * 100 : 10;
             content += `
                 <div style="flex-grow:1; display:flex; gap:8px; margin-left:10px; align-items:center;">
-                    <div style="display:flex; align-items:center;"><span class="inline-label">Stk%</span><input type="number" class="dyn-reb-s" value="${s}" style="width:35px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" oninput="calculate()"></div>
-                    <div style="display:flex; align-items:center;"><span class="inline-label">Bnd%</span><input type="number" class="dyn-reb-b" value="${b}" style="width:35px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" oninput="calculate()"></div>
-                    <div style="display:flex; align-items:center;"><span class="inline-label">Tip%</span><input type="number" class="dyn-reb-t" value="${tp}" style="width:35px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" oninput="calculate()"></div>
-                    <div style="display:flex; align-items:center;"><span class="inline-label">Csh%</span><input type="number" class="dyn-reb-c" value="${csh}" style="width:35px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" oninput="calculate()"></div>
+                    <div style="display:flex; align-items:center;"><span class="inline-label">Stk%</span><input type="number" class="dyn-reb-s" value="${s}" style="width:35px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" onchange="adjustRebalance(this, 's')"></div>
+                    <div style="display:flex; align-items:center;"><span class="inline-label">Bnd%</span><input type="number" class="dyn-reb-b" value="${b}" style="width:35px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" onchange="adjustRebalance(this, 'b')"></div>
+                    <div style="display:flex; align-items:center;"><span class="inline-label">Tip%</span><input type="number" class="dyn-reb-t" value="${tp}" style="width:35px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" onchange="adjustRebalance(this, 't')"></div>
+                    <div style="display:flex; align-items:center;"><span class="inline-label">Csh%</span><input type="number" class="dyn-reb-c" value="${csh}" style="width:35px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" onchange="adjustRebalance(this, 'c')"></div>
                 </div>`;
         } else {
             content += `
