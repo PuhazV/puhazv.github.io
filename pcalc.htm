@@ -12,16 +12,15 @@
             --success: #10b981; 
             --danger: #ef4444; 
             --crash: #8b5cf6;
+            --rebalance: #eab308;
             --midnight: #0f172a;
             --slate-panel: #1e293b;
             --bg-light: #f1f5f9;
-            --teal-header: #134e4a;
         }
         
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background-color: var(--bg-light); color: #1e293b; padding: 0; margin: 0; }
         .container { max-width: 98vw; margin: auto; padding: 0 20px 20px 20px; }
 
-        /* Premium Midnight Title Bar */
         .summary-ribbon { 
             background: var(--midnight); padding: 18px 45px; border-bottom: 2px solid #334155; 
             display: flex; justify-content: space-between; align-items: center; 
@@ -33,7 +32,6 @@
         .stat-label { font-size: 11px; color: #94a3b8; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 4px; }
         .stat-value { font-size: 24px; font-weight: 800; font-family: 'JetBrains Mono', monospace; color: #fff; }
 
-        /* Scenario Manager Drawer */
         .scenario-drawer { 
             background: #f8fafc; border-bottom: 1px solid #cbd5e1; 
             max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
@@ -51,7 +49,6 @@
         .name-input { width: 100%; border: 1px solid #cbd5e1; border-radius: 4px; padding: 6px; font-weight: bold; font-size: 12px; box-sizing: border-box; }
         .card-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; }
 
-        /* Sidebar Slate Panel */
         .dashboard-grid { display: grid; grid-template-columns: 440px 1fr; gap: 30px; padding: 25px 0; }
         .inputs-section { 
             background: var(--slate-panel); color: white; padding: 25px; border-radius: 16px; 
@@ -59,35 +56,37 @@
             box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
         }
         
-        .inputs-section h3 { font-size: 13px; margin-top: 20px; border-bottom: 1px solid #475569; padding-bottom: 8px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
-        .input-grid-5 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px; }
+        /* Collapsible Section Styling */
+        .section-header { 
+            font-size: 13px; margin-top: 20px; border-bottom: 1px solid #475569; padding-bottom: 8px; 
+            color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; 
+            display: flex; justify-content: space-between; align-items: center; user-select: none;
+        }
+        .section-header:hover { color: #fff; }
+        .section-header::after { content: '▼'; font-size: 10px; transition: transform 0.2s; color: #64748b; }
+        .section-header.collapsed::after { transform: rotate(-90deg); }
+        
+        .section-content { display: block; margin-top: 15px; }
+        .section-content.collapsed { display: none; }
+
+        .input-grid-5 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
         .input-group label { display: block; font-size: 10px; font-weight: 700; color: #cbd5e1; margin-bottom: 5px; }
         .input-group input { width: 100%; padding: 8px; border: 1px solid #475569; border-radius: 6px; background: #0f172a; color: white; font-size: 13px; font-family: monospace; box-sizing: border-box; }
 
-        /* Uniform Table & Expanded Chart Styling */
         .outputs-section { display: flex; flex-direction: column; gap: 30px; }
         .chart-container { background: white; padding: 25px; border-radius: 16px; border: 1px solid #e2e8f0; height: 650px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
         .table-container { background: white; border-radius: 16px; border: 1px solid #e2e8f0; overflow: auto; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
         
-        table { width: 100%; border-collapse: collapse; min-width: 1300px; }
+        table { width: 100%; border-collapse: collapse; min-width: 1400px; }
         
         th { 
-            background: #334155 !important; 
-            color: #fff; 
-            padding: 14px 12px; 
-            font-size: 11px; 
-            font-weight: 800; 
-            text-transform: uppercase; 
-            letter-spacing: 0.5px; 
-            position: sticky; 
-            top: 0; 
-            z-index: 10; 
-            border-bottom: 2px solid var(--midnight);
+            background: #334155 !important; color: #fff; padding: 14px 12px; font-size: 11px; 
+            font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; 
+            position: sticky; top: 0; z-index: 10; border-bottom: 2px solid var(--midnight);
         }
 
         td { padding: 14px 12px; font-size: 11px; text-align: right; border-bottom: 1px solid #f1f5f9; font-family: 'JetBrains Mono', monospace; }
 
-        /* Column Specific Colors */
         .col-income { color: #22c55e !important; }
         .col-withdrawal { color: #3b82f6 !important; }
         .col-taxes { color: #f97316 !important; }
@@ -96,22 +95,23 @@
         .header-live { color: #3b82f6 !important; }
         .header-base { color: #94a3b8 !important; }
         .header-delta { color: #f87171 !important; }
-        .header-house { color: #fb923c !important; }
 
         .base-col { background: #fafafa; color: var(--baseline); border-left: 1px solid #e2e8f0; }
         .delta-col { font-weight: bold; width: 120px; }
         .delta-neg { background-color: #fef2f2; color: var(--danger); }
         .delta-pos { background-color: #ecfdf5; color: var(--success); }
 
-        /* Overrides */
         .btn { padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; border: none; font-size: 11px; transition: 0.2s; }
         .btn-manage { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 30px; padding: 8px 20px; }
-        .btn-crash { background: var(--crash); color: white; width: 100%; margin-top: 10px; height: 40px; }
-        .btn-event { background: var(--primary); color: white; width: 100%; margin-top: 10px; height: 40px; }
-        .event-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; background: #334155; padding: 10px; border-radius: 8px; }
+        .btn-crash { background: var(--crash); color: white; width: 100%; margin-top: 10px; height: 35px; }
+        .btn-event { background: var(--primary); color: white; width: 100%; margin-top: 10px; height: 35px; }
+        .btn-rebalance { background: var(--rebalance); color: #000; width: 100%; margin-top: 10px; height: 35px; }
+        
+        .event-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; background: #334155; padding: 10px; border-radius: 8px; }
         .input-wrapper { position: relative; width: 100%; display: flex; align-items: center; }
         .symbol-right { position: absolute; right: 10px; color: #94a3b8; font-weight: bold; font-size: 12px; }
         .symbol-left { position: absolute; left: 10px; color: #94a3b8; font-weight: bold; font-size: 12px; }
+        .mini-label { font-size:9px; color:#cbd5e1; display:block; text-align:center; margin-bottom:2px; }
     </style>
 </head>
 <body>
@@ -136,24 +136,51 @@
 <div class="container">
     <div class="dashboard-grid">
         <aside class="inputs-section">
-            <h3>Fundamentals</h3>
-            <div class="input-grid-5" style="grid-template-columns: 1fr 1fr;">
-                <div class="input-group"><label>Start Year</label><input type="number" id="startYear" value="2028" oninput="calculate()"></div>
-                <div class="input-group"><label>Inflation %</label><input type="number" id="inflation" value="4.0" step="0.1" oninput="calculate()"></div>
-                <div class="input-group"><label>Portfolio $</label><input type="text" id="startLiquid" value="10,000,000" oninput="formatCurrencyInput(this)"></div>
-                <div class="input-group"><label>Growth %</label><input type="number" id="stockGrowth" value="7.0" step="0.1" oninput="calculate()"></div>
-                <div class="input-group"><label>House Value $</label><input type="text" id="startHouse" value="3,000,000" oninput="formatCurrencyInput(this)"></div>
-                <div class="input-group"><label>RE Apprec %</label><input type="number" id="reApprec" value="4.0" step="0.1" oninput="calculate()"></div>
-            </div>
-            <h3>Monthly Spend ($)</h3><div class="input-grid-5" id="spendGrid"></div>
-            <h3>Monthly Income ($)</h3><div class="input-grid-5" id="incomeGrid"></div>
-            <h3>Tax Estimates (%)</h3><div class="input-grid-5" id="taxGrid"></div>
             
-            <h3>Stress Test & Events</h3>
-            <div id="dynamicReturns"></div>
-            <button class="btn btn-crash" onclick="addRow('return')">+ Add Market Crash Event</button>
-            <div id="dynamicEvents" style="margin-top:20px;"></div>
-            <button class="btn btn-event" onclick="addRow('event')">+ Add One-Time Cash Event</button>
+            <h3 class="section-header collapsed" onclick="toggleSection('fundamentals')">Fundamentals</h3>
+            <div id="sect-fundamentals" class="section-content collapsed">
+                <div class="input-grid-5">
+                    <div class="input-group"><label>Start Year</label><input type="number" id="startYear" value="2028" oninput="calculate()"></div>
+                    <div class="input-group"><label>Inflation %</label><input type="number" id="inflation" value="4.0" step="0.1" oninput="calculate()"></div>
+                    
+                    <div class="input-group"><label>Stocks $</label><input type="text" id="startStocks" value="6,000,000" oninput="formatCurrencyInput(this)"></div>
+                    <div class="input-group"><label>Stock Grwth %</label><input type="number" id="stockGrowth" value="7.0" step="0.1" oninput="calculate()"></div>
+                    
+                    <div class="input-group"><label>Bonds $</label><input type="text" id="startBonds" value="3,000,000" oninput="formatCurrencyInput(this)"></div>
+                    <div class="input-group"><label>Bond Yield %</label><input type="number" id="bondYield" value="4.0" step="0.1" oninput="calculate()"></div>
+
+                    <div class="input-group"><label>Cash $</label><input type="text" id="startCash" value="1,000,000" oninput="formatCurrencyInput(this)"></div>
+                    <div class="input-group"><label>Cash Yield %</label><input type="number" id="cashYield" value="2.0" step="0.1" oninput="calculate()"></div>
+
+                    <div class="input-group"><label>House Value $</label><input type="text" id="startHouse" value="3,000,000" oninput="formatCurrencyInput(this)"></div>
+                    <div class="input-group"><label>RE Apprec %</label><input type="number" id="reApprec" value="4.0" step="0.1" oninput="calculate()"></div>
+                </div>
+            </div>
+            
+            <h3 class="section-header collapsed" onclick="toggleSection('spend')">Monthly Spend ($)</h3>
+            <div id="sect-spend" class="section-content collapsed">
+                <div class="input-grid-5" id="spendGrid"></div>
+            </div>
+            
+            <h3 class="section-header collapsed" onclick="toggleSection('income')">Monthly Income ($)</h3>
+            <div id="sect-income" class="section-content collapsed">
+                <div class="input-grid-5" id="incomeGrid"></div>
+            </div>
+
+            <h3 class="section-header collapsed" onclick="toggleSection('tax')">Tax Estimates (%)</h3>
+            <div id="sect-tax" class="section-content collapsed">
+                <div class="input-grid-5" id="taxGrid"></div>
+            </div>
+            
+            <h3 class="section-header collapsed" onclick="toggleSection('stress')">Stress Test & Events</h3>
+            <div id="sect-stress" class="section-content collapsed">
+                <div id="dynamicReturns"></div>
+                <button class="btn btn-crash" onclick="addRow('return')">+ Add Stock Market Crash Event</button>
+                <div id="dynamicEvents" style="margin-top:10px;"></div>
+                <button class="btn btn-event" onclick="addRow('event')">+ Add One-Time Cash Event</button>
+                <div id="dynamicRebalances" style="margin-top:10px;"></div>
+                <button class="btn btn-rebalance" onclick="addRow('rebalance')">+ Add Portfolio Rebalance</button>
+            </div>
         </aside>
 
         <main class="outputs-section">
@@ -169,17 +196,23 @@
 </div>
 
 <script>
-    let scenarios = JSON.parse(localStorage.getItem('scenData_v9')) || { A: null, B: null, C: null, D: null };
-    let scenarioNames = JSON.parse(localStorage.getItem('scenNames_v9')) || { A: '', B: '', C: '', D: '' };
-    let baselineSlot = localStorage.getItem('baseSlot_v9');
+    let scenarios = JSON.parse(localStorage.getItem('scenData_v10')) || { A: null, B: null, C: null, D: null };
+    let scenarioNames = JSON.parse(localStorage.getItem('scenNames_v10')) || { A: '', B: '', C: '', D: '' };
+    let baselineSlot = localStorage.getItem('baseSlot_v10');
     
-    // Sanitize baselineSlot to prevent "null" string bugs
     if (baselineSlot === "null" || baselineSlot === null) baselineSlot = null;
 
     let chartObj = null;
     const fmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 
     function toggleDrawer() { document.getElementById('drawer').classList.toggle('expanded'); }
+
+    function toggleSection(id) {
+        const content = document.getElementById('sect-' + id);
+        const header = content.previousElementSibling;
+        content.classList.toggle('collapsed');
+        header.classList.toggle('collapsed');
+    }
 
     function initGrids() {
         ['spend', 'income', 'tax'].forEach(k => {
@@ -202,75 +235,93 @@
 
     function getInputs() {
         const v = id => Number(document.getElementById(id).value.replace(/,/g, ''));
-        const inp = { startYear: v('startYear'), inflation: v('inflation')/100, startLiquid: v('startLiquid'), stockGrowth: v('stockGrowth')/100, startHouse: v('startHouse'), reApprec: v('reApprec')/100, buckets: [], returns: [], events: [] };
+        const inp = { 
+            startYear: v('startYear'), inflation: v('inflation')/100, 
+            startStocks: v('startStocks'), stockGrowth: v('stockGrowth')/100, 
+            startBonds: v('startBonds'), bondYield: v('bondYield')/100, 
+            startCash: v('startCash'), cashYield: v('cashYield')/100, 
+            startHouse: v('startHouse'), reApprec: v('reApprec')/100, 
+            buckets: [], returns: [], events: [], rebalances: [] 
+        };
         for (let i = 1; i <= 8; i++) inp.buckets.push({ spend: v(`spend${i}`)*12, income: v(`income${i}`)*12, tax: v(`tax${i}`)/100 });
+        
         document.querySelectorAll('.dyn-ret-yr').forEach((node, idx) => {
             inp.returns.push({ yr: Number(node.value), val: Number(document.querySelectorAll('.dyn-ret-val')[idx].value)/100 });
         });
         document.querySelectorAll('.dyn-evt-yr').forEach((node, idx) => {
             inp.events.push({ yr: Number(node.value), val: Number(document.querySelectorAll('.dyn-evt-val')[idx].value.replace(/,/g, '')) });
         });
+        document.querySelectorAll('.dyn-reb-yr').forEach((node, idx) => {
+            inp.rebalances.push({ 
+                yr: Number(node.value), 
+                s: Number(document.querySelectorAll('.dyn-reb-s')[idx].value)/100,
+                b: Number(document.querySelectorAll('.dyn-reb-b')[idx].value)/100,
+                c: Number(document.querySelectorAll('.dyn-reb-c')[idx].value)/100
+            });
+        });
         return inp;
     }
 
     function run(inp) {
         if (!inp) return null;
-        let res = [], liq = inp.startLiquid, hse = inp.startHouse;
+        let res = [];
+        let st = inp.startStocks, bd = inp.startBonds, csh = inp.startCash, hse = inp.startHouse;
+        
         for (let i = 0; i < 40; i++) {
             const yr = inp.startYear + i, b = inp.buckets[Math.floor(i/5)];
-            const sLiq = liq;
-
-            // --- FIX STARTS HERE ---
-            // 1. Find if there is a one-time event for the current year
-            const eventThisYear = inp.events.find(e => e.yr === yr)?.val || 0;
-
-            // 2. Add the event to the pocket-need (Net Spendable Goal)
-            const net = (b.spend * Math.pow(1 + inp.inflation, i)) + eventThisYear;
-            // --- FIX ENDS HERE ---
-
-            const gross = net / (1 - Math.min(0.95, b.tax));
-            let wth = Math.max(0, gross - (b.income * Math.pow(1 + inp.inflation, i)));
             
-            // Calculate taxes on total income (withdrawal + fixed income)
-            const tx = (wth + (b.income * Math.pow(1 + inp.inflation, i))) * b.tax;
+            const reb = inp.rebalances.find(r => r.yr === yr);
+            if (reb) {
+                let totalLiq = st + bd + csh;
+                let sumPct = reb.s + reb.b + reb.c;
+                if (sumPct > 0) {
+                    st = totalLiq * (reb.s / sumPct);
+                    bd = totalLiq * (reb.b / sumPct);
+                    csh = totalLiq * (reb.c / sumPct);
+                }
+            }
 
-            if (liq <= 0) { liq = 0; wth = 0; } 
-            else if (wth > liq) { wth = liq; }
+            const eventThisYear = inp.events.find(e => e.yr === yr)?.val || 0;
+            const net = (b.spend * Math.pow(1 + inp.inflation, i)) + eventThisYear;
+            const gross = net / (1 - Math.min(0.95, b.tax));
+            
+            let reqWth = Math.max(0, gross - (b.income * Math.pow(1 + inp.inflation, i)));
+            const tx = (reqWth + (b.income * Math.pow(1 + inp.inflation, i))) * b.tax;
 
-            let g = inp.returns.find(r => r.yr === yr)?.val ?? inp.stockGrowth;
-            liq = Math.max(0, (liq - wth) * (1 + g)); 
+            let remainingWth = reqWth;
+            
+            let drawCash = Math.min(csh, remainingWth);
+            csh -= drawCash; remainingWth -= drawCash;
+            
+            let drawBonds = Math.min(bd, remainingWth);
+            bd -= drawBonds; remainingWth -= drawBonds;
+            
+            let drawStocks = Math.min(st, remainingWth);
+            st -= drawStocks; remainingWth -= drawStocks;
+
+            let actualWth = reqWth - remainingWth;
+
+            let sg = inp.returns.find(r => r.yr === yr)?.val ?? inp.stockGrowth;
+            st *= (1 + sg);
+            bd *= (1 + inp.bondYield);
+            csh *= (1 + inp.cashYield);
             hse *= (1 + inp.reApprec);
+
+            let endTotalLiq = st + bd + csh;
 
             res.push({ 
                 yr, 
-                sLiq, 
                 taxableIncome: b.income * 12 * Math.pow(1 + inp.inflation, i), 
-                withdrawal: wth, 
+                withdrawal: actualWth, 
                 taxes: tx, 
                 netSpendable: net, 
-                endLiq: liq, 
+                endStocks: st,
+                endBonds: bd,
+                endCash: csh,
+                endLiq: endTotalLiq, 
                 house: hse, 
-                total: liq + hse 
+                total: endTotalLiq + hse 
             });
-        }
-        return res;
-    }
-
-    function run(inp) {
-        if (!inp) return null;
-        let res = [], liq = inp.startLiquid, hse = inp.startHouse;
-        for (let i = 0; i < 40; i++) {
-            const yr = inp.startYear + i, b = inp.buckets[Math.floor(i/5)];
-            const sLiq = liq;
-            const eventThisYear = inp.events.find(e => e.yr === yr)?.val || 0;
-            const net = (b.spend * Math.pow(1 + inp.inflation, i)) + eventThisYear;
-            const gross = net / (1 - Math.min(0.95, b.tax));
-            let wth = Math.max(0, gross - (b.income * Math.pow(1 + inp.inflation, i)));
-            const tx = (wth + (b.income * Math.pow(1 + inp.inflation, i))) * b.tax;
-            if (liq <= 0) { liq = 0; wth = 0; } else if (wth > liq) { wth = liq; }
-            let g = inp.returns.find(r => r.yr === yr)?.val ?? inp.stockGrowth;
-            liq = Math.max(0, (liq - wth) * (1 + g)); hse *= (1 + inp.reApprec);
-            res.push({ yr, sLiq, taxableIncome: b.income*12*Math.pow(1 + inp.inflation,i), withdrawal: wth, taxes: tx, netSpendable: net, endLiq: liq, house: hse, total: liq + hse });
         }
         return res;
     }
@@ -286,9 +337,9 @@
     function updateHeaders(isCompare) {
         const h = document.getElementById('tableHeaders');
         if (isCompare) {
-            h.innerHTML = `<th>Year</th><th>Withdrawal</th><th class="header-live">End Liq (Live)</th><th class="header-base">Liq (Base)</th><th class="header-delta">LIQ DELTA</th><th class="header-house">House (Live)</th><th class="header-base">House (Base)</th><th class="header-delta">HOUSE DELTA</th><th>Total NW</th><th class="col-power">Real Power</th>`;
+            h.innerHTML = `<th>Year</th><th>Wthdrwl</th><th class="header-live">Liq (Live)</th><th class="header-base">Liq (Base)</th><th class="header-delta">LIQ DELTA</th><th class="header-house">House (Live)</th><th class="header-base">House (Base)</th><th class="header-delta">HOUSE DELTA</th><th>Total NW</th><th class="col-power">Real Power</th>`;
         } else {
-            h.innerHTML = `<th>Year</th><th>Start Liquid</th><th class="col-income">Taxable Income</th><th class="col-withdrawal">Port. Withdrawal</th><th class="col-taxes">Taxes Paid</th><th>Net Spendable</th><th>End Liquid</th><th>Total Net Worth</th><th class="col-power">Purchasing Power</th>`;
+            h.innerHTML = `<th>Year</th><th class="col-withdrawal">Withdrawal</th><th class="col-taxes">Taxes</th><th>Net Spendable</th><th>End Cash</th><th>End Bonds</th><th>End Stocks</th><th>Total Liquid</th><th>Total Net Worth</th><th class="col-power">Purchasing Power</th>`;
         }
     }
 
@@ -302,7 +353,7 @@
                 const dH = r.house - base[i].house;
                 tr.innerHTML = `<td>${r.yr}</td><td>${fmt.format(r.withdrawal)}</td><td style="color:var(--primary); font-weight:bold">${fmt.format(r.endLiq)}</td><td class="base-col">${fmt.format(base[i].endLiq)}</td><td class="delta-col ${dL >= 0 ? 'delta-pos' : 'delta-neg'}">${(dL>=0?'+':'')+fmt.format(dL)}</td><td style="color:#fb923c">${fmt.format(r.house)}</td><td class="base-col">${fmt.format(base[i].house)}</td><td class="delta-col ${dH >= 0 ? 'delta-pos' : 'delta-neg'}">${(dH>=0?'+':'')+fmt.format(dH)}</td><td>${fmt.format(r.total)}</td><td class="col-power">${fmt.format(r.total / Math.pow(1 + getInputs().inflation, i))}</td>`;
             } else {
-                tr.innerHTML = `<td>${r.yr}</td><td>${fmt.format(r.sLiq)}</td><td class="col-income">${fmt.format(r.taxableIncome)}</td><td class="col-withdrawal">${fmt.format(r.withdrawal)}</td><td class="col-taxes">${fmt.format(r.taxes)}</td><td>${fmt.format(r.netSpendable)}</td><td>${fmt.format(r.endLiq)}</td><td>${fmt.format(r.total)}</td><td class="col-power">${fmt.format(r.total / Math.pow(1 + getInputs().inflation, i))}</td>`;
+                tr.innerHTML = `<td>${r.yr}</td><td class="col-withdrawal">${fmt.format(r.withdrawal)}</td><td class="col-taxes">${fmt.format(r.taxes)}</td><td>${fmt.format(r.netSpendable)}</td><td style="color:#94a3b8">${fmt.format(r.endCash)}</td><td style="color:#a855f7">${fmt.format(r.endBonds)}</td><td style="color:#3b82f6">${fmt.format(r.endStocks)}</td><td style="font-weight:bold">${fmt.format(r.endLiq)}</td><td>${fmt.format(r.total)}</td><td class="col-power">${fmt.format(r.total / Math.pow(1 + getInputs().inflation, i))}</td>`;
             }
             tbody.appendChild(tr);
         });
@@ -319,7 +370,12 @@
     function updateChart(live, base) {
         const ctx = document.getElementById('mainChart').getContext('2d');
         if (chartObj) chartObj.destroy();
-        const ds = [{ label: 'Portfolio Assets', data: live.map(r => r.endLiq), backgroundColor: 'rgba(59, 130, 246, 0.8)', stack: 'A' }, { label: 'Real Estate Value', data: live.map(r => r.house), backgroundColor: 'rgba(16, 185, 129, 0.8)', stack: 'A' }];
+        const ds = [
+            { label: 'Cash', data: live.map(r => r.endCash), backgroundColor: 'rgba(148, 163, 184, 0.8)', stack: 'A' },
+            { label: 'Bonds', data: live.map(r => r.endBonds), backgroundColor: 'rgba(168, 85, 247, 0.8)', stack: 'A' },
+            { label: 'Stocks', data: live.map(r => r.endStocks), backgroundColor: 'rgba(59, 130, 246, 0.8)', stack: 'A' },
+            { label: 'Real Estate', data: live.map(r => r.house), backgroundColor: 'rgba(16, 185, 129, 0.8)', stack: 'A' }
+        ];
         if (base) ds.push({ label: 'Baseline Scenario', data: base.map(r => r.total), borderColor: '#94a3b8', borderDash: [6, 4], type: 'line', fill: false, borderWidth: 3 });
         chartObj = new Chart(ctx, { type: 'bar', data: { labels: live.map(r => r.yr), datasets: ds }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { stacked: true, ticks: { callback: v => '$' + (v/1e6).toFixed(1) + 'M' } }, x: { stacked: true } }, plugins: { legend: { position: 'bottom' } } } });
     }
@@ -350,16 +406,21 @@
         }
     }
 
-    function saveSlot(s) { scenarios[s] = getInputs(); if (!scenarioNames[s]) scenarioNames[s] = `Scenario ${s}`; localStorage.setItem('scenData_v9', JSON.stringify(scenarios)); localStorage.setItem('scenNames_v9', JSON.stringify(scenarioNames)); updateScenarioCards(); calculate(); }
+    function saveSlot(s) { scenarios[s] = getInputs(); if (!scenarioNames[s]) scenarioNames[s] = `Scenario ${s}`; localStorage.setItem('scenData_v10', JSON.stringify(scenarios)); localStorage.setItem('scenNames_v10', JSON.stringify(scenarioNames)); updateScenarioCards(); calculate(); }
     
     function loadSlot(s) { 
         const d = scenarios[s]; if (!d) return;
         document.getElementById('startYear').value = d.startYear;
         document.getElementById('inflation').value = (d.inflation*100).toFixed(1);
-        document.getElementById('startLiquid').value = d.startLiquid.toLocaleString();
+        document.getElementById('startStocks').value = d.startStocks.toLocaleString();
         document.getElementById('stockGrowth').value = (d.stockGrowth*100).toFixed(1);
+        document.getElementById('startBonds').value = d.startBonds.toLocaleString();
+        document.getElementById('bondYield').value = (d.bondYield*100).toFixed(1);
+        document.getElementById('startCash').value = d.startCash.toLocaleString();
+        document.getElementById('cashYield').value = (d.cashYield*100).toFixed(1);
         document.getElementById('startHouse').value = d.startHouse.toLocaleString();
         document.getElementById('reApprec').value = (d.reApprec*100).toFixed(1);
+        
         d.buckets.forEach((b, i) => { 
             document.getElementById(`spend${i+1}`).value = (b.spend/12).toLocaleString(); 
             document.getElementById(`income${i+1}`).value = (b.income/12).toLocaleString(); 
@@ -367,22 +428,55 @@
         });
         document.getElementById('dynamicReturns').innerHTML = ''; d.returns.forEach(r => addRow('return', r.yr, r.val*100));
         document.getElementById('dynamicEvents').innerHTML = ''; d.events.forEach(e => addRow('event', e.yr, e.val));
+        document.getElementById('dynamicRebalances').innerHTML = ''; 
+        if(d.rebalances) d.rebalances.forEach(r => addRow('rebalance', r.yr, null, r));
         calculate();
+        
+        // Auto-expand Fundamentals so the user sees the loaded data
+        const fundContent = document.getElementById('sect-fundamentals');
+        if(fundContent.classList.contains('collapsed')) { toggleSection('fundamentals'); }
     }
 
-    function clearSlot(s) { scenarios[s] = null; scenarioNames[s] = ''; if (baselineSlot === s) baselineSlot = null; localStorage.setItem('scenData_v9', JSON.stringify(scenarios)); localStorage.setItem('scenNames_v9', JSON.stringify(scenarioNames)); localStorage.setItem('baseSlot_v9', baselineSlot); updateScenarioCards(); calculate(); }
-    
-    function setBaseline(s) { baselineSlot = (baselineSlot === s) ? null : s; localStorage.setItem('baseSlot_v9', baselineSlot); updateScenarioCards(); calculate(); }
-    
-    function updateScenarioNames() { ['A', 'B', 'C', 'D'].forEach(s => { const el = document.getElementById(`name-${s}`); if (el) scenarioNames[s] = el.value; }); localStorage.setItem('scenNames_v9', JSON.stringify(scenarioNames)); updateScenarioCards(); }
+    function clearSlot(s) { scenarios[s] = null; scenarioNames[s] = ''; if (baselineSlot === s) baselineSlot = null; localStorage.setItem('scenData_v10', JSON.stringify(scenarios)); localStorage.setItem('scenNames_v10', JSON.stringify(scenarioNames)); localStorage.setItem('baseSlot_v10', baselineSlot); updateScenarioCards(); calculate(); }
+    function setBaseline(s) { baselineSlot = (baselineSlot === s) ? null : s; localStorage.setItem('baseSlot_v10', baselineSlot); updateScenarioCards(); calculate(); }
+    function updateScenarioNames() { ['A', 'B', 'C', 'D'].forEach(s => { const el = document.getElementById(`name-${s}`); if (el) scenarioNames[s] = el.value; }); localStorage.setItem('scenNames_v10', JSON.stringify(scenarioNames)); updateScenarioCards(); }
 
-    function addRow(t, yO, vO) {
-        const c = document.getElementById(t === 'return' ? 'dynamicReturns' : 'dynamicEvents');
-        const yr = yO || (Number(document.getElementById('startYear').value) + 2 + c.children.length);
+    function addRow(t, yO, vO, rO) {
+        let c, yr;
+        if (t === 'return') c = document.getElementById('dynamicReturns');
+        else if (t === 'event') c = document.getElementById('dynamicEvents');
+        else c = document.getElementById('dynamicRebalances');
+        
+        yr = yO || (Number(document.getElementById('startYear').value) + 2 + c.children.length);
         const div = document.createElement('div');
         div.className = 'event-row';
-        div.innerHTML = `<div style="font-size:10px; font-weight:bold; color:#cbd5e1; width:25px;">Yr</div><input type="number" class="${t==='return'?'dyn-ret-yr':'dyn-evt-yr'}" value="${yr}" style="width:55px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" oninput="calculate()"><div style="font-size:10px; font-weight:bold; color:#cbd5e1; margin-left:5px;">${t==='return'?'%':'$'}:</div><div class="input-wrapper">${t==='event'?'<span class="symbol-left">$</span>':''}<input type="${t==='return'?'number':'text'}" class="${t==='return'?'has-right dyn-ret-val':'has-left dyn-evt-val'}" value="${(vO||(t==='return'?-20:50000)).toLocaleString()}" style="background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px; width:100%" oninput="${t==='return'?'calculate()':'formatCurrencyInput(this)'}">${t==='return'?'<span class="symbol-right">%</span>':''}</div><button class="btn" style="color:var(--danger); background:transparent; font-size:16px;" onclick="this.parentElement.remove();calculate()">×</button>`;
-        c.appendChild(div); if (!yO) calculate();
+        
+        let content = `<div style="font-size:10px; font-weight:bold; color:#cbd5e1; width:25px;">Yr</div><input type="number" class="dyn-${t=== 'rebalance' ? 'reb' : (t==='return'?'ret':'evt')}-yr" value="${yr}" style="width:50px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" oninput="calculate()">`;
+        
+        if (t === 'rebalance') {
+            const s = rO ? rO.s * 100 : 60;
+            const b = rO ? rO.b * 100 : 30;
+            const csh = rO ? rO.c * 100 : 10;
+            content += `
+                <div style="flex-grow:1; display:flex; gap:4px; margin-left:5px;">
+                    <div><span class="mini-label">Stk%</span><input type="number" class="dyn-reb-s" value="${s}" style="width:35px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" oninput="calculate()"></div>
+                    <div><span class="mini-label">Bnd%</span><input type="number" class="dyn-reb-b" value="${b}" style="width:35px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" oninput="calculate()"></div>
+                    <div><span class="mini-label">Csh%</span><input type="number" class="dyn-reb-c" value="${csh}" style="width:35px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" oninput="calculate()"></div>
+                </div>`;
+        } else {
+            content += `
+                <div style="font-size:10px; font-weight:bold; color:#cbd5e1; margin-left:5px;">${t==='return'?'%':'$'}:</div>
+                <div class="input-wrapper">
+                    ${t==='event'?'<span class="symbol-left">$</span>':''}
+                    <input type="${t==='return'?'number':'text'}" class="${t==='return'?'has-right dyn-ret-val':'has-left dyn-evt-val'}" value="${(vO||(t==='return'?-20:50000)).toLocaleString()}" style="background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px; width:100%" oninput="${t==='return'?'calculate()':'formatCurrencyInput(this)'}">
+                    ${t==='return'?'<span class="symbol-right">%</span>':''}
+                </div>`;
+        }
+        
+        content += `<button class="btn" style="color:var(--danger); background:transparent; font-size:16px;" onclick="this.parentElement.remove();calculate()">×</button>`;
+        div.innerHTML = content;
+        c.appendChild(div); 
+        if (!yO) calculate();
     }
 
     window.onload = () => { initGrids(); updateScenarioCards(); calculate(); };
