@@ -160,6 +160,13 @@
                             <span class="symbol-right">%</span>
                         </div>
                     </div>
+                    <div class="input-group" style="grid-column: 1 / -1;">
+                        <label>Portfolio Liquidation Tax (%)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="liquidationTaxRate" value="10.6" step="0.1" class="has-right" oninput="calculate()">
+                            <span class="symbol-right">%</span>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="input-group-box">
@@ -471,6 +478,11 @@
             const tax3 = getNum('tax3') / 100;
             const caStateTax = getNum('caStateTax') / 100;
             
+            // Dynamic Liquidation Tax Calculation
+            const liquidationTaxRateInput = getNum('liquidationTaxRate');
+            const liquidationTaxRate = liquidationTaxRateInput / 100;
+            const caEntryTax = startLiq * liquidationTaxRate;
+            
             const caPurchaseYrPath2 = getNum('caPurchaseYrPath2');
             const flPurchaseYr = getNum('flPurchaseYr');
             const caPurchaseYrPath4 = getNum('caPurchaseYrPath4');
@@ -479,7 +491,6 @@
 
             const waCarry = 42000; 
             const waWinterRentLoss = caWinterRentCost * waWinterMonths;
-            const caEntryTax = 1060000; // Represents 10.6% capital gains tax event
             const estateExempt = 6140000;
             const estateTaxRate = 0.20;
 
@@ -732,7 +743,7 @@
                     </div>
                     <div>
                         <h4>Liquid Capital & Compounding Mechanics</h4>
-                        <p>Liquidating assets to fund the move and property purchases potentially subjects our portfolio to a <strong>${formatCurrency(caEntryTax)} Capital Gains Tax (10.6%)</strong>. Establishing residency itself is not a taxable event, but realizing gains on stock assets to re-allocate capital triggers this liability. Because of this initial capital drain and the CA down payment, our compounding engine is reduced from Day 1.</p>
+                        <p>Liquidating assets to fund the move and property purchases potentially subjects our portfolio to a <strong>${formatCurrency(caEntryTax)} Capital Gains Tax (${formatPct(liquidationTaxRate)})</strong>. Establishing residency itself is not a taxable event, but realizing gains on stock assets to re-allocate capital triggers this liability. Because of this initial capital drain and the CA down payment, our compounding engine is reduced from Day 1.</p>
                         
                         <h5>Year 1 Detailed Calculation Formulas:</h5>
                         <div class="math-box">
