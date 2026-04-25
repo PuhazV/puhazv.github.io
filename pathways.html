@@ -36,6 +36,15 @@
         
         .results-container { background: #1e293b; padding: 20px; border-radius: 8px; border: 1px solid #334155; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         .results-container p { font-size: 13px; color: #94a3b8; margin-top: 0; margin-bottom: 15px; }
+
+        /* New Layout Additions */
+        .dashboard-bottom-row { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-top: 5px; }
+        .risk-panel { background: #1e293b; padding: 20px; border-radius: 8px; border: 1px solid #334155; box-shadow: 0 4px 6px rgba(0,0,0,0.3); display: flex; flex-direction: column; gap: 15px; }
+        .risk-card { background: #0b1121; padding: 15px; border-radius: 6px; border-left: 3px solid; }
+        .risk-card.tax { border-color: #f87171; }
+        .risk-card.swr { border-color: #eab308; }
+        .risk-title { color: #94a3b8; font-size: 11px; text-transform: uppercase; font-weight: 600; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .risk-subtext { color: #64748b; font-size: 11px; margin-top: 10px; font-style: italic; }
         
         table { width: 100%; border-collapse: separate; border-spacing: 0; }
         th, td { padding: 14px 12px; text-align: left; border-bottom: 1px solid #334155; font-size: 14px; }
@@ -80,12 +89,12 @@
         .history-table tr:nth-child(even) td { background-color: #0b1121; }
         .history-table tr:nth-child(odd) td { background-color: #0f172a; }
         .history-table tr:hover td { background-color: #1e293b; }
-        .history-table td:nth-child(1) { color: #94a3b8; font-weight: bold; text-align: center; } /* Year */
-        .history-table td:nth-child(2) { color: #eab308; } /* Net Shortfall */
-        .history-table td:nth-child(3) { color: #f87171; } /* Tax */
-        .history-table td:nth-child(4) { color: #fb7185; } /* Gross Withdrawal */
-        .history-table td:nth-child(5) { color: #38bdf8; font-weight: 600; } /* End Liq */
-</style>
+        .history-table td:nth-child(1) { color: #94a3b8; font-weight: bold; text-align: center; }
+        .history-table td:nth-child(2) { color: #eab308; } 
+        .history-table td:nth-child(3) { color: #f87171; } 
+        .history-table td:nth-child(4) { color: #fb7185; } 
+        .history-table td:nth-child(5) { color: #38bdf8; font-weight: 600; } 
+    </style>
 </head>
 <body>
 
@@ -95,7 +104,6 @@
     <div class="dashboard-grid">
         <div class="inputs-section">
             <div class="input-grid">
-                <!-- Box 1: Baseline -->
                 <div class="input-group-box">
                     <h3>Economic Baseline</h3>
                     <div class="input-group">
@@ -116,7 +124,6 @@
                     </div>
                 </div>
 
-                <!-- Box 2: Tax Rates -->
                 <div class="input-group-box">
                     <h3>Effective Tax Rates</h3>
                     <div class="input-group">
@@ -149,7 +156,6 @@
                     </div>
                 </div>
 
-                <!-- Box 3: Lifestyle Spend -->
                 <div class="input-group-box">
                     <h3>Monthly Spend (Excl. RE)</h3>
                     <div class="input-group"><label>Years 1-5 ($ / month)</label><input type="text" id="w1_5" value="25,000" oninput="formatCurrencyInput(this)"></div>
@@ -160,7 +166,6 @@
                     <div class="input-group"><label>Years 26-30+ ($ / month)</label><input type="text" id="w26_30" value="20,000" oninput="formatCurrencyInput(this)"></div>
                 </div>
 
-                <!-- Box 4: Pre-Tax Income -->
                 <div class="input-group-box">
                     <h3>Pre-Tax Monthly Income</h3>
                     <div class="input-group"><label>Years 1-5 ($ / month)</label><input type="text" id="i1_5" value="0" oninput="formatCurrencyInput(this)"></div>
@@ -171,7 +176,6 @@
                     <div class="input-group"><label>Years 26-30+ ($ / month)</label><input type="text" id="i26_30" value="0" oninput="formatCurrencyInput(this)"></div>
                 </div>
 
-                <!-- Box 5: Mortgages -->
                 <div class="input-group-box">
                     <h3>Mortgage Terms</h3>
                     <div class="input-group">
@@ -188,7 +192,6 @@
                     </div>
                 </div>
 
-                <!-- Box 6: Rentals -->
                 <div class="input-group-box">
                     <h3>Rental Income & Costs</h3>
                     <div class="input-group">
@@ -213,7 +216,6 @@
                     </div>
                 </div>
 
-                <!-- Box 7: Real Estate Values & Growth -->
                 <div class="input-group-box" style="grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
                     <div style="grid-column: 1 / -1;"><h3>Real Estate Values & Appreciation</h3></div>
                     <div>
@@ -248,36 +250,35 @@
                     </div>
                 </div>
 
-                <!-- Box 8: Timelines -->
                 <div class="input-group-box" style="grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
                     <div style="grid-column: 1 / -1;"><h3>Timelines & Scenarios</h3></div>
                     <div>
                         <div class="input-group">
-                            <label>Projection End Year </label>
+                            <label>Projection End Year</label>
                             <input type="number" id="endYear" value="2055" oninput="calculate()">
                         </div>
                         <div class="input-group">
-                            <label>Years Delayed in WA (Path 4)</label>
+                            <label>Path 4: Years Delayed in WA</label>
                             <input type="number" id="delayedCaYears" value="7" oninput="calculate()">
                         </div>
                     </div>
                     <div>
                         <div class="input-group">
-                            <label>CA Purchase Year (Path 2)</label>
+                            <label>Path 2: CA Purchase Year</label>
                             <input type="number" id="caPurchaseYrPath2" value="2026" oninput="calculate()">
                         </div>
                         <div class="input-group">
-                            <label>CA Purchase Year(Path 4)</label>
+                            <label>Path 4: CA Purchase Year</label>
                             <input type="number" id="caPurchaseYrPath4" value="2026" oninput="calculate()">
                         </div>
                     </div>
                     <div>
                         <div class="input-group">
-                            <label>FL Purchase Year (Path 3, 5)</label>
+                            <label>Path 3, 5: FL Purchase Year</label>
                             <input type="number" id="flPurchaseYr" value="2026" oninput="calculate()">
                         </div>
                         <div class="input-group">
-                            <label>CA Purchase Year (Path 5)</label>
+                            <label>Path 5: CA Purchase Year</label>
                             <input type="number" id="caPurchaseYrPath5" value="2028" oninput="calculate()">
                         </div>
                     </div>
@@ -289,8 +290,9 @@
             <div class="chart-container" id="chartWrapper">
                 <canvas id="legacyChart"></canvas>
             </div>
+            
             <div class="results-container">
-                <p style="font-size: 13px; color: #64748b; margin-top: 0; margin-bottom: 10px;"><em>Click any row to view calculation breakdown and year-by-year amortization.</em></p>
+                <p><em>Click any row to view calculation breakdown and year-by-year amortization.</em></p>
                 <table id="resultsTable">
                     <thead>
                         <tr>
@@ -305,12 +307,22 @@
                         </tbody>
                 </table>
             </div>
+
+            <div class="dashboard-bottom-row">
+                <div class="chart-container" style="height: 400px;">
+                    <canvas id="timeSeriesChart"></canvas>
+                </div>
+                <div class="risk-panel" id="riskPanel">
+                    </div>
+            </div>
+
         </div>
     </div>
 </div>
 
 <script>
     let legacyChartInstance = null; 
+    let timeSeriesChartInstance = null;
     
     const formatCurrency = (num) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(num);
     const formatPct = (decimalVal) => Number((decimalVal * 100).toFixed(2)) + '%';
@@ -350,7 +362,6 @@
         }
     }
 
-    
     function buildHistoryTable(historyData) {
         let html = `
         <div style="grid-column: 1 / -1; margin-top: 15px; overflow-x: auto;">
@@ -386,7 +397,6 @@
         </div>`;
         return html;
     }
-
 
     function calculate() {
         try {
@@ -469,7 +479,16 @@
             const netRentWA_Base = (waRentMonthly * 12) * (1 - mgmtFee);
             const netRentCA_Base = (caRentMonthly * 12) * (1 - mgmtFee);
 
+            // Base real estate FV calculation function
             const calcFVRealEstate = (val, apprec, n) => n <= 0 ? val : val * Math.pow(1 + apprec, n);
+            
+            // Dynamic real estate getter for the time-series line chart
+            const getPropVal = (homeVal, apprec, currentYr, purchaseYr) => {
+                if (currentYr < purchaseYr) return 0;
+                return calcFVRealEstate(homeVal, apprec, currentYr - purchaseYr);
+            };
+
+            // Final real estate values for the primary table
             const fvWa = calcFVRealEstate(waHome, waApprec, years); 
             const fvCaPath2 = calcFVRealEstate(caHome, caApprec, endYear - caPurchaseYrPath2);
             const fvFl = calcFVRealEstate(flHome, flApprec, endYear - flPurchaseYr);
@@ -486,8 +505,16 @@
             let p5Liq = startLiq - flDpAmt - caDpAmt;
 
             let p1Hist = [], p2Hist = [], p3Hist = [], p4Hist = [], p5Hist = [];
+            
+            // Risk & Chart Metrics
+            let tsLabels = [], tsP1 = [], tsP2 = [], tsP3 = [], tsP4 = [], tsP5 = [];
+            let p1CumTax = 0, p2CumTax = 0, p3CumTax = 0, p4CumTax = 0, p5CumTax = 0;
+            let p1PeakSWR = 0, p2PeakSWR = 0, p3PeakSWR = 0, p4PeakSWR = 0, p5PeakSWR = 0;
 
             for(let i=0; i<years; i++) {
+                let curYr = startYear + i;
+                tsLabels.push(curYr);
+
                 let annualBaseNet = getSpend(i);
                 let annualPreTaxInc = getInc(i);
                 let annualTaxRate = 0;
@@ -507,17 +534,27 @@
                 let infCaRent = netRentCA_Base * inf;
                 let infWaWinter = waWinterRentLoss * inf;
 
-                // Function to process shortfall correctly
-                const processShortfall = (liq, shortfall, taxRate) => {
+                const processShortfall = (liqStart, shortfall, taxRate, pathNum) => {
                     let gross = 0, tax = 0;
                     if(shortfall > 0) {
                         gross = shortfall / (1 - taxRate);
                         tax = gross - shortfall;
                     } else {
-                        gross = shortfall; // Negative, surplus saved
+                        gross = shortfall; 
                         tax = 0;
                     }
-                    liq = (liq - gross) * (1 + r);
+                    
+                    // Track SWR Risk
+                    if(liqStart > 0 && gross > 0) {
+                        let swr = gross / liqStart;
+                        if(pathNum === 1 && swr > p1PeakSWR) p1PeakSWR = swr;
+                        if(pathNum === 2 && swr > p2PeakSWR) p2PeakSWR = swr;
+                        if(pathNum === 3 && swr > p3PeakSWR) p3PeakSWR = swr;
+                        if(pathNum === 4 && swr > p4PeakSWR) p4PeakSWR = swr;
+                        if(pathNum === 5 && swr > p5PeakSWR) p5PeakSWR = swr;
+                    }
+
+                    let liq = (liqStart - gross) * (1 + r);
                     if (liq < 0) { liq = 0; gross = 0; shortfall = 0; }
                     return { liq, gross, tax, shortfall };
                 };
@@ -526,25 +563,28 @@
                 let p1TaxR = Math.min(annualTaxRate, 0.99);
                 let p1NetInc = infInc * (1 - p1TaxR);
                 let p1Exp = infBaseLife + infWaCarry;
-                let p1Res = processShortfall(p1Liq, p1Exp - p1NetInc, p1TaxR);
+                let p1Res = processShortfall(p1Liq, p1Exp - p1NetInc, p1TaxR, 1);
                 p1Liq = p1Res.liq;
-                p1Hist.push({ year: startYear + i, netNeed: p1Res.shortfall, tax: p1Res.tax, gross: p1Res.gross, liq: p1Liq });
+                p1CumTax += p1Res.tax;
+                p1Hist.push({ year: curYr, netNeed: p1Res.shortfall, tax: p1Res.tax, gross: p1Res.gross, liq: p1Liq });
 
                 // Path 2
                 let p2TaxR = Math.min(annualTaxRate + caStateTax, 0.99);
                 let p2NetInc = infInc * (1 - p2TaxR);
                 let p2Exp = infBaseLife + caMortgage + infCaStatic + infWaCarry - infWaRent;
-                let p2Res = processShortfall(p2Liq, p2Exp - p2NetInc, p2TaxR);
+                let p2Res = processShortfall(p2Liq, p2Exp - p2NetInc, p2TaxR, 2);
                 p2Liq = p2Res.liq;
-                p2Hist.push({ year: startYear + i, netNeed: p2Res.shortfall, tax: p2Res.tax, gross: p2Res.gross, liq: p2Liq });
+                p2CumTax += p2Res.tax;
+                p2Hist.push({ year: curYr, netNeed: p2Res.shortfall, tax: p2Res.tax, gross: p2Res.gross, liq: p2Liq });
 
                 // Path 3
                 let p3TaxR = Math.min(annualTaxRate, 0.99);
                 let p3NetInc = infInc * (1 - p3TaxR);
                 let p3Exp = infBaseLife + flMortgage + infFlStatic + infWaCarry - infWaRent;
-                let p3Res = processShortfall(p3Liq, p3Exp - p3NetInc, p3TaxR);
+                let p3Res = processShortfall(p3Liq, p3Exp - p3NetInc, p3TaxR, 3);
                 p3Liq = p3Res.liq;
-                p3Hist.push({ year: startYear + i, netNeed: p3Res.shortfall, tax: p3Res.tax, gross: p3Res.gross, liq: p3Liq });
+                p3CumTax += p3Res.tax;
+                p3Hist.push({ year: curYr, netNeed: p3Res.shortfall, tax: p3Res.tax, gross: p3Res.gross, liq: p3Liq });
 
                 // Path 4
                 let p4TaxR = Math.min((i < delayedCaYears) ? annualTaxRate : annualTaxRate + caStateTax, 0.99);
@@ -555,17 +595,33 @@
                 } else {
                     p4Exp = infBaseLife + caMortgage + infCaStatic + infWaCarry - infWaRent;
                 }
-                let p4Res = processShortfall(p4Liq, p4Exp - p4NetInc, p4TaxR);
+                let p4Res = processShortfall(p4Liq, p4Exp - p4NetInc, p4TaxR, 4);
                 p4Liq = p4Res.liq;
-                p4Hist.push({ year: startYear + i, netNeed: p4Res.shortfall, tax: p4Res.tax, gross: p4Res.gross, liq: p4Liq });
+                p4CumTax += p4Res.tax;
+                p4Hist.push({ year: curYr, netNeed: p4Res.shortfall, tax: p4Res.tax, gross: p4Res.gross, liq: p4Liq });
 
                 // Path 5
                 let p5TaxR = Math.min(annualTaxRate, 0.99);
                 let p5NetInc = infInc * (1 - p5TaxR);
                 let p5Exp = infBaseLife + flMortgage + infFlStatic + caMortgage + infCaStatic + infWaCarry - infWaRent - infCaRent;
-                let p5Res = processShortfall(p5Liq, p5Exp - p5NetInc, p5TaxR);
+                let p5Res = processShortfall(p5Liq, p5Exp - p5NetInc, p5TaxR, 5);
                 p5Liq = p5Res.liq;
-                p5Hist.push({ year: startYear + i, netNeed: p5Res.shortfall, tax: p5Res.tax, gross: p5Res.gross, liq: p5Liq });
+                p5CumTax += p5Res.tax;
+                p5Hist.push({ year: curYr, netNeed: p5Res.shortfall, tax: p5Res.tax, gross: p5Res.gross, liq: p5Liq });
+
+                // Time Series Chart Logic (Gross assets for given year)
+                let valWa = calcFVRealEstate(waHome, waApprec, i);
+                let valCaP2 = getPropVal(caHome, caApprec, curYr, caPurchaseYrPath2);
+                let valFlP3 = getPropVal(flHome, flApprec, curYr, flPurchaseYr);
+                let valCaP4 = getPropVal(caHome, caApprec, curYr, caPurchaseYrPath4);
+                let valFlP5 = getPropVal(flHome, flApprec, curYr, flPurchaseYr);
+                let valCaP5 = getPropVal(caHome, caApprec, curYr, caPurchaseYrPath5);
+
+                tsP1.push(valWa + p1Liq); // Note: Estate tax penalty happens at death, not during life
+                tsP2.push(valWa + valCaP2 + p2Liq);
+                tsP3.push(valWa + valFlP3 + p3Liq);
+                tsP4.push(valWa + valCaP4 + p4Liq);
+                tsP5.push(valWa + valFlP5 + valCaP5 + p5Liq);
             }
 
             const results = [];
@@ -586,6 +642,8 @@
 
             let p1Estate = fvWa + p1Liq;
             let p1Tax = p1Estate > estateExempt ? (p1Estate - estateExempt) * estateTaxRate : 0;
+            p1CumTax += p1Tax; // Add death tax to cumulative total for risk panel
+
             results.push({
                 name: "Path 1: Stay in WA", liq: p1Liq, re: fvWa, tax: -p1Tax, net: p1Estate - p1Tax,
                 details: `
@@ -634,6 +692,9 @@
                     ${buildHistoryTable(p1Hist)}
                 `
             });
+
+            // Path 2 logic
+            p2CumTax += caEntryTax; // Add Entry Tax to Cumulative Panel
 
             let p2TaxR = Math.min(tax1 + caStateTax, 0.99);
             let p2NetInc = y1Inc * (1 - p2TaxR);
@@ -895,6 +956,7 @@
                 `
             });
 
+            // Populate Main Table
             const tbody = document.querySelector('#resultsTable tbody');
             tbody.innerHTML = '';
             
@@ -932,6 +994,73 @@
             });
 
             updateChart(labels, liquidData, realEstateData, taxData, netLegacyData);
+
+            // Populate Tax & Risk Analytics Panel
+            const panel = document.getElementById('riskPanel');
+            panel.innerHTML = `
+                <h3 style="margin-top: 0; color: #38bdf8; font-size: 13px; border-bottom: 1px solid #334155; padding-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Tax & Risk Analytics</h3>
+                
+                <div class="risk-card tax">
+                    <div class="risk-title">Cumulative Tax Leakage</div>
+                    <div style="display:flex; justify-content: space-between; align-items: center; margin-top:10px;">
+                        <span style="color:#94a3b8; font-size: 13px;">Path 1 (WA Baseline)</span> 
+                        <strong style="color:#f87171; font-family: 'SF Mono', monospace; font-size: 15px;">${formatCurrency(p1CumTax)}</strong>
+                    </div>
+                    <div style="display:flex; justify-content: space-between; align-items: center; margin-top:8px;">
+                        <span style="color:#94a3b8; font-size: 13px;">Path 2 (CA Residency)</span> 
+                        <strong style="color:#fb923c; font-family: 'SF Mono', monospace; font-size: 15px;">${formatCurrency(p2CumTax)}</strong>
+                    </div>
+                    <div style="display:flex; justify-content: space-between; align-items: center; margin-top:8px;">
+                        <span style="color:#94a3b8; font-size: 13px;">Path 3 (FL Tax Haven)</span> 
+                        <strong style="color:#34d399; font-family: 'SF Mono', monospace; font-size: 15px;">${formatCurrency(p3CumTax)}</strong>
+                    </div>
+                    <div class="risk-subtext">Calculates total lifetime state & federal income taxes drawn from the portfolio, plus the final WA death tax penalty.</div>
+                </div>
+
+                <div class="risk-card swr">
+                    <div class="risk-title">Peak Portfolio Withdrawal Rate (SWR)</div>
+                    <div style="display:flex; justify-content: space-between; align-items: center; margin-top:10px;">
+                        <span style="color:#94a3b8; font-size: 13px;">Path 4 (Delayed CA)</span> 
+                        <strong style="color:${p4PeakSWR > 0.05 ? '#f87171' : '#eab308'}; font-family: 'SF Mono', monospace; font-size: 15px;">${formatPct(p4PeakSWR)}</strong>
+                    </div>
+                    <div style="display:flex; justify-content: space-between; align-items: center; margin-top:8px;">
+                        <span style="color:#94a3b8; font-size: 13px;">Path 5 (Hybrid FL/CA)</span> 
+                        <strong style="color:${p5PeakSWR > 0.05 ? '#f87171' : '#eab308'}; font-family: 'SF Mono', monospace; font-size: 15px;">${formatPct(p5PeakSWR)}</strong>
+                    </div>
+                    <div class="risk-subtext">The maximum percentage of liquid capital required to fund lifestyle in a single year. Rates over 5% carry sequence-of-returns risk.</div>
+                </div>
+            `;
+
+            // Draw Time Series Chart
+            const tsCtx = document.getElementById('timeSeriesChart').getContext('2d');
+            if (timeSeriesChartInstance) timeSeriesChartInstance.destroy();
+            timeSeriesChartInstance = new Chart(tsCtx, {
+                type: 'line',
+                data: {
+                    labels: tsLabels,
+                    datasets: [
+                        { label: 'Path 1 (WA)', data: tsP1, borderColor: '#94a3b8', backgroundColor: '#94a3b8', tension: 0.3, fill: false, borderWidth: 2, pointRadius: 0 },
+                        { label: 'Path 2 (CA)', data: tsP2, borderColor: '#fb923c', backgroundColor: '#fb923c', tension: 0.3, fill: false, borderWidth: 2, pointRadius: 0 },
+                        { label: 'Path 3 (FL)', data: tsP3, borderColor: '#34d399', backgroundColor: '#34d399', tension: 0.3, fill: false, borderWidth: 2, pointRadius: 0 },
+                        { label: 'Path 4 (Delay CA)', data: tsP4, borderColor: '#a78bfa', backgroundColor: '#a78bfa', tension: 0.3, fill: false, borderWidth: 3, pointRadius: 0 },
+                        { label: 'Path 5 (Hybrid)', data: tsP5, borderColor: '#38bdf8', backgroundColor: '#38bdf8', tension: 0.3, fill: false, borderWidth: 3, pointRadius: 0 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    color: '#94a3b8',
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        title: { display: true, text: 'Wealth Trajectory (Total Gross Assets Year-by-Year)', font: { size: 14, weight: '500' }, color: '#f8fafc', padding: {bottom: 15} },
+                        legend: { labels: { color: '#cbd5e1', boxWidth: 12, padding: 15 }, position: 'bottom' },
+                        tooltip: { callbacks: { label: function(context) { return context.dataset.label + ': ' + formatCurrency(context.parsed.y); } } }
+                    },
+                    scales: { 
+                        x: { grid: { color: '#334155', drawBorder: false }, ticks: { color: '#94a3b8', maxTicksLimit: 10 } }, 
+                        y: { grid: { color: '#334155', drawBorder: false }, ticks: { color: '#94a3b8', callback: function(value) { return '$' + (value / 1000000).toFixed(1) + 'M'; } } } 
+                    }
+                }
+            });
 
         } catch (error) {
             console.error("Calculation failed:", error);
