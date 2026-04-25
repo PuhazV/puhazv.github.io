@@ -56,7 +56,6 @@
             box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
         }
         
-        /* Collapsible Section Styling */
         .section-header { 
             font-size: 13px; margin-top: 20px; border-bottom: 1px solid #475569; padding-bottom: 8px; 
             color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; 
@@ -77,7 +76,7 @@
         .chart-container { background: white; padding: 25px; border-radius: 16px; border: 1px solid #e2e8f0; height: 650px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
         .table-container { background: white; border-radius: 16px; border: 1px solid #e2e8f0; overflow: auto; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
         
-        table { width: 100%; border-collapse: collapse; min-width: 1400px; }
+        table { width: 100%; border-collapse: collapse; min-width: 1500px; }
         
         th { 
             background: #334155 !important; color: #fff; padding: 14px 12px; font-size: 11px; 
@@ -111,7 +110,7 @@
         .input-wrapper { position: relative; width: 100%; display: flex; align-items: center; }
         .symbol-right { position: absolute; right: 10px; color: #94a3b8; font-weight: bold; font-size: 12px; }
         .symbol-left { position: absolute; left: 10px; color: #94a3b8; font-weight: bold; font-size: 12px; }
-        .mini-label { font-size:9px; color:#cbd5e1; display:block; text-align:center; margin-bottom:2px; }
+        .inline-label { font-size:9px; color:#cbd5e1; margin-right:4px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -143,11 +142,14 @@
                     <div class="input-group"><label>Start Year</label><input type="number" id="startYear" value="2028" oninput="calculate()"></div>
                     <div class="input-group"><label>Inflation %</label><input type="number" id="inflation" value="4.0" step="0.1" oninput="calculate()"></div>
                     
-                    <div class="input-group"><label>Stocks $</label><input type="text" id="startStocks" value="6,000,000" oninput="formatCurrencyInput(this)"></div>
+                    <div class="input-group"><label>Stocks $</label><input type="text" id="startStocks" value="5,000,000" oninput="formatCurrencyInput(this)"></div>
                     <div class="input-group"><label>Stock Grwth %</label><input type="number" id="stockGrowth" value="7.0" step="0.1" oninput="calculate()"></div>
                     
-                    <div class="input-group"><label>Bonds $</label><input type="text" id="startBonds" value="3,000,000" oninput="formatCurrencyInput(this)"></div>
+                    <div class="input-group"><label>Bonds $</label><input type="text" id="startBonds" value="2,000,000" oninput="formatCurrencyInput(this)"></div>
                     <div class="input-group"><label>Bond Yield %</label><input type="number" id="bondYield" value="4.0" step="0.1" oninput="calculate()"></div>
+
+                    <div class="input-group"><label>TIPS $</label><input type="text" id="startTips" value="2,000,000" oninput="formatCurrencyInput(this)"></div>
+                    <div class="input-group"><label>TIPS Yield %</label><input type="number" id="tipsYield" value="4.5" step="0.1" oninput="calculate()"></div>
 
                     <div class="input-group"><label>Cash $</label><input type="text" id="startCash" value="1,000,000" oninput="formatCurrencyInput(this)"></div>
                     <div class="input-group"><label>Cash Yield %</label><input type="number" id="cashYield" value="2.0" step="0.1" oninput="calculate()"></div>
@@ -196,9 +198,9 @@
 </div>
 
 <script>
-    let scenarios = JSON.parse(localStorage.getItem('scenData_v10')) || { A: null, B: null, C: null, D: null };
-    let scenarioNames = JSON.parse(localStorage.getItem('scenNames_v10')) || { A: '', B: '', C: '', D: '' };
-    let baselineSlot = localStorage.getItem('baseSlot_v10');
+    let scenarios = JSON.parse(localStorage.getItem('scenData_v11')) || { A: null, B: null, C: null, D: null };
+    let scenarioNames = JSON.parse(localStorage.getItem('scenNames_v11')) || { A: '', B: '', C: '', D: '' };
+    let baselineSlot = localStorage.getItem('baseSlot_v11');
     
     if (baselineSlot === "null" || baselineSlot === null) baselineSlot = null;
 
@@ -239,6 +241,7 @@
             startYear: v('startYear'), inflation: v('inflation')/100, 
             startStocks: v('startStocks'), stockGrowth: v('stockGrowth')/100, 
             startBonds: v('startBonds'), bondYield: v('bondYield')/100, 
+            startTips: v('startTips'), tipsYield: v('tipsYield')/100,
             startCash: v('startCash'), cashYield: v('cashYield')/100, 
             startHouse: v('startHouse'), reApprec: v('reApprec')/100, 
             buckets: [], returns: [], events: [], rebalances: [] 
@@ -256,6 +259,7 @@
                 yr: Number(node.value), 
                 s: Number(document.querySelectorAll('.dyn-reb-s')[idx].value)/100,
                 b: Number(document.querySelectorAll('.dyn-reb-b')[idx].value)/100,
+                t: Number(document.querySelectorAll('.dyn-reb-t')[idx].value)/100,
                 c: Number(document.querySelectorAll('.dyn-reb-c')[idx].value)/100
             });
         });
@@ -265,18 +269,19 @@
     function run(inp) {
         if (!inp) return null;
         let res = [];
-        let st = inp.startStocks, bd = inp.startBonds, csh = inp.startCash, hse = inp.startHouse;
+        let st = inp.startStocks, bd = inp.startBonds, tp = inp.startTips, csh = inp.startCash, hse = inp.startHouse;
         
         for (let i = 0; i < 40; i++) {
             const yr = inp.startYear + i, b = inp.buckets[Math.floor(i/5)];
             
             const reb = inp.rebalances.find(r => r.yr === yr);
             if (reb) {
-                let totalLiq = st + bd + csh;
-                let sumPct = reb.s + reb.b + reb.c;
+                let totalLiq = st + bd + tp + csh;
+                let sumPct = reb.s + reb.b + reb.t + reb.c;
                 if (sumPct > 0) {
                     st = totalLiq * (reb.s / sumPct);
                     bd = totalLiq * (reb.b / sumPct);
+                    tp = totalLiq * (reb.t / sumPct);
                     csh = totalLiq * (reb.c / sumPct);
                 }
             }
@@ -293,6 +298,9 @@
             let drawCash = Math.min(csh, remainingWth);
             csh -= drawCash; remainingWth -= drawCash;
             
+            let drawTips = Math.min(tp, remainingWth);
+            tp -= drawTips; remainingWth -= drawTips;
+
             let drawBonds = Math.min(bd, remainingWth);
             bd -= drawBonds; remainingWth -= drawBonds;
             
@@ -304,10 +312,11 @@
             let sg = inp.returns.find(r => r.yr === yr)?.val ?? inp.stockGrowth;
             st *= (1 + sg);
             bd *= (1 + inp.bondYield);
+            tp *= (1 + inp.tipsYield);
             csh *= (1 + inp.cashYield);
             hse *= (1 + inp.reApprec);
 
-            let endTotalLiq = st + bd + csh;
+            let endTotalLiq = st + bd + tp + csh;
 
             res.push({ 
                 yr, 
@@ -317,6 +326,7 @@
                 netSpendable: net, 
                 endStocks: st,
                 endBonds: bd,
+                endTips: tp,
                 endCash: csh,
                 endLiq: endTotalLiq, 
                 house: hse, 
@@ -339,7 +349,7 @@
         if (isCompare) {
             h.innerHTML = `<th>Year</th><th>Wthdrwl</th><th class="header-live">Liq (Live)</th><th class="header-base">Liq (Base)</th><th class="header-delta">LIQ DELTA</th><th class="header-house">House (Live)</th><th class="header-base">House (Base)</th><th class="header-delta">HOUSE DELTA</th><th>Total NW</th><th class="col-power">Real Power</th>`;
         } else {
-            h.innerHTML = `<th>Year</th><th class="col-withdrawal">Withdrawal</th><th class="col-taxes">Taxes</th><th>Net Spendable</th><th>End Cash</th><th>End Bonds</th><th>End Stocks</th><th>Total Liquid</th><th>Total Net Worth</th><th class="col-power">Purchasing Power</th>`;
+            h.innerHTML = `<th>Year</th><th class="col-withdrawal">Withdrawal</th><th class="col-taxes">Taxes</th><th>Net Spendable</th><th>End Cash</th><th>End TIPS</th><th>End Bonds</th><th>End Stocks</th><th>Total Liquid</th><th>Total Net Worth</th><th class="col-power">Purchasing Power</th>`;
         }
     }
 
@@ -353,7 +363,7 @@
                 const dH = r.house - base[i].house;
                 tr.innerHTML = `<td>${r.yr}</td><td>${fmt.format(r.withdrawal)}</td><td style="color:var(--primary); font-weight:bold">${fmt.format(r.endLiq)}</td><td class="base-col">${fmt.format(base[i].endLiq)}</td><td class="delta-col ${dL >= 0 ? 'delta-pos' : 'delta-neg'}">${(dL>=0?'+':'')+fmt.format(dL)}</td><td style="color:#fb923c">${fmt.format(r.house)}</td><td class="base-col">${fmt.format(base[i].house)}</td><td class="delta-col ${dH >= 0 ? 'delta-pos' : 'delta-neg'}">${(dH>=0?'+':'')+fmt.format(dH)}</td><td>${fmt.format(r.total)}</td><td class="col-power">${fmt.format(r.total / Math.pow(1 + getInputs().inflation, i))}</td>`;
             } else {
-                tr.innerHTML = `<td>${r.yr}</td><td class="col-withdrawal">${fmt.format(r.withdrawal)}</td><td class="col-taxes">${fmt.format(r.taxes)}</td><td>${fmt.format(r.netSpendable)}</td><td style="color:#94a3b8">${fmt.format(r.endCash)}</td><td style="color:#a855f7">${fmt.format(r.endBonds)}</td><td style="color:#3b82f6">${fmt.format(r.endStocks)}</td><td style="font-weight:bold">${fmt.format(r.endLiq)}</td><td>${fmt.format(r.total)}</td><td class="col-power">${fmt.format(r.total / Math.pow(1 + getInputs().inflation, i))}</td>`;
+                tr.innerHTML = `<td>${r.yr}</td><td class="col-withdrawal">${fmt.format(r.withdrawal)}</td><td class="col-taxes">${fmt.format(r.taxes)}</td><td>${fmt.format(r.netSpendable)}</td><td style="color:#94a3b8">${fmt.format(r.endCash)}</td><td style="color:#f59e0b">${fmt.format(r.endTips)}</td><td style="color:#a855f7">${fmt.format(r.endBonds)}</td><td style="color:#3b82f6">${fmt.format(r.endStocks)}</td><td style="font-weight:bold">${fmt.format(r.endLiq)}</td><td>${fmt.format(r.total)}</td><td class="col-power">${fmt.format(r.total / Math.pow(1 + getInputs().inflation, i))}</td>`;
             }
             tbody.appendChild(tr);
         });
@@ -372,6 +382,7 @@
         if (chartObj) chartObj.destroy();
         const ds = [
             { label: 'Cash', data: live.map(r => r.endCash), backgroundColor: 'rgba(148, 163, 184, 0.8)', stack: 'A' },
+            { label: 'TIPS', data: live.map(r => r.endTips), backgroundColor: 'rgba(245, 158, 11, 0.8)', stack: 'A' },
             { label: 'Bonds', data: live.map(r => r.endBonds), backgroundColor: 'rgba(168, 85, 247, 0.8)', stack: 'A' },
             { label: 'Stocks', data: live.map(r => r.endStocks), backgroundColor: 'rgba(59, 130, 246, 0.8)', stack: 'A' },
             { label: 'Real Estate', data: live.map(r => r.house), backgroundColor: 'rgba(16, 185, 129, 0.8)', stack: 'A' }
@@ -406,7 +417,7 @@
         }
     }
 
-    function saveSlot(s) { scenarios[s] = getInputs(); if (!scenarioNames[s]) scenarioNames[s] = `Scenario ${s}`; localStorage.setItem('scenData_v10', JSON.stringify(scenarios)); localStorage.setItem('scenNames_v10', JSON.stringify(scenarioNames)); updateScenarioCards(); calculate(); }
+    function saveSlot(s) { scenarios[s] = getInputs(); if (!scenarioNames[s]) scenarioNames[s] = `Scenario ${s}`; localStorage.setItem('scenData_v11', JSON.stringify(scenarios)); localStorage.setItem('scenNames_v11', JSON.stringify(scenarioNames)); updateScenarioCards(); calculate(); }
     
     function loadSlot(s) { 
         const d = scenarios[s]; if (!d) return;
@@ -416,6 +427,8 @@
         document.getElementById('stockGrowth').value = (d.stockGrowth*100).toFixed(1);
         document.getElementById('startBonds').value = d.startBonds.toLocaleString();
         document.getElementById('bondYield').value = (d.bondYield*100).toFixed(1);
+        document.getElementById('startTips').value = (d.startTips || 2000000).toLocaleString();
+        document.getElementById('tipsYield').value = ((d.tipsYield || 0.045)*100).toFixed(1);
         document.getElementById('startCash').value = d.startCash.toLocaleString();
         document.getElementById('cashYield').value = (d.cashYield*100).toFixed(1);
         document.getElementById('startHouse').value = d.startHouse.toLocaleString();
@@ -432,14 +445,13 @@
         if(d.rebalances) d.rebalances.forEach(r => addRow('rebalance', r.yr, null, r));
         calculate();
         
-        // Auto-expand Fundamentals so the user sees the loaded data
         const fundContent = document.getElementById('sect-fundamentals');
         if(fundContent.classList.contains('collapsed')) { toggleSection('fundamentals'); }
     }
 
-    function clearSlot(s) { scenarios[s] = null; scenarioNames[s] = ''; if (baselineSlot === s) baselineSlot = null; localStorage.setItem('scenData_v10', JSON.stringify(scenarios)); localStorage.setItem('scenNames_v10', JSON.stringify(scenarioNames)); localStorage.setItem('baseSlot_v10', baselineSlot); updateScenarioCards(); calculate(); }
-    function setBaseline(s) { baselineSlot = (baselineSlot === s) ? null : s; localStorage.setItem('baseSlot_v10', baselineSlot); updateScenarioCards(); calculate(); }
-    function updateScenarioNames() { ['A', 'B', 'C', 'D'].forEach(s => { const el = document.getElementById(`name-${s}`); if (el) scenarioNames[s] = el.value; }); localStorage.setItem('scenNames_v10', JSON.stringify(scenarioNames)); updateScenarioCards(); }
+    function clearSlot(s) { scenarios[s] = null; scenarioNames[s] = ''; if (baselineSlot === s) baselineSlot = null; localStorage.setItem('scenData_v11', JSON.stringify(scenarios)); localStorage.setItem('scenNames_v11', JSON.stringify(scenarioNames)); localStorage.setItem('baseSlot_v11', baselineSlot); updateScenarioCards(); calculate(); }
+    function setBaseline(s) { baselineSlot = (baselineSlot === s) ? null : s; localStorage.setItem('baseSlot_v11', baselineSlot); updateScenarioCards(); calculate(); }
+    function updateScenarioNames() { ['A', 'B', 'C', 'D'].forEach(s => { const el = document.getElementById(`name-${s}`); if (el) scenarioNames[s] = el.value; }); localStorage.setItem('scenNames_v11', JSON.stringify(scenarioNames)); updateScenarioCards(); }
 
     function addRow(t, yO, vO, rO) {
         let c, yr;
@@ -454,14 +466,16 @@
         let content = `<div style="font-size:10px; font-weight:bold; color:#cbd5e1; width:25px;">Yr</div><input type="number" class="dyn-${t=== 'rebalance' ? 'reb' : (t==='return'?'ret':'evt')}-yr" value="${yr}" style="width:50px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" oninput="calculate()">`;
         
         if (t === 'rebalance') {
-            const s = rO ? rO.s * 100 : 60;
-            const b = rO ? rO.b * 100 : 30;
+            const s = rO ? rO.s * 100 : 50;
+            const b = rO ? rO.b * 100 : 20;
+            const tp = rO ? (rO.t || 0.2) * 100 : 20;
             const csh = rO ? rO.c * 100 : 10;
             content += `
-                <div style="flex-grow:1; display:flex; gap:4px; margin-left:5px;">
-                    <div><span class="mini-label">Stk%</span><input type="number" class="dyn-reb-s" value="${s}" style="width:35px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" oninput="calculate()"></div>
-                    <div><span class="mini-label">Bnd%</span><input type="number" class="dyn-reb-b" value="${b}" style="width:35px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" oninput="calculate()"></div>
-                    <div><span class="mini-label">Csh%</span><input type="number" class="dyn-reb-c" value="${csh}" style="width:35px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" oninput="calculate()"></div>
+                <div style="flex-grow:1; display:flex; gap:8px; margin-left:10px; align-items:center;">
+                    <div style="display:flex; align-items:center;"><span class="inline-label">Stk%</span><input type="number" class="dyn-reb-s" value="${s}" style="width:35px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" oninput="calculate()"></div>
+                    <div style="display:flex; align-items:center;"><span class="inline-label">Bnd%</span><input type="number" class="dyn-reb-b" value="${b}" style="width:35px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" oninput="calculate()"></div>
+                    <div style="display:flex; align-items:center;"><span class="inline-label">Tip%</span><input type="number" class="dyn-reb-t" value="${tp}" style="width:35px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" oninput="calculate()"></div>
+                    <div style="display:flex; align-items:center;"><span class="inline-label">Csh%</span><input type="number" class="dyn-reb-c" value="${csh}" style="width:35px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" oninput="calculate()"></div>
                 </div>`;
         } else {
             content += `
