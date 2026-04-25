@@ -76,7 +76,7 @@
         .chart-container { background: white; padding: 25px; border-radius: 16px; border: 1px solid #e2e8f0; height: 650px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
         .table-container { background: white; border-radius: 16px; border: 1px solid #e2e8f0; overflow: auto; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
         
-        table { width: 100%; border-collapse: collapse; min-width: 1500px; }
+        table { width: 100%; border-collapse: collapse; min-width: 1600px; }
         
         th { 
             background: #334155 !important; color: #fff; padding: 14px 12px; font-size: 11px; 
@@ -140,7 +140,9 @@
             <div id="sect-fundamentals" class="section-content collapsed">
                 <div class="input-grid-5">
                     <div class="input-group"><label>Start Year</label><input type="number" id="startYear" value="2028" oninput="calculate()"></div>
-                    <div class="input-group"><label>Stocks $</label><input type="text" id="startStocks" value="5,000,000" oninput="formatCurrencyInput(this)"></div>
+                    <div class="input-group"><label>Stocks (Pre-Tax) $</label><input type="text" id="startStocks" value="4,000,000" oninput="formatCurrencyInput(this)"></div>
+                    <div class="input-group"><label>Roth (Tax-Free) $</label><input type="text" id="startRoth" value="1,000,000" oninput="formatCurrencyInput(this)"></div>
+                    <div class="input-group"><label>Roth Grwth % (Static)</label><input type="number" id="rothGrowth" value="7.0" step="0.1" oninput="calculate()"></div>
                     <div class="input-group"><label>Bonds $</label><input type="text" id="startBonds" value="2,000,000" oninput="formatCurrencyInput(this)"></div>
                     <div class="input-group"><label>TIPS $</label><input type="text" id="startTips" value="2,000,000" oninput="formatCurrencyInput(this)"></div>
                     <div class="input-group"><label>Cash $</label><input type="text" id="startCash" value="1,000,000" oninput="formatCurrencyInput(this)"></div>
@@ -195,10 +197,9 @@
 </div>
 
 <script>
-    // Bumping storage version to clear old incompatible static inputs
-    let scenarios = JSON.parse(localStorage.getItem('scenData_v13')) || { A: null, B: null, C: null, D: null };
-    let scenarioNames = JSON.parse(localStorage.getItem('scenNames_v13')) || { A: '', B: '', C: '', D: '' };
-    let baselineSlot = localStorage.getItem('baseSlot_v13');
+    let scenarios = JSON.parse(localStorage.getItem('scenData_v14')) || { A: null, B: null, C: null, D: null };
+    let scenarioNames = JSON.parse(localStorage.getItem('scenNames_v14')) || { A: '', B: '', C: '', D: '' };
+    let baselineSlot = localStorage.getItem('baseSlot_v14');
     
     if (baselineSlot === "null" || baselineSlot === null) baselineSlot = null;
 
@@ -251,13 +252,15 @@
         const bEl = row.querySelector('.dyn-reb-b');
         const tEl = row.querySelector('.dyn-reb-t');
         const cEl = row.querySelector('.dyn-reb-c');
+        const rEl = row.querySelector('.dyn-reb-r');
 
         let s = Number(sEl.value);
         let b = Number(bEl.value);
         let t = Number(tEl.value);
         let c = Number(cEl.value);
+        let r = Number(rEl.value);
 
-        let total = s + b + t + c;
+        let total = s + b + t + c + r;
         let diff = 100 - total;
 
         if (diff !== 0) {
@@ -265,6 +268,7 @@
                 { type: 'c', el: cEl, get val() { return Number(this.el.value); } },
                 { type: 't', el: tEl, get val() { return Number(this.el.value); } },
                 { type: 'b', el: bEl, get val() { return Number(this.el.value); } },
+                { type: 'r', el: rEl, get val() { return Number(this.el.value); } },
                 { type: 's', el: sEl, get val() { return Number(this.el.value); } }
             ];
 
@@ -294,8 +298,9 @@
         };
         const inp = { 
             startYear: v('startYear'), 
-            startStocks: v('startStocks'), startBonds: v('startBonds'), 
-            startTips: v('startTips'), startCash: v('startCash'), cashYield: v('cashYield')/100, 
+            startStocks: v('startStocks'), startRoth: v('startRoth'), rothGrowth: v('rothGrowth')/100,
+            startBonds: v('startBonds'), startTips: v('startTips'), 
+            startCash: v('startCash'), cashYield: v('cashYield')/100, 
             startHouse: v('startHouse'), reApprec: v('reApprec')/100, 
             buckets: [], returns: [], events: [], rebalances: [] 
         };
@@ -323,7 +328,8 @@
                 s: Number(document.querySelectorAll('.dyn-reb-s')[idx].value)/100,
                 b: Number(document.querySelectorAll('.dyn-reb-b')[idx].value)/100,
                 t: Number(document.querySelectorAll('.dyn-reb-t')[idx].value)/100,
-                c: Number(document.querySelectorAll('.dyn-reb-c')[idx].value)/100
+                c: Number(document.querySelectorAll('.dyn-reb-c')[idx].value)/100,
+                r: Number(document.querySelectorAll('.dyn-reb-r')[idx].value)/100
             });
         });
         return inp;
@@ -332,7 +338,7 @@
     function run(inp) {
         if (!inp) return null;
         let res = [];
-        let st = inp.startStocks, bd = inp.startBonds, tp = inp.startTips, csh = inp.startCash, hse = inp.startHouse;
+        let st = inp.startStocks, rth = inp.startRoth, bd = inp.startBonds, tp = inp.startTips, csh = inp.startCash, hse = inp.startHouse;
         
         let cumInflation = 1.0; 
 
@@ -342,10 +348,11 @@
             
             const reb = inp.rebalances.find(r => r.yr === yr);
             if (reb) {
-                let totalLiq = st + bd + tp + csh;
-                let sumPct = reb.s + reb.b + reb.t + reb.c;
+                let totalLiq = st + rth + bd + tp + csh;
+                let sumPct = reb.s + reb.r + reb.b + reb.t + reb.c;
                 if (sumPct > 0) {
                     st = totalLiq * (reb.s / sumPct);
+                    rth = totalLiq * (reb.r / sumPct);
                     bd = totalLiq * (reb.b / sumPct);
                     tp = totalLiq * (reb.t / sumPct);
                     csh = totalLiq * (reb.c / sumPct);
@@ -356,42 +363,56 @@
             const evt = inp.events.find(e => e.yr === yr);
             const eventThisYear = evt?.val || 0;
             
-            // CORRECTED: Spending & Income in Today's Dollars multiplied by Cumulative Inflation
-            const netSpendingNeed = (b.spend * cumInflation) + eventThisYear;
+            const netNeed = (b.spend * cumInflation) + eventThisYear;
             const taxableIncome = b.income * cumInflation;
             
-            // Calculate total gross income needed: netSpendingNeed = totalIncome * (1 - taxRate)
-            const totalIncomeNeeded = netSpendingNeed / (1 - Math.min(0.95, b.tax));
-            const requiredWithdrawal = Math.max(0, totalIncomeNeeded - taxableIncome);
-            
-            // Taxes are calculated on total income (withdrawal + other income)
-            const totalActualIncome = requiredWithdrawal + taxableIncome;
-            const totalTaxes = totalActualIncome * b.tax;
+            const afterTaxIncome = taxableIncome * (1 - b.tax);
+            let remainingNet = Math.max(0, netNeed - afterTaxIncome);
 
-            let remainingWth = requiredWithdrawal;
-            
-            let drawCash = Math.min(csh, remainingWth);
-            csh -= drawCash; remainingWth -= drawCash;
-            
-            let drawTips = Math.min(tp, remainingWth);
-            tp -= drawTips; remainingWth -= drawTips;
+            let actualGrossWth = 0; 
+            let actualTaxes = taxableIncome * b.tax; 
 
-            let drawBonds = Math.min(bd, remainingWth);
-            bd -= drawBonds; remainingWth -= drawBonds;
-            
-            let drawStocks = Math.min(st, remainingWth);
-            st -= drawStocks; remainingWth -= drawStocks;
+            // Helper to handle tax gross-up for taxable accounts
+            function drawTaxable(bucketVal, netNeeded) {
+                if (netNeeded <= 0 || bucketVal <= 0) return { drawnGross: 0, netYield: 0, remainingBucket: bucketVal, taxes: 0 };
+                let grossNeeded = netNeeded / (1 - b.tax);
+                let drawGross = Math.min(bucketVal, grossNeeded);
+                let netYield = drawGross * (1 - b.tax);
+                let taxesGenerated = drawGross * b.tax;
+                return { drawnGross: drawGross, netYield: netYield, taxes: taxesGenerated, remainingBucket: bucketVal - drawGross };
+            }
 
-            let actualWth = requiredWithdrawal - remainingWth;
+            let dRes;
+            dRes = drawTaxable(csh, remainingNet);
+            csh = dRes.remainingBucket; remainingNet -= dRes.netYield; actualGrossWth += dRes.drawnGross; actualTaxes += dRes.taxes;
+
+            dRes = drawTaxable(tp, remainingNet);
+            tp = dRes.remainingBucket; remainingNet -= dRes.netYield; actualGrossWth += dRes.drawnGross; actualTaxes += dRes.taxes;
+
+            dRes = drawTaxable(bd, remainingNet);
+            bd = dRes.remainingBucket; remainingNet -= dRes.netYield; actualGrossWth += dRes.drawnGross; actualTaxes += dRes.taxes;
+
+            dRes = drawTaxable(st, remainingNet);
+            st = dRes.remainingBucket; remainingNet -= dRes.netYield; actualGrossWth += dRes.drawnGross; actualTaxes += dRes.taxes;
+
+            // Roth logic - Tax Free (No Gross Up)
+            if (remainingNet > 0 && rth > 0) {
+                let drawRoth = Math.min(rth, remainingNet);
+                rth -= drawRoth;
+                remainingNet -= drawRoth;
+                actualGrossWth += drawRoth; 
+                // Notice: NO taxes added to actualTaxes
+            }
 
             let sg = cRet?.val ?? b.stockGrowth;
             st *= (1 + sg);
+            rth *= (1 + inp.rothGrowth); 
             bd *= (1 + b.bondYield);
             tp *= (1 + b.tipsYield);
-            csh *= (1 + inp.cashYield); // Static
-            hse *= (1 + inp.reApprec); // Static
+            csh *= (1 + inp.cashYield); 
+            hse *= (1 + inp.reApprec); 
 
-            let endTotalLiq = st + bd + tp + csh;
+            let endTotalLiq = st + rth + bd + tp + csh;
 
             res.push({ 
                 yr, 
@@ -399,20 +420,20 @@
                 hasCustomReturn: !!cRet,
                 hasCashEvent: !!evt,
                 taxableIncome: taxableIncome, 
-                withdrawal: actualWth, 
-                taxes: totalTaxes, 
-                netSpendable: netSpendingNeed, 
+                withdrawal: actualGrossWth, 
+                taxes: actualTaxes, 
+                netSpendable: netNeed, 
                 endStocks: st,
+                endRoth: rth,
                 endBonds: bd,
                 endTips: tp,
                 endCash: csh,
                 endLiq: endTotalLiq, 
                 house: hse, 
                 total: endTotalLiq + hse,
-                cumInf: cumInflation // Save for Real Power calculation
+                cumInf: cumInflation 
             });
             
-            // Compoud Inflation for next year's loop
             cumInflation *= (1 + b.inflation);
         }
         return res;
@@ -431,7 +452,7 @@
         if (isCompare) {
             h.innerHTML = `<th>Year</th><th>Wthdrwl</th><th class="header-live">Liq (Live)</th><th class="header-base">Liq (Base)</th><th class="header-delta">LIQ DELTA</th><th class="header-house">House (Live)</th><th class="header-base">House (Base)</th><th class="header-delta">HOUSE DELTA</th><th>Total NW</th><th class="col-power">Real Power</th>`;
         } else {
-            h.innerHTML = `<th>Year</th><th class="col-withdrawal">Withdrawal</th><th class="col-taxes">Taxes</th><th>Net Spendable</th><th>End Cash</th><th>End TIPS</th><th>End Bonds</th><th>End Stocks</th><th>Total Liquid</th><th>Total Net Worth</th><th class="col-power">Purchasing Power</th>`;
+            h.innerHTML = `<th>Year</th><th class="col-withdrawal">Gross Wthdrwl</th><th class="col-taxes">Total Taxes</th><th>Net Spendable</th><th>End Cash</th><th>End TIPS</th><th>End Bonds</th><th>End Stocks</th><th style="color:#ec4899">End Roth</th><th>Total Liquid</th><th>Total Net Worth</th><th class="col-power">Purchasing Power</th>`;
         }
     }
 
@@ -452,7 +473,7 @@
                 const dH = r.house - base[i].house;
                 tr.innerHTML = `${yearStr}<td>${fmt.format(r.withdrawal)}</td><td style="color:var(--primary); font-weight:bold">${fmt.format(r.endLiq)}</td><td class="base-col">${fmt.format(base[i].endLiq)}</td><td class="delta-col ${dL >= 0 ? 'delta-pos' : 'delta-neg'}">${(dL>=0?'+':'')+fmt.format(dL)}</td><td style="color:#fb923c">${fmt.format(r.house)}</td><td class="base-col">${fmt.format(base[i].house)}</td><td class="delta-col ${dH >= 0 ? 'delta-pos' : 'delta-neg'}">${(dH>=0?'+':'')+fmt.format(dH)}</td><td>${fmt.format(r.total)}</td><td class="col-power">${fmt.format(r.total / r.cumInf)}</td>`;
             } else {
-                tr.innerHTML = `${yearStr}<td class="col-withdrawal">${fmt.format(r.withdrawal)}</td><td class="col-taxes">${fmt.format(r.taxes)}</td><td>${fmt.format(r.netSpendable)}</td><td style="color:#94a3b8">${fmt.format(r.endCash)}</td><td style="color:#f59e0b">${fmt.format(r.endTips)}</td><td style="color:#a855f7">${fmt.format(r.endBonds)}</td><td style="color:#3b82f6">${fmt.format(r.endStocks)}</td><td style="font-weight:bold">${fmt.format(r.endLiq)}</td><td>${fmt.format(r.total)}</td><td class="col-power">${fmt.format(r.total / r.cumInf)}</td>`;
+                tr.innerHTML = `${yearStr}<td class="col-withdrawal">${fmt.format(r.withdrawal)}</td><td class="col-taxes">${fmt.format(r.taxes)}</td><td>${fmt.format(r.netSpendable)}</td><td style="color:#94a3b8">${fmt.format(r.endCash)}</td><td style="color:#f59e0b">${fmt.format(r.endTips)}</td><td style="color:#a855f7">${fmt.format(r.endBonds)}</td><td style="color:#3b82f6">${fmt.format(r.endStocks)}</td><td style="color:#ec4899; font-weight:bold">${fmt.format(r.endRoth)}</td><td style="font-weight:bold">${fmt.format(r.endLiq)}</td><td>${fmt.format(r.total)}</td><td class="col-power">${fmt.format(r.total / r.cumInf)}</td>`;
             }
             tbody.appendChild(tr);
         });
@@ -473,7 +494,8 @@
             { label: 'Cash', data: live.map(r => r.endCash), backgroundColor: 'rgba(148, 163, 184, 0.8)', stack: 'A' },
             { label: 'TIPS', data: live.map(r => r.endTips), backgroundColor: 'rgba(245, 158, 11, 0.8)', stack: 'A' },
             { label: 'Bonds', data: live.map(r => r.endBonds), backgroundColor: 'rgba(168, 85, 247, 0.8)', stack: 'A' },
-            { label: 'Stocks', data: live.map(r => r.endStocks), backgroundColor: 'rgba(59, 130, 246, 0.8)', stack: 'A' },
+            { label: 'Stocks (Pre-Tax)', data: live.map(r => r.endStocks), backgroundColor: 'rgba(59, 130, 246, 0.8)', stack: 'A' },
+            { label: 'Roth (Tax-Free)', data: live.map(r => r.endRoth), backgroundColor: 'rgba(236, 72, 153, 0.8)', stack: 'A' },
             { label: 'Real Estate', data: live.map(r => r.house), backgroundColor: 'rgba(16, 185, 129, 0.8)', stack: 'A' }
         ];
         if (base) ds.push({ label: 'Baseline Scenario', data: base.map(r => r.total), borderColor: '#94a3b8', borderDash: [6, 4], type: 'line', fill: false, borderWidth: 3 });
@@ -506,12 +528,14 @@
         }
     }
 
-    function saveSlot(s) { scenarios[s] = getInputs(); if (!scenarioNames[s]) scenarioNames[s] = `Scenario ${s}`; localStorage.setItem('scenData_v13', JSON.stringify(scenarios)); localStorage.setItem('scenNames_v13', JSON.stringify(scenarioNames)); updateScenarioCards(); calculate(); }
+    function saveSlot(s) { scenarios[s] = getInputs(); if (!scenarioNames[s]) scenarioNames[s] = `Scenario ${s}`; localStorage.setItem('scenData_v14', JSON.stringify(scenarios)); localStorage.setItem('scenNames_v14', JSON.stringify(scenarioNames)); updateScenarioCards(); calculate(); }
     
     function loadSlot(s) { 
         const d = scenarios[s]; if (!d) return;
         document.getElementById('startYear').value = d.startYear;
         document.getElementById('startStocks').value = d.startStocks.toLocaleString();
+        document.getElementById('startRoth').value = (d.startRoth || 0).toLocaleString();
+        document.getElementById('rothGrowth').value = ((d.rothGrowth || 0.07)*100).toFixed(1);
         document.getElementById('startBonds').value = d.startBonds.toLocaleString();
         document.getElementById('startTips').value = d.startTips.toLocaleString();
         document.getElementById('startCash').value = d.startCash.toLocaleString();
@@ -538,9 +562,9 @@
         if(fundContent.classList.contains('collapsed')) { toggleSection('fundamentals'); }
     }
 
-    function clearSlot(s) { scenarios[s] = null; scenarioNames[s] = ''; if (baselineSlot === s) baselineSlot = null; localStorage.setItem('scenData_v13', JSON.stringify(scenarios)); localStorage.setItem('scenNames_v13', JSON.stringify(scenarioNames)); localStorage.setItem('baseSlot_v13', baselineSlot); updateScenarioCards(); calculate(); }
-    function setBaseline(s) { baselineSlot = (baselineSlot === s) ? null : s; localStorage.setItem('baseSlot_v13', baselineSlot); updateScenarioCards(); calculate(); }
-    function updateScenarioNames() { ['A', 'B', 'C', 'D'].forEach(s => { const el = document.getElementById(`name-${s}`); if (el) scenarioNames[s] = el.value; }); localStorage.setItem('scenNames_v13', JSON.stringify(scenarioNames)); updateScenarioCards(); }
+    function clearSlot(s) { scenarios[s] = null; scenarioNames[s] = ''; if (baselineSlot === s) baselineSlot = null; localStorage.setItem('scenData_v14', JSON.stringify(scenarios)); localStorage.setItem('scenNames_v14', JSON.stringify(scenarioNames)); localStorage.setItem('baseSlot_v14', baselineSlot); updateScenarioCards(); calculate(); }
+    function setBaseline(s) { baselineSlot = (baselineSlot === s) ? null : s; localStorage.setItem('baseSlot_v14', baselineSlot); updateScenarioCards(); calculate(); }
+    function updateScenarioNames() { ['A', 'B', 'C', 'D'].forEach(s => { const el = document.getElementById(`name-${s}`); if (el) scenarioNames[s] = el.value; }); localStorage.setItem('scenNames_v14', JSON.stringify(scenarioNames)); updateScenarioCards(); }
 
     function addRow(t, yO, vO, rO) {
         let c, yr;
@@ -555,16 +579,18 @@
         let content = `<div style="font-size:10px; font-weight:bold; color:#cbd5e1; width:25px;">Yr</div><input type="number" class="dyn-${t=== 'rebalance' ? 'reb' : (t==='return'?'ret':'evt')}-yr" value="${yr}" style="width:50px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" oninput="calculate()">`;
         
         if (t === 'rebalance') {
-            const s = rO ? rO.s * 100 : 50;
+            const s = rO ? rO.s * 100 : 40;
+            const rth = rO ? (rO.r || 0) * 100 : 10;
             const b = rO ? rO.b * 100 : 20;
-            const tp = rO ? (rO.t || 0.2) * 100 : 20;
+            const tp = rO ? (rO.t || 0) * 100 : 20;
             const csh = rO ? rO.c * 100 : 10;
             content += `
-                <div style="flex-grow:1; display:grid; grid-template-columns: 1fr 1fr; gap:6px 12px; margin-left:10px;">
-                    <div style="display:flex; justify-content: space-between; align-items:center;"><span class="inline-label">Stk%</span><input type="number" class="dyn-reb-s" value="${s}" style="width:45px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" onchange="adjustRebalance(this, 's')"></div>
-                    <div style="display:flex; justify-content: space-between; align-items:center;"><span class="inline-label">Bnd%</span><input type="number" class="dyn-reb-b" value="${b}" style="width:45px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" onchange="adjustRebalance(this, 'b')"></div>
-                    <div style="display:flex; justify-content: space-between; align-items:center;"><span class="inline-label">Tip%</span><input type="number" class="dyn-reb-t" value="${tp}" style="width:45px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" onchange="adjustRebalance(this, 't')"></div>
-                    <div style="display:flex; justify-content: space-between; align-items:center;"><span class="inline-label">Csh%</span><input type="number" class="dyn-reb-c" value="${csh}" style="width:45px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" onchange="adjustRebalance(this, 'c')"></div>
+                <div style="flex-grow:1; display:flex; flex-wrap:wrap; gap:6px 12px; margin-left:10px;">
+                    <div style="display:flex; justify-content: space-between; align-items:center;"><span class="inline-label">Stk%</span><input type="number" class="dyn-reb-s" value="${s}" style="width:40px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" onchange="adjustRebalance(this, 's')"></div>
+                    <div style="display:flex; justify-content: space-between; align-items:center;"><span class="inline-label">Rth%</span><input type="number" class="dyn-reb-r" value="${rth}" style="width:40px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" onchange="adjustRebalance(this, 'r')"></div>
+                    <div style="display:flex; justify-content: space-between; align-items:center;"><span class="inline-label">Bnd%</span><input type="number" class="dyn-reb-b" value="${b}" style="width:40px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" onchange="adjustRebalance(this, 'b')"></div>
+                    <div style="display:flex; justify-content: space-between; align-items:center;"><span class="inline-label">Tip%</span><input type="number" class="dyn-reb-t" value="${tp}" style="width:40px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" onchange="adjustRebalance(this, 't')"></div>
+                    <div style="display:flex; justify-content: space-between; align-items:center;"><span class="inline-label">Csh%</span><input type="number" class="dyn-reb-c" value="${csh}" style="width:40px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" onchange="adjustRebalance(this, 'c')"></div>
                 </div>`;
         } else {
             content += `
