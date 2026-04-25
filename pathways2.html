@@ -716,42 +716,61 @@
             let y1Spend = getSpend(0);
             let y1Inc = getInc(0);
 
-            // Path 1
+            // Path 1 details variables
             let p1NetInc = y1Inc * (1 - tax1);
             let p1Exp = y1Spend + waCarry;
             let p1Short = p1Exp - p1NetInc;
             let p1GrossW = p1Short > 0 ? p1Short / (1 - tax1) : p1Short;
             let p1Estate = fvWa + p1Liq;
             let p1Tax = p1Estate > estateExempt ? (p1Estate - estateExempt) * estateTaxRate : 0;
-            p1CumTax += p1Tax; 
-            results.push({ name: "Path 1: Stay in WA", liq: p1Liq, re: fvWa, tax: -p1Tax, net: p1Estate - p1Tax, details: `...`});
+            p1CumTax += p1Tax;
 
-            // Path 2
+            // Path 2 details variables
+            let p2TaxR = Math.min(tax1 + caStateTax, 0.99);
+            let p2NetInc = y1Inc * (1 - p2TaxR);
+            let p2Exp = y1Spend + caMortgage + caStaticBase + waCarry - netRentWA_Base;
+            let p2Short = p2Exp - p2NetInc;
+            let p2GrossW = p2Short > 0 ? p2Short / (1 - p2TaxR) : p2Short;
             p2CumTax += caEntryTax; 
             let p2Re = fvWa + fvCaPath2;
-            results.push({ name: "Path 2: Immediate CA", liq: p2Liq, re: p2Re, tax: 0, net: p2Liq + p2Re, details: `...`});
 
-            // Path 3
+            // Path 3 details variables
+            let p3TaxR = Math.min(tax1, 0.99);
+            let p3NetInc = y1Inc * (1 - p3TaxR);
+            let p3Exp = y1Spend + flMortgage + flStaticBase + waCarry - netRentWA_Base;
+            let p3Short = p3Exp - p3NetInc;
+            let p3GrossW = p3Short > 0 ? p3Short / (1 - p3TaxR) : p3Short;
             let p3Re = fvWa + fvFl;
-            results.push({ name: "Path 3: Immediate FL", liq: p3Liq, re: p3Re, tax: 0, net: p3Liq + p3Re, details: `...`});
 
-            // Path 4
+            // Path 4 details variables
+            let p4TaxR = Math.min(tax1, 0.99); // Phase 1 WA
+            let p4NetInc = y1Inc * (1 - p4TaxR);
+            let p4Exp = y1Spend + caMortgage + caStaticBase + waCarry + waWinterRentLoss - netRentCA_Base;
+            let p4Short = p4Exp - p4NetInc;
+            let p4GrossW = p4Short > 0 ? p4Short / (1 - p4TaxR) : p4Short;
             let p4Re = fvWa + fvCaPath4;
-            results.push({ name: "Path 4: Delayed CA", liq: p4Liq, re: p4Re, tax: 0, net: p4Liq + p4Re, details: `...`});
 
-            // Path 5
+            // Path 5 details variables
+            let p5TaxR = Math.min(tax1, 0.99); // FL residency
+            let p5NetInc = y1Inc * (1 - p5TaxR);
+            let p5Exp = y1Spend + flMortgage + caMortgage + flStaticBase + caStaticBase + waCarry - netRentWA_Base - netRentCA_Base;
+            let p5Short = p5Exp - p5NetInc;
+            let p5GrossW = p5Short > 0 ? p5Short / (1 - p5TaxR) : p5Short;
             let p5Re = fvWa + fvFl + fvCaPath5;
-            results.push({ name: "Path 5: Hybrid FL/CA", liq: p5Liq, re: p5Re, tax: 0, net: p5Liq + p5Re, details: `...`});
 
-            // Path 6 Logic
+            // Path 6 details variables
             let p6TaxR = Math.min(tax1, 0.99); 
             let p6NetInc = y1Inc * (1 - p6TaxR);
             let p6ExpYear1 = y1Spend + flMortgageP6 + flStaticBaseP6 + waCarry - netRentFL_BaseP6;
             let p6Short = p6ExpYear1 - p6NetInc;
             let p6GrossW = p6Short > 0 ? p6Short / (1 - p6TaxR) : p6Short;
-
             let p6Re = fvWa + fvFlP6;
-            results[0].details = `
+
+
+            // Push objects to results array with fully formatted detail strings
+            results.push({ 
+                name: "Path 1: Stay in WA", liq: p1Liq, re: fvWa, tax: -p1Tax, net: p1Estate - p1Tax, 
+                details: `
                     <div class="details-overview"><strong>Overview:</strong> Remain in our current Washington primary residence for the duration of retirement. This path requires the lowest initial capital output but exposes our final legacy to the aggressive WA state estate tax.</div>
                     <div><h4>Liquid Capital & Compounding Mechanics</h4><p>Our starting capital is <strong>${formatCurrency(startLiq)}</strong>. Every year, the simulation offsets our living expenses with any active income, withdraws the net shortfall from our portfolio, and then compounds the remaining balance by our assumed <strong>${formatPct(r)}</strong> market return.</p>
                         <h5>Year 1 Detailed Calculation Formulas:</h5>
@@ -768,8 +787,12 @@
                         <li><strong>Total Gross Estate in ${endYear}:</strong> ${formatCurrency(p1Estate)} (Liquid Assets + Real Estate).</li></ul>
                         <div class="math-box">(${formatCurrency(p1Estate)} Gross Estate - ${formatCurrency(estateExempt)} Exemption) × ${formatPct(estateTaxRate)} Tax Rate<br>= <strong>Total Tax Forfeited to WA State: ${formatCurrency(p1Tax)}</strong></div></div>
                     ${buildHistoryTable(p1Hist)}
-            `;
-            results[1].details = `
+                `
+            });
+
+            results.push({ 
+                name: "Path 2: Immediate CA", liq: p2Liq, re: p2Re, tax: 0, net: p2Liq + p2Re, 
+                details: `
                     <div class="details-overview"><strong>Overview:</strong> Relocate permanently to California early in retirement. Establishing legal domicile in CA shields our entire legacy from WA estate taxes, but incurs a higher ongoing lifestyle cost and a significant upfront tax hit if we liquidate stock assets to move.</div>
                     <div><h4>Liquid Capital & Compounding Mechanics</h4><p>Liquidating assets to fund the move potentially subjects our portfolio to a <strong>${formatCurrency(caEntryTax)} Capital Gains Tax (${formatPct(liquidationTaxRate)})</strong>. Because of this initial drain, our compounding engine is reduced from Day 1.</p>
                         <h5>Year 1 Detailed Calculation Formulas:</h5>
@@ -782,8 +805,12 @@
                         </div></div>
                     <div><h4>Real Estate & Estate Shielding</h4><ul><li><strong>WA Home Growth (${years} years):</strong> ${formatCurrency(fvWa)}</li><li><strong>CA Home Growth (${endYear - caPurchaseYrPath2} years):</strong> ${formatCurrency(fvCaPath2)}.</li><li><strong>Total Tax Forfeited at Death:</strong> $0.</li></ul></div>
                     ${buildHistoryTable(p2Hist)}
-            `;
-            results[2].details = `
+                `
+            });
+
+            results.push({ 
+                name: "Path 3: Immediate FL", liq: p3Liq, re: p3Re, tax: 0, net: p3Liq + p3Re, 
+                details: `
                     <div class="details-overview"><strong>Overview:</strong> Relocate permanently to Florida early in retirement. This highly efficient path establishes domicile in a tax haven, protecting capital compounding while avoiding WA taxes entirely.</div>
                     <div><h4>Liquid Capital & Compounding Mechanics</h4><p>Our starting capital is only reduced by our FL down payment (${formatCurrency(flDpAmt)}). With Florida's 0% state income tax, our "gross-up" to pull cash is perfectly efficient.</p>
                         <h5>Year 1 Detailed Calculation Formulas:</h5>
@@ -796,8 +823,12 @@
                         </div></div>
                     <div><h4>Real Estate & Estate Shielding</h4><ul><li><strong>WA Home Growth (${years} years):</strong> ${formatCurrency(fvWa)}</li><li><strong>FL Home Growth (${endYear - flPurchaseYr} years):</strong> ${formatCurrency(fvFl)}.</li><li><strong>Total Tax Forfeited at Death:</strong> $0.</li></ul></div>
                     ${buildHistoryTable(p3Hist)}
-            `;
-            results[3].details = `
+                `
+            });
+
+            results.push({ 
+                name: "Path 4: Delayed CA", liq: p4Liq, re: p4Re, tax: 0, net: p4Liq + p4Re, 
+                details: `
                     <div class="details-overview"><strong>Overview:</strong> Purchase a CA property early, but delay our official move for ${delayedCaYears} years.</div>
                     <div><h4>Liquid Capital Mechanics</h4><p>By waiting to legally change our domicile, we avoid the initial ${formatCurrency(caEntryTax)} capital gains tax hit on our portfolio.</p>
                         <h5>Phase 1: WA Domicile (Years 1-${delayedCaYears}) - Year 1 Breakdown:</h5>
@@ -811,8 +842,12 @@
                         <h5>Phase 2: CA Domicile (Years ${delayedCaYears + 1}+):</h5><p>We officially move to CA. We lose CA rental income, and effective tax jumps by <strong>${formatPct(caStateTax)}</strong> CA premium.</p></div>
                     <div><h4>Real Estate & Estate Shielding</h4><ul><li><strong>WA Home Growth (${years} years):</strong> ${formatCurrency(fvWa)}</li><li><strong>CA Home Growth (${endYear - caPurchaseYrPath4} years):</strong> ${formatCurrency(fvCaPath4)}.</li><li><strong>Total Tax Forfeited at Death:</strong> $0.</li></ul></div>
                     ${buildHistoryTable(p4Hist)}
-            `;
-            results[4].details = `
+                `
+            });
+
+            results.push({ 
+                name: "Path 5: Hybrid FL/CA", liq: p5Liq, re: p5Re, tax: 0, net: p5Liq + p5Re, 
+                details: `
                     <div class="details-overview"><strong>Overview:</strong> Establish tax domicile in FL while owning properties in WA, FL, and CA to subsidize a three-home lifestyle.</div>
                     <div><h4>Liquid Capital Mechanics</h4><p>We leverage three properties. We pay FL and CA Down Payments from liquid assets, subsidized by two streams of LTR income.</p>
                         <h5>Year 1 Detailed Calculation Formulas:</h5>
@@ -825,7 +860,8 @@
                         </div></div>
                     <div><h4>Real Estate & Estate Shielding</h4><ul><li><strong>WA Home Growth:</strong> ${formatCurrency(fvWa)}</li><li><strong>FL Home Growth:</strong> ${formatCurrency(fvFl)}</li><li><strong>CA Home Growth:</strong> ${formatCurrency(fvCaPath5)}</li><li><strong>Tax Forfeited:</strong> $0.</li></ul></div>
                     ${buildHistoryTable(p5Hist)}
-            `;
+                `
+            });
             
             results.push({
                 name: "Path 6: Delayed FL", liq: p6Liq, re: p6Re, tax: 0, net: p6Liq + p6Re,
@@ -835,7 +871,7 @@
                     </div>
                     <div>
                         <h4>Liquid Capital Mechanics (The Tax Arbitrage Phase)</h4>
-                        <p>Unlike moving to California, delaying our move to Florida is purely an arbitrage play. We avoid liquidating major assets while still domiciled in WA (saving the 7% WA Capital Gains tax). We pull only the ${formatCurrency(flDpAmtP6)} down payment, rent the FL house out to subsidize costs, and wait to liquidate the rest of our portfolio tax-free once we establish FL domicile.</p>
+                        <p>Unlike moving to California, delaying our move to Florida is purely an arbitrage play. We avoid liquidating major assets while still domiciled in WA (saving the WA Capital Gains tax). We pull only the ${formatCurrency(flDpAmtP6)} down payment, rent the FL house out to subsidize costs, and wait to liquidate the rest of our portfolio tax-free once we establish FL domicile.</p>
                         
                         <h5>Phase 1: WA Domicile (Years 1-${delayedFlYears}) - Year 1 Breakdown:</h5>
                         <div class="math-box">
