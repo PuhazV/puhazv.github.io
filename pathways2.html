@@ -14,7 +14,6 @@
         
         .inputs-section { background: #0f172a; padding: 0; }
         
-        /* ADDED: align-items: start; stops the closed boxes from stretching to match open ones */
         .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding-right: 10px; align-items: start; }
         
         .input-group-box { background: #1e293b; padding: 18px; border-radius: 8px; border: 1px solid #334155; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: all 0.3s ease; }
@@ -189,7 +188,7 @@
                 </div>
 
                 <div class="input-group-box">
-                    <h3>Mortgage Terms</h3>
+                    <h3>Mortgage & DP Terms</h3>
                     <div class="input-group">
                         <label>Mortgage Interest Rate (%)</label>
                         <input type="number" id="interestRate" value="6.5" step="0.1" oninput="calculate()">
@@ -199,66 +198,84 @@
                         <input type="number" id="caDownPaymentPct" value="20" step="1" oninput="calculate()">
                     </div>
                     <div class="input-group">
-                        <label>FL Down Payment (%)</label>
+                        <label>FL DP (Paths 3, 5) (%)</label>
                         <input type="number" id="flDownPaymentPct" value="20" step="1" oninput="calculate()">
+                    </div>
+                    <div class="input-group">
+                        <label>FL DP (Path 6) (%)</label>
+                        <input type="number" id="flDpPctP6" value="20" step="1" oninput="calculate()">
                     </div>
                 </div>
 
                 <div class="input-group-box">
                     <h3>Rental Income & Costs</h3>
                     <div class="input-group">
-                        <label>WA Monthly Rent ($)</label>
+                        <label>WA Rent ($/mo)</label>
                         <input type="text" id="waRent" value="6,500" oninput="formatCurrencyInput(this)">
                     </div>
                     <div class="input-group">
-                        <label>CA Monthly Rent ($)</label>
+                        <label>CA Rent ($/mo)</label>
                         <input type="text" id="caRent" value="6,500" oninput="formatCurrencyInput(this)">
+                    </div>
+                    <div class="input-group">
+                        <label>FL Rent (Path 6) ($/mo)</label>
+                        <input type="text" id="flRentP6" value="5,000" oninput="formatCurrencyInput(this)">
                     </div>
                     <div class="input-group">
                         <label>Property Mgmt Fee (%)</label>
                         <input type="number" id="mgmtFee" value="7" step="0.1" oninput="calculate()">
                     </div>
                     <div class="input-group">
-                        <label>CA Rent (Path 4) ($/mo)</label>
+                        <label>CA Winter Rent (P4) ($/mo)</label>
                         <input type="text" id="caWinterRentCost" value="6,500" oninput="formatCurrencyInput(this)">
                     </div>
                     <div class="input-group">
-                        <label>Months in CA (Path 4)</label>
+                        <label>Months in CA (P4)</label>
                         <input type="number" id="waWinterMonths" value="5" oninput="calculate()">
                     </div>
                 </div>
 
                 <div class="input-group-box" style="grid-column: 1 / -1;">
                     <h3>Real Estate Values & Appreciation</h3>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
-                        <div>
-                            <div class="input-group">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div style="display: flex; gap: 10px;">
+                            <div class="input-group" style="flex: 1;">
                                 <label>WA Home ($)</label>
                                 <input type="text" id="waHome" value="3,000,000" oninput="formatCurrencyInput(this)">
                             </div>
-                            <div class="input-group">
-                                <label>WA Apprec (%)</label>
+                            <div class="input-group" style="width: 100px;">
+                                <label>Apprec (%)</label>
                                 <input type="number" id="waApprec" value="6" step="0.1" oninput="calculate()">
                             </div>
                         </div>
-                        <div>
-                            <div class="input-group">
+                        <div style="display: flex; gap: 10px;">
+                            <div class="input-group" style="flex: 1;">
                                 <label>CA Home ($)</label>
                                 <input type="text" id="caHome" value="1,600,000" oninput="formatCurrencyInput(this)">
                             </div>
-                            <div class="input-group">
-                                <label>CA Apprec (%)</label>
+                            <div class="input-group" style="width: 100px;">
+                                <label>Apprec (%)</label>
                                 <input type="number" id="caApprec" value="6" step="0.1" oninput="calculate()">
                             </div>
                         </div>
-                        <div>
-                            <div class="input-group">
-                                <label>FL Home ($)</label>
+                        <div style="display: flex; gap: 10px;">
+                            <div class="input-group" style="flex: 1;">
+                                <label>FL Home (P3, P5) ($)</label>
                                 <input type="text" id="flHome" value="900,000" oninput="formatCurrencyInput(this)">
                             </div>
-                            <div class="input-group">
-                                <label>FL Apprec (%)</label>
+                            <div class="input-group" style="width: 100px;">
+                                <label>Apprec (%)</label>
                                 <input type="number" id="flApprec" value="4" step="0.1" oninput="calculate()">
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <div class="input-group" style="flex: 1;">
+                                <label>FL Home (P6) ($)</label>
+                                <input type="text" id="flHomeP6" value="1,200,000" oninput="formatCurrencyInput(this)">
+                            </div>
+                            <div class="input-group" style="width: 100px;">
+                                <label>Apprec (%)</label>
+                                <input type="number" id="flApprecP6" value="4" step="0.1" oninput="calculate()">
                             </div>
                         </div>
                     </div>
@@ -266,35 +283,45 @@
 
                 <div class="input-group-box" style="grid-column: 1 / -1;">
                     <h3>Timelines & Scenarios</h3>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px;">
                         <div>
                             <div class="input-group">
                                 <label>Projection End Year</label>
                                 <input type="number" id="endYear" value="2055" oninput="calculate()">
                             </div>
                             <div class="input-group">
-                                <label>Path 4: Years Delayed in WA</label>
+                                <label>P4: WA Delay (Yrs)</label>
                                 <input type="number" id="delayedCaYears" value="7" oninput="calculate()">
                             </div>
                         </div>
                         <div>
                             <div class="input-group">
-                                <label>Path 2: CA Purchase Year</label>
+                                <label>P2: CA Purchase Yr</label>
                                 <input type="number" id="caPurchaseYrPath2" value="2026" oninput="calculate()">
                             </div>
                             <div class="input-group">
-                                <label>Path 4: CA Purchase Year</label>
+                                <label>P4: CA Purchase Yr</label>
                                 <input type="number" id="caPurchaseYrPath4" value="2026" oninput="calculate()">
                             </div>
                         </div>
                         <div>
                             <div class="input-group">
-                                <label>Path 3, 5: FL Purchase Year</label>
+                                <label>P3, P5: FL Purchase Yr</label>
                                 <input type="number" id="flPurchaseYr" value="2026" oninput="calculate()">
                             </div>
                             <div class="input-group">
-                                <label>Path 5: CA Purchase Year</label>
+                                <label>P5: CA Purchase Yr</label>
                                 <input type="number" id="caPurchaseYrPath5" value="2028" oninput="calculate()">
+                            </div>
+                        </div>
+                        <div>
+                            <div class="input-group">
+                                <label>P6: FL Purchase Yr</label>
+                                <input type="number" id="flPurchaseYrP6" value="2026" oninput="calculate()">
+                            </div>
+                            <div class="input-group">
+                                <label>P6: WA Delay (Yrs)</label>
+                                <input type="number" id="delayedFlYears" value="5" oninput="calculate()">
                             </div>
                         </div>
                     </div>
@@ -337,7 +364,6 @@
 </div>
 
 <script>
-    // Set up Collapsible Input Groups
     document.querySelectorAll('.input-group-box').forEach(box => {
         box.classList.add('collapsed');
         const header = box.querySelector('h3');
@@ -454,6 +480,14 @@
             const waWinterMonths = getNum('waWinterMonths');
             const mgmtFee = getNum('mgmtFee') / 100;
             
+            // Path 6 Specific Inputs
+            const flHomeP6 = getNum('flHomeP6');
+            const flApprecP6 = getNum('flApprecP6') / 100;
+            const flPurchaseYrP6 = getNum('flPurchaseYrP6');
+            const delayedFlYears = getNum('delayedFlYears');
+            const flDpPctP6 = getNum('flDpPctP6') / 100;
+            const flRentP6 = getNum('flRentP6');
+
             const getSpend = (i) => {
                 if(i < 5) return getNum('w1_5') * 12;
                 if(i < 10) return getNum('w6_10') * 12;
@@ -477,7 +511,6 @@
             const tax3 = getNum('tax3') / 100;
             const caStateTax = getNum('caStateTax') / 100;
             
-            // Dynamic Liquidation Tax Calculation
             const liquidationTaxRateInput = getNum('liquidationTaxRate');
             const liquidationTaxRate = liquidationTaxRateInput / 100;
             const caEntryTax = startLiq * liquidationTaxRate;
@@ -485,7 +518,6 @@
             const caPurchaseYrPath2 = getNum('caPurchaseYrPath2');
             const flPurchaseYr = getNum('flPurchaseYr');
             const caPurchaseYrPath4 = getNum('caPurchaseYrPath4');
-            const delayedCaYears = getNum('delayedCaYears');
             const caPurchaseYrPath5 = getNum('caPurchaseYrPath5');
 
             const waCarry = 42000; 
@@ -507,24 +539,28 @@
             const flMortgage = calcAnnualMortgage(flHome * (1 - flDpPct), intRate);
             const flStaticBase = flHome * 0.0225; 
 
+            // Path 6 Property Calcs
+            const flDpAmtP6 = flHomeP6 * flDpPctP6;
+            const flMortgageP6 = calcAnnualMortgage(flHomeP6 - flDpAmtP6, intRate);
+            const flStaticBaseP6 = flHomeP6 * 0.0225;
+
             const netRentWA_Base = (waRentMonthly * 12) * (1 - mgmtFee);
             const netRentCA_Base = (caRentMonthly * 12) * (1 - mgmtFee);
+            const netRentFL_BaseP6 = (flRentP6 * 12) * (1 - mgmtFee);
 
-            // Base real estate FV calculation function
             const calcFVRealEstate = (val, apprec, n) => n <= 0 ? val : val * Math.pow(1 + apprec, n);
             
-            // Dynamic real estate getter for the time-series line chart
             const getPropVal = (homeVal, apprec, currentYr, purchaseYr) => {
                 if (currentYr < purchaseYr) return 0;
                 return calcFVRealEstate(homeVal, apprec, currentYr - purchaseYr);
             };
 
-            // Final real estate values for the primary table
             const fvWa = calcFVRealEstate(waHome, waApprec, years); 
             const fvCaPath2 = calcFVRealEstate(caHome, caApprec, endYear - caPurchaseYrPath2);
             const fvFl = calcFVRealEstate(flHome, flApprec, endYear - flPurchaseYr);
             const fvCaPath4 = calcFVRealEstate(caHome, caApprec, endYear - caPurchaseYrPath4);
             const fvCaPath5 = calcFVRealEstate(caHome, caApprec, endYear - caPurchaseYrPath5);
+            const fvFlP6 = calcFVRealEstate(flHomeP6, flApprecP6, endYear - flPurchaseYrP6);
 
             let caDpAmt = caHome * caDpPct;
             let flDpAmt = flHome * flDpPct;
@@ -534,13 +570,13 @@
             let p3Liq = startLiq - flDpAmt;
             let p4Liq = startLiq - caDpAmt;
             let p5Liq = startLiq - flDpAmt - caDpAmt;
+            let p6Liq = startLiq - flDpAmtP6; // Path 6 avoids massive liquidation tax on start
 
-            let p1Hist = [], p2Hist = [], p3Hist = [], p4Hist = [], p5Hist = [];
+            let p1Hist = [], p2Hist = [], p3Hist = [], p4Hist = [], p5Hist = [], p6Hist = [];
             
-            // Risk & Chart Metrics
-            let tsLabels = [], tsP1 = [], tsP2 = [], tsP3 = [], tsP4 = [], tsP5 = [];
-            let p1CumTax = 0, p2CumTax = 0, p3CumTax = 0, p4CumTax = 0, p5CumTax = 0;
-            let p1PeakSWR = 0, p2PeakSWR = 0, p3PeakSWR = 0, p4PeakSWR = 0, p5PeakSWR = 0;
+            let tsLabels = [], tsP1 = [], tsP2 = [], tsP3 = [], tsP4 = [], tsP5 = [], tsP6 = [];
+            let p1CumTax = 0, p2CumTax = 0, p3CumTax = 0, p4CumTax = 0, p5CumTax = 0, p6CumTax = 0;
+            let p1PeakSWR = 0, p2PeakSWR = 0, p3PeakSWR = 0, p4PeakSWR = 0, p5PeakSWR = 0, p6PeakSWR = 0;
 
             for(let i=0; i<years; i++) {
                 let curYr = startYear + i;
@@ -564,6 +600,9 @@
                 let infWaRent = netRentWA_Base * inf;
                 let infCaRent = netRentCA_Base * inf;
                 let infWaWinter = waWinterRentLoss * inf;
+                
+                let infFlStaticP6 = flStaticBaseP6 * inf;
+                let infFlRentP6 = netRentFL_BaseP6 * inf;
 
                 const processShortfall = (liqStart, shortfall, taxRate, pathNum) => {
                     let gross = 0, tax = 0;
@@ -575,7 +614,6 @@
                         tax = 0;
                     }
                     
-                    // Track SWR Risk
                     if(liqStart > 0 && gross > 0) {
                         let swr = gross / liqStart;
                         if(pathNum === 1 && swr > p1PeakSWR) p1PeakSWR = swr;
@@ -583,6 +621,7 @@
                         if(pathNum === 3 && swr > p3PeakSWR) p3PeakSWR = swr;
                         if(pathNum === 4 && swr > p4PeakSWR) p4PeakSWR = swr;
                         if(pathNum === 5 && swr > p5PeakSWR) p5PeakSWR = swr;
+                        if(pathNum === 6 && swr > p6PeakSWR) p6PeakSWR = swr;
                     }
 
                     let liq = (liqStart - gross) * (1 + r);
@@ -595,8 +634,7 @@
                 let p1NetInc = infInc * (1 - p1TaxR);
                 let p1Exp = infBaseLife + infWaCarry;
                 let p1Res = processShortfall(p1Liq, p1Exp - p1NetInc, p1TaxR, 1);
-                p1Liq = p1Res.liq;
-                p1CumTax += p1Res.tax;
+                p1Liq = p1Res.liq; p1CumTax += p1Res.tax;
                 p1Hist.push({ year: curYr, netNeed: p1Res.shortfall, tax: p1Res.tax, gross: p1Res.gross, liq: p1Liq });
 
                 // Path 2
@@ -604,8 +642,7 @@
                 let p2NetInc = infInc * (1 - p2TaxR);
                 let p2Exp = infBaseLife + caMortgage + infCaStatic + infWaCarry - infWaRent;
                 let p2Res = processShortfall(p2Liq, p2Exp - p2NetInc, p2TaxR, 2);
-                p2Liq = p2Res.liq;
-                p2CumTax += p2Res.tax;
+                p2Liq = p2Res.liq; p2CumTax += p2Res.tax;
                 p2Hist.push({ year: curYr, netNeed: p2Res.shortfall, tax: p2Res.tax, gross: p2Res.gross, liq: p2Liq });
 
                 // Path 3
@@ -613,8 +650,7 @@
                 let p3NetInc = infInc * (1 - p3TaxR);
                 let p3Exp = infBaseLife + flMortgage + infFlStatic + infWaCarry - infWaRent;
                 let p3Res = processShortfall(p3Liq, p3Exp - p3NetInc, p3TaxR, 3);
-                p3Liq = p3Res.liq;
-                p3CumTax += p3Res.tax;
+                p3Liq = p3Res.liq; p3CumTax += p3Res.tax;
                 p3Hist.push({ year: curYr, netNeed: p3Res.shortfall, tax: p3Res.tax, gross: p3Res.gross, liq: p3Liq });
 
                 // Path 4
@@ -627,8 +663,7 @@
                     p4Exp = infBaseLife + caMortgage + infCaStatic + infWaCarry - infWaRent;
                 }
                 let p4Res = processShortfall(p4Liq, p4Exp - p4NetInc, p4TaxR, 4);
-                p4Liq = p4Res.liq;
-                p4CumTax += p4Res.tax;
+                p4Liq = p4Res.liq; p4CumTax += p4Res.tax;
                 p4Hist.push({ year: curYr, netNeed: p4Res.shortfall, tax: p4Res.tax, gross: p4Res.gross, liq: p4Liq });
 
                 // Path 5
@@ -636,23 +671,39 @@
                 let p5NetInc = infInc * (1 - p5TaxR);
                 let p5Exp = infBaseLife + flMortgage + infFlStatic + caMortgage + infCaStatic + infWaCarry - infWaRent - infCaRent;
                 let p5Res = processShortfall(p5Liq, p5Exp - p5NetInc, p5TaxR, 5);
-                p5Liq = p5Res.liq;
-                p5CumTax += p5Res.tax;
+                p5Liq = p5Res.liq; p5CumTax += p5Res.tax;
                 p5Hist.push({ year: curYr, netNeed: p5Res.shortfall, tax: p5Res.tax, gross: p5Res.gross, liq: p5Liq });
 
-                // Time Series Chart Logic (Gross assets for given year)
+                // Path 6: Delayed FL
+                let p6TaxR = Math.min(annualTaxRate, 0.99); // Fed tax only (WA has no state inc tax, FL has no state inc tax)
+                let p6NetInc = infInc * (1 - p6TaxR);
+                let p6Exp = 0;
+                if (i < delayedFlYears) {
+                    // Phase 1: Live in WA, FL is rented
+                    p6Exp = infBaseLife + flMortgageP6 + infFlStaticP6 + infWaCarry - infFlRentP6;
+                } else {
+                    // Phase 2: Live in FL, WA is rented
+                    p6Exp = infBaseLife + flMortgageP6 + infFlStaticP6 + infWaCarry - infWaRent;
+                }
+                let p6Res = processShortfall(p6Liq, p6Exp - p6NetInc, p6TaxR, 6);
+                p6Liq = p6Res.liq; p6CumTax += p6Res.tax;
+                p6Hist.push({ year: curYr, netNeed: p6Res.shortfall, tax: p6Res.tax, gross: p6Res.gross, liq: p6Liq });
+
+
                 let valWa = calcFVRealEstate(waHome, waApprec, i);
                 let valCaP2 = getPropVal(caHome, caApprec, curYr, caPurchaseYrPath2);
                 let valFlP3 = getPropVal(flHome, flApprec, curYr, flPurchaseYr);
                 let valCaP4 = getPropVal(caHome, caApprec, curYr, caPurchaseYrPath4);
                 let valFlP5 = getPropVal(flHome, flApprec, curYr, flPurchaseYr);
                 let valCaP5 = getPropVal(caHome, caApprec, curYr, caPurchaseYrPath5);
+                let valFlP6 = getPropVal(flHomeP6, flApprecP6, curYr, flPurchaseYrP6);
 
-                tsP1.push(valWa + p1Liq); // Note: Estate tax penalty happens at death, not during life
+                tsP1.push(valWa + p1Liq);
                 tsP2.push(valWa + valCaP2 + p2Liq);
                 tsP3.push(valWa + valFlP3 + p3Liq);
                 tsP4.push(valWa + valCaP4 + p4Liq);
                 tsP5.push(valWa + valFlP5 + valCaP5 + p5Liq);
+                tsP6.push(valWa + valFlP6 + p6Liq);
             }
 
             const results = [];
@@ -665,330 +716,174 @@
             let y1Spend = getSpend(0);
             let y1Inc = getInc(0);
 
-            // Path 1 details
+            // Path 1
             let p1NetInc = y1Inc * (1 - tax1);
             let p1Exp = y1Spend + waCarry;
             let p1Short = p1Exp - p1NetInc;
             let p1GrossW = p1Short > 0 ? p1Short / (1 - tax1) : p1Short;
-
             let p1Estate = fvWa + p1Liq;
             let p1Tax = p1Estate > estateExempt ? (p1Estate - estateExempt) * estateTaxRate : 0;
-            p1CumTax += p1Tax; // Add death tax to cumulative total for risk panel
+            p1CumTax += p1Tax; 
+            results.push({ name: "Path 1: Stay in WA", liq: p1Liq, re: fvWa, tax: -p1Tax, net: p1Estate - p1Tax, details: `...`});
 
-            results.push({
-                name: "Path 1: Stay in WA", liq: p1Liq, re: fvWa, tax: -p1Tax, net: p1Estate - p1Tax,
-                details: `
-                    <div class="details-overview">
-                        <strong>Overview:</strong> Remain in our current Washington primary residence for the duration of retirement. This path requires the lowest initial capital output but exposes our final legacy to the aggressive WA state estate tax.
-                    </div>
-                    <div>
-                        <h4>Liquid Capital & Compounding Mechanics</h4>
-                        <p>Our liquid portfolio operates on an iterative, year-by-year compounding engine. Our starting capital is <strong>${formatCurrency(startLiq)}</strong>. Every year, the simulation offsets our living expenses with any active income, withdraws the net shortfall from our portfolio, and then compounds the remaining balance by our assumed <strong>${formatPct(r)}</strong> market return.</p>
-                        
-                        <h5>Year 1 Detailed Calculation Formulas:</h5>
-                        <div class="math-box">
-                            + Base Spend: ${formatCurrency(y1Spend)}
-                            <span class="math-subtext">($${numToCommas(y1Spend/12)}/mo × 12 months)</span>
-                            
-                            + WA Carry: ${formatCurrency(waCarry)}
-                            <span class="math-subtext">(Fixed baseline estimate for property taxes & insurance on our paid-off $3M home)</span>
-                            
-                            ---------------------------------------------------------<br>
-                            = <strong>Total Expenses: ${formatCurrency(p1Exp)}</strong><br><br>
-                            
-                            - Net Income: -${formatCurrency(p1NetInc)}
-                            <span class="math-subtext">(Pre-tax $${numToCommas(y1Inc/12)}/mo × 12 months, minus ${formatPct(tax1)} Fed Tax)</span><br>
-
-                            ---------------------------------------------------------<br>
-                            = <strong>Net Portfolio Shortfall: ${formatCurrency(p1Short)}</strong><br><br>
-                            
-                            ÷ (1 - ${formatPct(tax1)} Federal Tax Rate)<br>
-                            = <strong>Gross Withdrawal: ${formatCurrency(p1GrossW)}</strong>
-                        </div>
-                        <p><em>Note: Variables like property taxes and base spend inflate automatically at <strong>${formatPct(g)}</strong> each year, constantly increasing our gross withdrawal requirement.</em></p>
-                    </div>
-                    <div>
-                        <h4>Real Estate & Washington Estate Tax Penalty</h4>
-                        <p>Because we are domiciled in Washington, our entire net worth is subject to the state's estate tax. This is considered the least efficient option for wealth preservation across generations.</p>
-                        <ul>
-                            <li><strong>WA Home Growth Calculation:</strong> Our ${formatCurrency(waHome)} home appreciates at ${formatPct(waApprec)} annually. Formula: <code>PV * (1 + ${waApprec})^${years} years</code> = <strong>${formatCurrency(fvWa)}</strong>.</li>
-                            <li><strong>Total Gross Estate in ${endYear}:</strong> ${formatCurrency(p1Estate)} (Liquid Assets + Real Estate).</li>
-                            <li><strong>Estate Tax Application:</strong> Washington allows a bypass trust exemption of roughly ${formatCurrency(estateExempt)}. Everything above this threshold is taxed.</li>
-                        </ul>
-                        <div class="math-box">
-                            (${formatCurrency(p1Estate)} Gross Estate - ${formatCurrency(estateExempt)} Exemption) × ${formatPct(estateTaxRate)} Tax Rate<br>
-                            = <strong>Total Tax Forfeited to WA State: ${formatCurrency(p1Tax)}</strong>
-                        </div>
-                    </div>
-                    ${buildHistoryTable(p1Hist)}
-                `
-            });
-
-            // Path 2 logic
-            p2CumTax += caEntryTax; // Add Entry Tax to Cumulative Panel
-
-            let p2TaxR = Math.min(tax1 + caStateTax, 0.99);
-            let p2NetInc = y1Inc * (1 - p2TaxR);
-            let p2Exp = y1Spend + caMortgage + caStaticBase + waCarry - netRentWA_Base;
-            let p2Short = p2Exp - p2NetInc;
-            let p2GrossW = p2Short > 0 ? p2Short / (1 - p2TaxR) : p2Short;
-
+            // Path 2
+            p2CumTax += caEntryTax; 
             let p2Re = fvWa + fvCaPath2;
-            results.push({
-                name: "Path 2: Immediate CA", liq: p2Liq, re: p2Re, tax: 0, net: p2Liq + p2Re,
-                details: `
-                    <div class="details-overview">
-                        <strong>Overview:</strong> Relocate permanently to California early in retirement. Establishing legal domicile in CA shields our entire legacy from WA estate taxes, but incurs a higher ongoing lifestyle cost and a significant upfront tax hit if we liquidate stock assets to move.
-                    </div>
-                    <div>
-                        <h4>Liquid Capital & Compounding Mechanics</h4>
-                        <p>Liquidating assets to fund the move and property purchases potentially subjects our portfolio to a <strong>${formatCurrency(caEntryTax)} Capital Gains Tax (${formatPct(liquidationTaxRate)})</strong>. Establishing residency itself is not a taxable event, but realizing gains on stock assets to re-allocate capital triggers this liability. Because of this initial capital drain and the CA down payment, our compounding engine is reduced from Day 1.</p>
-                        
-                        <h5>Year 1 Detailed Calculation Formulas:</h5>
-                        <div class="math-box">
-                            Starting Portfolio: ${formatCurrency(startLiq - caEntryTax - caDpAmt)}
-                            <span class="math-subtext">(${formatCurrency(startLiq)} initial - ${formatCurrency(caEntryTax)} Capital Gains Tax - ${formatCurrency(caDpAmt)} CA Down Payment)</span><br>
-                            
-                            + Base Spend: ${formatCurrency(y1Spend)}
-                            <span class="math-subtext">($${numToCommas(y1Spend/12)}/mo × 12 months)</span>
-                            
-                            + CA Mortgage P&I: ${formatCurrency(caMortgage)}
-                            <span class="math-subtext">(${formatCurrency(caHome - caDpAmt)} principal loan amortized at ${formatPct(intRate)} over 30 years)</span>
-                            
-                            + CA Taxes/HOA: ${formatCurrency(caStaticBase)}
-                            <span class="math-subtext">(Estimated at a static 1.75% of the ${formatCurrency(caHome)} property value)</span>
-                            
-                            + WA Carry: ${formatCurrency(waCarry)}
-                            <span class="math-subtext">(Taxes & insurance to maintain the empty WA home)</span>
-                            
-                            - WA LTR Income (Gross Offset): -${formatCurrency(netRentWA_Base)}
-                            <span class="math-subtext">($${numToCommas(waRentMonthly)}/mo × 12 months, minus ${formatPct(mgmtFee)} Property Mgmt Fee)</span>
-                            
-                            ---------------------------------------------------------<br>
-                            = <strong>Total Expenses: ${formatCurrency(p2Exp)}</strong><br><br>
+            results.push({ name: "Path 2: Immediate CA", liq: p2Liq, re: p2Re, tax: 0, net: p2Liq + p2Re, details: `...`});
 
-                            - Net Income: -${formatCurrency(p2NetInc)}
-                            <span class="math-subtext">(Pre-tax $${numToCommas(y1Inc/12)}/mo × 12 months, minus ${formatPct(p2TaxR)} Fed+CA Tax)</span><br>
-
-                            ---------------------------------------------------------<br>
-                            = <strong>Net Portfolio Shortfall: ${formatCurrency(p2Short)}</strong><br><br>
-                            
-                            ÷ (1 - ${formatPct(p2TaxR)} Combined Fed + CA State Tax Rate)<br>
-                            = <strong>Gross Withdrawal: ${formatCurrency(p2GrossW)}</strong>
-                        </div>
-                    </div>
-                    <div>
-                        <h4>Real Estate & Estate Shielding</h4>
-                        <p>By shifting our legal domicile to California, we zero out our estate tax liability. Furthermore, real estate benefits from <strong>leverage</strong>. Our ${formatCurrency(caDpAmt)} down payment controls a ${formatCurrency(caHome)} asset.</p>
-                        <ul>
-                            <li><strong>WA Home Growth (${years} years):</strong> ${formatCurrency(fvWa)}</li>
-                            <li><strong>CA Home Growth (${endYear - caPurchaseYrPath2} years):</strong> Appreciates from ${formatCurrency(caHome)} at ${formatPct(caApprec)}/yr = <strong>${formatCurrency(fvCaPath2)}</strong>.</li>
-                            <li><strong>Total Tax Forfeited at Death:</strong> $0. California has no state estate tax.</li>
-                        </ul>
-                    </div>
-                    ${buildHistoryTable(p2Hist)}
-                `
-            });
-
-            let p3TaxR = Math.min(tax1, 0.99);
-            let p3NetInc = y1Inc * (1 - p3TaxR);
-            let p3Exp = y1Spend + flMortgage + flStaticBase + waCarry - netRentWA_Base;
-            let p3Short = p3Exp - p3NetInc;
-            let p3GrossW = p3Short > 0 ? p3Short / (1 - p3TaxR) : p3Short;
-
+            // Path 3
             let p3Re = fvWa + fvFl;
-            results.push({
-                name: "Path 3: Immediate FL", liq: p3Liq, re: p3Re, tax: 0, net: p3Liq + p3Re,
-                details: `
-                    <div class="details-overview">
-                        <strong>Overview:</strong> Relocate permanently to Florida early in retirement. This highly efficient path establishes domicile in a tax haven (no income or estate tax), protecting capital compounding while avoiding WA taxes entirely.
-                    </div>
-                    <div>
-                        <h4>Liquid Capital & Compounding Mechanics</h4>
-                        <p>This Florida path does not require a massive liquidation tax event to enter. Our starting capital is only reduced by our FL down payment (${formatCurrency(flDpAmt)}). Additionally, because Florida has a 0% state income tax, our "gross-up" to pull cash out of our portfolio is perfectly efficient, maximizing our market compounding at ${formatPct(r)}.</p>
-                        
-                        <h5>Year 1 Detailed Calculation Formulas:</h5>
-                        <div class="math-box">
-                            Starting Portfolio: ${formatCurrency(startLiq - flDpAmt)}
-                            <span class="math-subtext">(${formatCurrency(startLiq)} initial - ${formatCurrency(flDpAmt)} FL Down Payment. Zero Capital Gains Event.)</span><br>
-                            
-                            + Base Spend: ${formatCurrency(y1Spend)}
-                            <span class="math-subtext">($${numToCommas(y1Spend/12)}/mo × 12 months)</span>
-                            
-                            + FL Mortgage P&I: ${formatCurrency(flMortgage)}
-                            <span class="math-subtext">(${formatCurrency(flHome - flDpAmt)} principal loan amortized at ${formatPct(intRate)} over 30 years)</span>
-                            
-                            + FL Taxes/HOA: ${formatCurrency(flStaticBase)}
-                            <span class="math-subtext">(Estimated at a static 2.25% of the ${formatCurrency(flHome)} property value, factoring in CDD)</span>
-                            
-                            + WA Carry: ${formatCurrency(waCarry)}
-                            <span class="math-subtext">(Taxes & insurance to maintain the empty WA home)</span>
-                            
-                            - WA LTR Income (Gross Offset): -${formatCurrency(netRentWA_Base)}
-                            <span class="math-subtext">($${numToCommas(waRentMonthly)}/mo × 12 months, minus ${formatPct(mgmtFee)} Property Mgmt Fee)</span>
-                            
-                            ---------------------------------------------------------<br>
-                            = <strong>Total Expenses: ${formatCurrency(p3Exp)}</strong><br><br>
+            results.push({ name: "Path 3: Immediate FL", liq: p3Liq, re: p3Re, tax: 0, net: p3Liq + p3Re, details: `...`});
 
-                            - Net Income: -${formatCurrency(p3NetInc)}
-                            <span class="math-subtext">(Pre-tax $${numToCommas(y1Inc/12)}/mo × 12 months, minus ${formatPct(p3TaxR)} Fed Tax)</span><br>
-
-                            ---------------------------------------------------------<br>
-                            = <strong>Net Portfolio Shortfall: ${formatCurrency(p3Short)}</strong><br><br>
-                            
-                            ÷ (1 - ${formatPct(p3TaxR)} Federal Tax Only - 0% FL State Tax)<br>
-                            = <strong>Gross Withdrawal: ${formatCurrency(p3GrossW)}</strong>
-                        </div>
-                    </div>
-                    <div>
-                        <h4>Real Estate & Estate Shielding</h4>
-                        <p>Our legacy is perfectly insulated in this scenario. Florida provides robust asset protection and zero estate taxes.</p>
-                        <ul>
-                            <li><strong>WA Home Growth (${years} years):</strong> ${formatCurrency(fvWa)}</li>
-                            <li><strong>FL Home Growth (${endYear - flPurchaseYr} years):</strong> Appreciates from ${formatCurrency(flHome)} at ${formatPct(flApprec)}/yr = <strong>${formatCurrency(fvFl)}</strong>.</li>
-                            <li><strong>Total Tax Forfeited at Death:</strong> $0.</li>
-                        </ul>
-                    </div>
-                    ${buildHistoryTable(p3Hist)}
-                `
-            });
-
-            let p4TaxR = Math.min(tax1, 0.99); // Phase 1 WA
-            let p4NetInc = y1Inc * (1 - p4TaxR);
-            let p4Exp = y1Spend + caMortgage + caStaticBase + waCarry + waWinterRentLoss - netRentCA_Base;
-            let p4Short = p4Exp - p4NetInc;
-            let p4GrossW = p4Short > 0 ? p4Short / (1 - p4TaxR) : p4Short;
-
+            // Path 4
             let p4Re = fvWa + fvCaPath4;
-            results.push({
-                name: "Path 4: Delayed CA", liq: p4Liq, re: p4Re, tax: 0, net: p4Liq + p4Re,
-                details: `
-                    <div class="details-overview">
-                        <strong>Overview:</strong> Purchase a CA property early to lock in appreciation, but delay our official move to CA for ${delayedCaYears} years. This splits time between WA and CA initially, maintaining flexibility while executing 0% state tax Roth conversions.
-                    </div>
-                    <div>
-                        <h4>Liquid Capital Mechanics (The Two-Phase System)</h4>
-                        <p>By waiting ${delayedCaYears} years to legally change our domicile, we avoid the initial ${formatCurrency(caEntryTax)} capital gains tax hit on our portfolio. During this delay, we rent out our CA property to aggressively offset our dual-state carrying costs while we rent a vacation home in CA during the WA winter.</p>
-                        
-                        <h5>Phase 1: WA Domicile (Years 1-${delayedCaYears}) - Year 1 Breakdown:</h5>
-                        <div class="math-box">
-                            Starting Portfolio: ${formatCurrency(startLiq - caDpAmt)}
-                            <span class="math-subtext">(${formatCurrency(startLiq)} initial - ${formatCurrency(caDpAmt)} CA Down Payment. Zero Capital Gains Event.)</span><br>
+            results.push({ name: "Path 4: Delayed CA", liq: p4Liq, re: p4Re, tax: 0, net: p4Liq + p4Re, details: `...`});
 
-                            + Base Spend: ${formatCurrency(y1Spend)}
-                            <span class="math-subtext">($${numToCommas(y1Spend/12)}/mo × 12 months)</span>
-                            
-                            + CA Mortgage P&I: ${formatCurrency(caMortgage)}
-                            <span class="math-subtext">(${formatCurrency(caHome - caDpAmt)} principal loan amortized at ${formatPct(intRate)} over 30 years)</span>
-                            
-                            + CA Taxes/HOA: ${formatCurrency(caStaticBase)}
-                            <span class="math-subtext">(Estimated at a static 1.75% of the ${formatCurrency(caHome)} property value)</span>
-                            
-                            + WA Carry: ${formatCurrency(waCarry)}
-                            <span class="math-subtext">(Baseline taxes & insurance on our primary WA home)</span>
-                            
-                            + WA Winter Rent Loss: ${formatCurrency(waWinterRentLoss)}
-                            <span class="math-subtext">(Housing cost to rent a place in CA for ${waWinterMonths} months at $${numToCommas(caWinterRentCost)}/mo)</span>
-                            
-                            - CA LTR Income (Gross Offset): -${formatCurrency(netRentCA_Base)}
-                            <span class="math-subtext">($${numToCommas(caRentMonthly)}/mo from owned CA home × 12 months, minus ${formatPct(mgmtFee)} Property Mgmt Fee)</span>
-                            
-                            ---------------------------------------------------------<br>
-                            = <strong>Total Expenses: ${formatCurrency(p4Exp)}</strong><br><br>
-
-                            - Net Income: -${formatCurrency(p4NetInc)}
-                            <span class="math-subtext">(Pre-tax $${numToCommas(y1Inc/12)}/mo × 12 months, minus ${formatPct(p4TaxR)} Fed Tax)</span><br>
-
-                            ---------------------------------------------------------<br>
-                            = <strong>Net Portfolio Shortfall: ${formatCurrency(p4Short)}</strong><br><br>
-                            
-                            ÷ (1 - ${formatPct(p4TaxR)} Fed Tax Only - WA residency)<br>
-                            = <strong>Gross Withdrawal: ${formatCurrency(p4GrossW)}</strong>
-                        </div>
-                        
-                        <h5>Phase 2: CA Domicile (Years ${delayedCaYears + 1}+):</h5>
-                        <p>We officially move to CA. We lose the rental income stream from the CA property, and our effective tax rate instantly jumps by the <strong>${formatPct(caStateTax)}</strong> CA premium. However, our portfolio survived the early years without the massive asset liquidation hit.</p>
-                    </div>
-                    <div>
-                        <h4>Real Estate & Estate Shielding</h4>
-                        <ul>
-                            <li><strong>WA Home Growth (${years} years):</strong> ${formatCurrency(fvWa)}</li>
-                            <li><strong>CA Home Growth (${endYear - caPurchaseYrPath4} years):</strong> Because we purchased it early in ${caPurchaseYrPath4}, it appreciates longer. Value: <strong>${formatCurrency(fvCaPath4)}</strong>.</li>
-                            <li><strong>Total Tax Forfeited at Death:</strong> $0. We are legally domiciled in CA when we pass.</li>
-                        </ul>
-                    </div>
-                    ${buildHistoryTable(p4Hist)}
-                `
-            });
-
-            let p5TaxR = Math.min(tax1, 0.99); // FL residency
-            let p5NetInc = y1Inc * (1 - p5TaxR);
-            let p5Exp = y1Spend + flMortgage + caMortgage + flStaticBase + caStaticBase + waCarry - netRentWA_Base - netRentCA_Base;
-            let p5Short = p5Exp - p5NetInc;
-            let p5GrossW = p5Short > 0 ? p5Short / (1 - p5TaxR) : p5Short;
-
+            // Path 5
             let p5Re = fvWa + fvFl + fvCaPath5;
-            results.push({
-                name: "Path 5: Hybrid FL/CA", liq: p5Liq, re: p5Re, tax: 0, net: p5Liq + p5Re,
-                details: `
-                    <div class="details-overview">
-                        <strong>Overview:</strong> The ultimate "snowbird" strategy. Establish legal tax domicile in Florida while actively owning and renting properties in WA, FL, and CA to heavily subsidize the carrying costs of a three-home lifestyle.
-                    </div>
-                    <div>
-                        <h4>Liquid Capital Mechanics (Maximum Leverage)</h4>
-                        <p>This path uses our portfolio to leverage three distinct properties simultaneously. We pay both the FL Down Payment (${formatCurrency(flDpAmt)}) and the CA Down Payment (${formatCurrency(caDpAmt)}) from our liquid assets. However, our daily lifestyle is highly subsidized by two streams of Long-Term Rental income, and our withdrawals are shielded by Florida's 0% state tax.</p>
-                        
+            results.push({ name: "Path 5: Hybrid FL/CA", liq: p5Liq, re: p5Re, tax: 0, net: p5Liq + p5Re, details: `...`});
+
+            // Path 6 Logic
+            let p6TaxR = Math.min(tax1, 0.99); 
+            let p6NetInc = y1Inc * (1 - p6TaxR);
+            let p6ExpYear1 = y1Spend + flMortgageP6 + flStaticBaseP6 + waCarry - netRentFL_BaseP6;
+            let p6Short = p6ExpYear1 - p6NetInc;
+            let p6GrossW = p6Short > 0 ? p6Short / (1 - p6TaxR) : p6Short;
+
+            let p6Re = fvWa + fvFlP6;
+            results[0].details = `
+                    <div class="details-overview"><strong>Overview:</strong> Remain in our current Washington primary residence for the duration of retirement. This path requires the lowest initial capital output but exposes our final legacy to the aggressive WA state estate tax.</div>
+                    <div><h4>Liquid Capital & Compounding Mechanics</h4><p>Our starting capital is <strong>${formatCurrency(startLiq)}</strong>. Every year, the simulation offsets our living expenses with any active income, withdraws the net shortfall from our portfolio, and then compounds the remaining balance by our assumed <strong>${formatPct(r)}</strong> market return.</p>
                         <h5>Year 1 Detailed Calculation Formulas:</h5>
                         <div class="math-box">
-                            Starting Portfolio: ${formatCurrency(startLiq - flDpAmt - caDpAmt)}
-                            <span class="math-subtext">(${formatCurrency(startLiq)} initial - ${formatCurrency(flDpAmt)} FL DP - ${formatCurrency(caDpAmt)} CA DP. Zero Liquidation Tax.)</span><br>
-                            
+                            + Base Spend: ${formatCurrency(y1Spend)} <span class="math-subtext">($${numToCommas(y1Spend/12)}/mo × 12 months)</span>
+                            + WA Carry: ${formatCurrency(waCarry)} <span class="math-subtext">(Fixed baseline estimate for property taxes & insurance)</span>
+                            ---------------------------------------------------------<br>= <strong>Total Expenses: ${formatCurrency(p1Exp)}</strong><br><br>
+                            - Net Income: -${formatCurrency(p1NetInc)} <span class="math-subtext">(Pre-tax $${numToCommas(y1Inc/12)}/mo × 12 months, minus ${formatPct(tax1)} Fed Tax)</span><br>
+                            ---------------------------------------------------------<br>= <strong>Net Portfolio Shortfall: ${formatCurrency(p1Short)}</strong><br><br>
+                            ÷ (1 - ${formatPct(tax1)} Federal Tax Rate)<br>= <strong>Gross Withdrawal: ${formatCurrency(p1GrossW)}</strong>
+                        </div></div>
+                    <div><h4>Real Estate & WA Estate Tax Penalty</h4><p>Because we are domiciled in WA, our net worth is subject to the state's estate tax.</p>
+                        <ul><li><strong>WA Home Growth Calculation:</strong> <code>PV * (1 + ${waApprec})^${years} years</code> = <strong>${formatCurrency(fvWa)}</strong>.</li>
+                        <li><strong>Total Gross Estate in ${endYear}:</strong> ${formatCurrency(p1Estate)} (Liquid Assets + Real Estate).</li></ul>
+                        <div class="math-box">(${formatCurrency(p1Estate)} Gross Estate - ${formatCurrency(estateExempt)} Exemption) × ${formatPct(estateTaxRate)} Tax Rate<br>= <strong>Total Tax Forfeited to WA State: ${formatCurrency(p1Tax)}</strong></div></div>
+                    ${buildHistoryTable(p1Hist)}
+            `;
+            results[1].details = `
+                    <div class="details-overview"><strong>Overview:</strong> Relocate permanently to California early in retirement. Establishing legal domicile in CA shields our entire legacy from WA estate taxes, but incurs a higher ongoing lifestyle cost and a significant upfront tax hit if we liquidate stock assets to move.</div>
+                    <div><h4>Liquid Capital & Compounding Mechanics</h4><p>Liquidating assets to fund the move potentially subjects our portfolio to a <strong>${formatCurrency(caEntryTax)} Capital Gains Tax (${formatPct(liquidationTaxRate)})</strong>. Because of this initial drain, our compounding engine is reduced from Day 1.</p>
+                        <h5>Year 1 Detailed Calculation Formulas:</h5>
+                        <div class="math-box">Starting Portfolio: ${formatCurrency(startLiq - caEntryTax - caDpAmt)} <span class="math-subtext">(${formatCurrency(startLiq)} initial - ${formatCurrency(caEntryTax)} Capital Gains Tax - ${formatCurrency(caDpAmt)} CA Down Payment)</span><br>
+                            + Base Spend: ${formatCurrency(y1Spend)} <br>+ CA Mortgage P&I: ${formatCurrency(caMortgage)} <br>+ CA Taxes/HOA: ${formatCurrency(caStaticBase)} <br>+ WA Carry: ${formatCurrency(waCarry)} <br>- WA LTR Income: -${formatCurrency(netRentWA_Base)}
+                            <br>---------------------------------------------------------<br>= <strong>Total Expenses: ${formatCurrency(p2Exp)}</strong><br><br>
+                            - Net Income: -${formatCurrency(p2NetInc)} <span class="math-subtext">(minus ${formatPct(Math.min(tax1 + caStateTax, 0.99))} Fed+CA Tax)</span><br>
+                            ---------------------------------------------------------<br>= <strong>Net Portfolio Shortfall: ${formatCurrency(p2Short)}</strong><br><br>
+                            ÷ (1 - ${formatPct(Math.min(tax1 + caStateTax, 0.99))} Combined Tax)<br>= <strong>Gross Withdrawal: ${formatCurrency(p2GrossW)}</strong>
+                        </div></div>
+                    <div><h4>Real Estate & Estate Shielding</h4><ul><li><strong>WA Home Growth (${years} years):</strong> ${formatCurrency(fvWa)}</li><li><strong>CA Home Growth (${endYear - caPurchaseYrPath2} years):</strong> ${formatCurrency(fvCaPath2)}.</li><li><strong>Total Tax Forfeited at Death:</strong> $0.</li></ul></div>
+                    ${buildHistoryTable(p2Hist)}
+            `;
+            results[2].details = `
+                    <div class="details-overview"><strong>Overview:</strong> Relocate permanently to Florida early in retirement. This highly efficient path establishes domicile in a tax haven, protecting capital compounding while avoiding WA taxes entirely.</div>
+                    <div><h4>Liquid Capital & Compounding Mechanics</h4><p>Our starting capital is only reduced by our FL down payment (${formatCurrency(flDpAmt)}). With Florida's 0% state income tax, our "gross-up" to pull cash is perfectly efficient.</p>
+                        <h5>Year 1 Detailed Calculation Formulas:</h5>
+                        <div class="math-box">Starting Portfolio: ${formatCurrency(startLiq - flDpAmt)} <span class="math-subtext">(${formatCurrency(startLiq)} initial - ${formatCurrency(flDpAmt)} FL Down Payment. Zero Capital Gains Event.)</span><br>
+                            + Base Spend: ${formatCurrency(y1Spend)} <br>+ FL Mortgage P&I: ${formatCurrency(flMortgage)} <br>+ FL Taxes/HOA: ${formatCurrency(flStaticBase)} <br>+ WA Carry: ${formatCurrency(waCarry)} <br>- WA LTR Income: -${formatCurrency(netRentWA_Base)}
+                            <br>---------------------------------------------------------<br>= <strong>Total Expenses: ${formatCurrency(p3Exp)}</strong><br><br>
+                            - Net Income: -${formatCurrency(p3NetInc)} <span class="math-subtext">(minus ${formatPct(tax1)} Fed Tax)</span><br>
+                            ---------------------------------------------------------<br>= <strong>Net Portfolio Shortfall: ${formatCurrency(p3Short)}</strong><br><br>
+                            ÷ (1 - ${formatPct(tax1)} Fed Tax)<br>= <strong>Gross Withdrawal: ${formatCurrency(p3GrossW)}</strong>
+                        </div></div>
+                    <div><h4>Real Estate & Estate Shielding</h4><ul><li><strong>WA Home Growth (${years} years):</strong> ${formatCurrency(fvWa)}</li><li><strong>FL Home Growth (${endYear - flPurchaseYr} years):</strong> ${formatCurrency(fvFl)}.</li><li><strong>Total Tax Forfeited at Death:</strong> $0.</li></ul></div>
+                    ${buildHistoryTable(p3Hist)}
+            `;
+            results[3].details = `
+                    <div class="details-overview"><strong>Overview:</strong> Purchase a CA property early, but delay our official move for ${delayedCaYears} years.</div>
+                    <div><h4>Liquid Capital Mechanics</h4><p>By waiting to legally change our domicile, we avoid the initial ${formatCurrency(caEntryTax)} capital gains tax hit on our portfolio.</p>
+                        <h5>Phase 1: WA Domicile (Years 1-${delayedCaYears}) - Year 1 Breakdown:</h5>
+                        <div class="math-box">Starting Portfolio: ${formatCurrency(startLiq - caDpAmt)}<br>
+                            + Base Spend: ${formatCurrency(y1Spend)} <br>+ CA Mortgage P&I: ${formatCurrency(caMortgage)} <br>+ CA Taxes/HOA: ${formatCurrency(caStaticBase)} <br>+ WA Carry: ${formatCurrency(waCarry)} <br>+ WA Winter Rent Loss: ${formatCurrency(waWinterRentLoss)} <br>- CA LTR Income: -${formatCurrency(netRentCA_Base)}
+                            <br>---------------------------------------------------------<br>= <strong>Total Expenses: ${formatCurrency(p4Exp)}</strong><br><br>
+                            - Net Income: -${formatCurrency(p4NetInc)} <span class="math-subtext">(minus ${formatPct(tax1)} Fed Tax)</span><br>
+                            ---------------------------------------------------------<br>= <strong>Net Portfolio Shortfall: ${formatCurrency(p4Short)}</strong><br><br>
+                            ÷ (1 - ${formatPct(tax1)} Fed Tax)<br>= <strong>Gross Withdrawal: ${formatCurrency(p4GrossW)}</strong>
+                        </div>
+                        <h5>Phase 2: CA Domicile (Years ${delayedCaYears + 1}+):</h5><p>We officially move to CA. We lose CA rental income, and effective tax jumps by <strong>${formatPct(caStateTax)}</strong> CA premium.</p></div>
+                    <div><h4>Real Estate & Estate Shielding</h4><ul><li><strong>WA Home Growth (${years} years):</strong> ${formatCurrency(fvWa)}</li><li><strong>CA Home Growth (${endYear - caPurchaseYrPath4} years):</strong> ${formatCurrency(fvCaPath4)}.</li><li><strong>Total Tax Forfeited at Death:</strong> $0.</li></ul></div>
+                    ${buildHistoryTable(p4Hist)}
+            `;
+            results[4].details = `
+                    <div class="details-overview"><strong>Overview:</strong> Establish tax domicile in FL while owning properties in WA, FL, and CA to subsidize a three-home lifestyle.</div>
+                    <div><h4>Liquid Capital Mechanics</h4><p>We leverage three properties. We pay FL and CA Down Payments from liquid assets, subsidized by two streams of LTR income.</p>
+                        <h5>Year 1 Detailed Calculation Formulas:</h5>
+                        <div class="math-box">Starting Portfolio: ${formatCurrency(startLiq - flDpAmt - caDpAmt)}<br>
+                            + Base Spend: ${formatCurrency(y1Spend)} <br>+ Mortgages (FL+CA): ${formatCurrency(flMortgage + caMortgage)} <br>+ Prop Taxes/HOA (FL+CA+WA): ${formatCurrency(flStaticBase + caStaticBase + waCarry)} <br>- Rent Offsets (WA+CA): -${formatCurrency(netRentWA_Base + netRentCA_Base)}
+                            <br>---------------------------------------------------------<br>= <strong>Total Expenses: ${formatCurrency(p5Exp)}</strong><br><br>
+                            - Net Income: -${formatCurrency(p5NetInc)} <span class="math-subtext">(minus ${formatPct(tax1)} Fed Tax)</span><br>
+                            ---------------------------------------------------------<br>= <strong>Net Portfolio Shortfall: ${formatCurrency(p5Short)}</strong><br><br>
+                            ÷ (1 - ${formatPct(tax1)} Fed Tax)<br>= <strong>Gross Withdrawal: ${formatCurrency(p5GrossW)}</strong>
+                        </div></div>
+                    <div><h4>Real Estate & Estate Shielding</h4><ul><li><strong>WA Home Growth:</strong> ${formatCurrency(fvWa)}</li><li><strong>FL Home Growth:</strong> ${formatCurrency(fvFl)}</li><li><strong>CA Home Growth:</strong> ${formatCurrency(fvCaPath5)}</li><li><strong>Tax Forfeited:</strong> $0.</li></ul></div>
+                    ${buildHistoryTable(p5Hist)}
+            `;
+            
+            results.push({
+                name: "Path 6: Delayed FL", liq: p6Liq, re: p6Re, tax: 0, net: p6Liq + p6Re,
+                details: `
+                    <div class="details-overview">
+                        <strong>Overview:</strong> Purchase a FL property early to lock in appreciation and generate rental income, but delay the official move to FL for ${delayedFlYears} years. Because FL has no state income tax, we simply minimize portfolio withdrawals to avoid WA capital gains tax until we establish FL domicile.
+                    </div>
+                    <div>
+                        <h4>Liquid Capital Mechanics (The Tax Arbitrage Phase)</h4>
+                        <p>Unlike moving to California, delaying our move to Florida is purely an arbitrage play. We avoid liquidating major assets while still domiciled in WA (saving the 7% WA Capital Gains tax). We pull only the ${formatCurrency(flDpAmtP6)} down payment, rent the FL house out to subsidize costs, and wait to liquidate the rest of our portfolio tax-free once we establish FL domicile.</p>
+                        
+                        <h5>Phase 1: WA Domicile (Years 1-${delayedFlYears}) - Year 1 Breakdown:</h5>
+                        <div class="math-box">
+                            Starting Portfolio: ${formatCurrency(startLiq - flDpAmtP6)}
+                            <span class="math-subtext">(${formatCurrency(startLiq)} initial - ${formatCurrency(flDpAmtP6)} FL Down Payment.)</span><br>
+
                             + Base Spend: ${formatCurrency(y1Spend)}
                             <span class="math-subtext">($${numToCommas(y1Spend/12)}/mo × 12 months)</span>
                             
-                            + FL Mortgage P&I: ${formatCurrency(flMortgage)}
-                            <span class="math-subtext">(${formatCurrency(flHome - flDpAmt)} principal loan amortized at ${formatPct(intRate)} over 30 years)</span>
+                            + FL Mortgage P&I: ${formatCurrency(flMortgageP6)}
+                            <span class="math-subtext">(${formatCurrency(flHomeP6 - flDpAmtP6)} loan at ${formatPct(intRate)} over 30 years)</span>
                             
-                            + CA Mortgage P&I: ${formatCurrency(caMortgage)}
-                            <span class="math-subtext">(${formatCurrency(caHome - caDpAmt)} principal loan amortized at ${formatPct(intRate)} over 30 years)</span>
+                            + FL Taxes/HOA: ${formatCurrency(flStaticBaseP6)}
                             
-                            + Combined Prop Taxes/HOA: ${formatCurrency(flStaticBase + caStaticBase + waCarry)}
-                            <span class="math-subtext">(Static bases: FL 2.25% + CA 1.75% + WA $42k Baseline)</span>
+                            + WA Carry: ${formatCurrency(waCarry)}
+                            <span class="math-subtext">(Baseline taxes & insurance while living in our WA home)</span>
                             
-                            - WA LTR Income (Gross Offset): -${formatCurrency(netRentWA_Base)}
-                            <span class="math-subtext">($${numToCommas(waRentMonthly)}/mo × 12 months, minus ${formatPct(mgmtFee)} Property Mgmt Fee)</span>
-                            
-                            - CA LTR Income (Gross Offset): -${formatCurrency(netRentCA_Base)}
-                            <span class="math-subtext">($${numToCommas(caRentMonthly)}/mo × 12 months, minus ${formatPct(mgmtFee)} Property Mgmt Fee)</span>
+                            - FL LTR Income (Gross Offset): -${formatCurrency(netRentFL_BaseP6)}
+                            <span class="math-subtext">($${numToCommas(flRentP6)}/mo from owned FL home × 12 months, minus ${formatPct(mgmtFee)} Mgmt Fee)</span>
                             
                             ---------------------------------------------------------<br>
-                            = <strong>Total Expenses: ${formatCurrency(p5Exp)}</strong><br><br>
+                            = <strong>Total Expenses: ${formatCurrency(p6ExpYear1)}</strong><br><br>
 
-                            - Net Income: -${formatCurrency(p5NetInc)}
-                            <span class="math-subtext">(Pre-tax $${numToCommas(y1Inc/12)}/mo × 12 months, minus ${formatPct(p5TaxR)} Fed Tax)</span><br>
+                            - Net Income: -${formatCurrency(p6NetInc)}
+                            <span class="math-subtext">(Pre-tax $${numToCommas(y1Inc/12)}/mo × 12 months, minus ${formatPct(p6TaxR)} Fed Tax)</span><br>
 
                             ---------------------------------------------------------<br>
-                            = <strong>Net Portfolio Shortfall: ${formatCurrency(p5Short)}</strong><br><br>
+                            = <strong>Net Portfolio Shortfall: ${formatCurrency(p6Short)}</strong><br><br>
                             
-                            ÷ (1 - ${formatPct(p5TaxR)} Federal Tax Only - 0% FL State Tax)<br>
-                            = <strong>Gross Withdrawal: ${formatCurrency(p5GrossW)}</strong>
+                            ÷ (1 - ${formatPct(p6TaxR)} Fed Tax Only - WA residency)<br>
+                            = <strong>Gross Withdrawal: ${formatCurrency(p6GrossW)}</strong>
                         </div>
+                        
+                        <h5>Phase 2: FL Domicile (Years ${delayedFlYears + 1}+):</h5>
+                        <p>We officially move to FL. The rental income stream flips: we lose the FL rent, but begin renting out the WA home. Any further portfolio liquidations are now completely free of WA state tax.</p>
                     </div>
                     <div>
                         <h4>Real Estate & Estate Shielding</h4>
-                        <p>We control a massive real estate footprint while legally sheltering it from state-level wealth taxation via our Florida domicile.</p>
                         <ul>
                             <li><strong>WA Home Growth (${years} years):</strong> ${formatCurrency(fvWa)}</li>
-                            <li><strong>FL Home Growth (${endYear - flPurchaseYr} years):</strong> ${formatCurrency(fvFl)}</li>
-                            <li><strong>CA Home Growth (${endYear - caPurchaseYrPath5} years):</strong> ${formatCurrency(fvCaPath5)}</li>
-                            <li><strong>Total Tax Forfeited at Death:</strong> $0.</li>
+                            <li><strong>FL Home Growth (${endYear - flPurchaseYrP6} years):</strong> Value: <strong>${formatCurrency(fvFlP6)}</strong>.</li>
+                            <li><strong>Total Tax Forfeited at Death:</strong> $0. We are legally domiciled in FL when we pass.</li>
                         </ul>
                     </div>
-                    ${buildHistoryTable(p5Hist)}
+                    ${buildHistoryTable(p6Hist)}
                 `
             });
 
-            // Populate Main Table
             const tbody = document.querySelector('#resultsTable tbody');
             tbody.innerHTML = '';
             
@@ -1027,25 +922,26 @@
 
             updateChart(labels, liquidData, realEstateData, taxData, netLegacyData);
 
-            // Populate Tax & Risk Analytics Panel
             let taxRanks = [
                 { name: "Path 1 (WA Baseline)", val: p1CumTax },
-                { name: "Path 2 (CA Residency)", val: p2CumTax },
-                { name: "Path 3 (FL Tax Haven)", val: p3CumTax },
+                { name: "Path 2 (Immediate CA)", val: p2CumTax },
+                { name: "Path 3 (Immediate FL)", val: p3CumTax },
                 { name: "Path 4 (Delayed CA)", val: p4CumTax },
-                { name: "Path 5 (Hybrid FL/CA)", val: p5CumTax }
+                { name: "Path 5 (Hybrid FL/CA)", val: p5CumTax },
+                { name: "Path 6 (Delayed FL)", val: p6CumTax }
             ].sort((a, b) => a.val - b.val);
 
             let swrRanks = [
                 { name: "Path 1 (WA Baseline)", val: p1PeakSWR },
-                { name: "Path 2 (CA Residency)", val: p2PeakSWR },
-                { name: "Path 3 (FL Tax Haven)", val: p3PeakSWR },
+                { name: "Path 2 (Immediate CA)", val: p2PeakSWR },
+                { name: "Path 3 (Immediate FL)", val: p3PeakSWR },
                 { name: "Path 4 (Delayed CA)", val: p4PeakSWR },
-                { name: "Path 5 (Hybrid FL/CA)", val: p5PeakSWR }
+                { name: "Path 5 (Hybrid FL/CA)", val: p5PeakSWR },
+                { name: "Path 6 (Delayed FL)", val: p6PeakSWR }
             ].sort((a, b) => a.val - b.val);
 
             const getRankColor = (index) => {
-                const colors = ['#34d399', '#a3e635', '#facc15', '#fb923c', '#f87171']; // Green -> Lime -> Yellow -> Orange -> Red
+                const colors = ['#34d399', '#a3e635', '#facc15', '#fb923c', '#f87171', '#e11d48']; 
                 return colors[index];
             };
 
@@ -1080,7 +976,6 @@
                 </div>
             `;
 
-            // Draw Time Series Chart
             const tsCtx = document.getElementById('timeSeriesChart').getContext('2d');
             if (timeSeriesChartInstance) timeSeriesChartInstance.destroy();
             timeSeriesChartInstance = new Chart(tsCtx, {
@@ -1092,7 +987,8 @@
                         { label: 'Path 2 (CA)', data: tsP2, borderColor: '#fb923c', backgroundColor: '#fb923c', tension: 0.3, fill: false, borderWidth: 2, pointRadius: 0 },
                         { label: 'Path 3 (FL)', data: tsP3, borderColor: '#34d399', backgroundColor: '#34d399', tension: 0.3, fill: false, borderWidth: 2, pointRadius: 0 },
                         { label: 'Path 4 (Delay CA)', data: tsP4, borderColor: '#a78bfa', backgroundColor: '#a78bfa', tension: 0.3, fill: false, borderWidth: 3, pointRadius: 0 },
-                        { label: 'Path 5 (Hybrid)', data: tsP5, borderColor: '#38bdf8', backgroundColor: '#38bdf8', tension: 0.3, fill: false, borderWidth: 3, pointRadius: 0 }
+                        { label: 'Path 5 (Hybrid)', data: tsP5, borderColor: '#38bdf8', backgroundColor: '#38bdf8', tension: 0.3, fill: false, borderWidth: 3, pointRadius: 0 },
+                        { label: 'Path 6 (Delay FL)', data: tsP6, borderColor: '#f472b6', backgroundColor: '#f472b6', tension: 0.3, fill: false, borderWidth: 3, pointRadius: 0 }
                     ]
                 },
                 options: {
