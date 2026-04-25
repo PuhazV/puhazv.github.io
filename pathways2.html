@@ -198,11 +198,11 @@
                         <input type="number" id="caDownPaymentPct" value="20" step="1" oninput="calculate()">
                     </div>
                     <div class="input-group">
-                        <label>FL DP (Paths 3, 5) (%)</label>
+                        <label>FL DP (P3, P5) (%)</label>
                         <input type="number" id="flDownPaymentPct" value="20" step="1" oninput="calculate()">
                     </div>
                     <div class="input-group">
-                        <label>FL DP (Path 6) (%)</label>
+                        <label>FL DP (P6) (%)</label>
                         <input type="number" id="flDpPctP6" value="20" step="1" oninput="calculate()">
                     </div>
                 </div>
@@ -218,7 +218,7 @@
                         <input type="text" id="caRent" value="6,500" oninput="formatCurrencyInput(this)">
                     </div>
                     <div class="input-group">
-                        <label>FL Rent (Path 6) ($/mo)</label>
+                        <label>FL Rent (P6) ($/mo)</label>
                         <input type="text" id="flRentP6" value="5,000" oninput="formatCurrencyInput(this)">
                     </div>
                     <div class="input-group">
@@ -228,10 +228,6 @@
                     <div class="input-group">
                         <label>CA Winter Rent (P4) ($/mo)</label>
                         <input type="text" id="caWinterRentCost" value="6,500" oninput="formatCurrencyInput(this)">
-                    </div>
-                    <div class="input-group">
-                        <label>Months in CA (P4)</label>
-                        <input type="number" id="waWinterMonths" value="5" oninput="calculate()">
                     </div>
                 </div>
 
@@ -271,7 +267,7 @@
                         <div style="display: flex; gap: 10px;">
                             <div class="input-group" style="flex: 1;">
                                 <label>FL Home (P6) ($)</label>
-                                <input type="text" id="flHomeP6" value="1,200,000" oninput="formatCurrencyInput(this)">
+                                <input type="text" id="flHomeP6" value="900,000" oninput="formatCurrencyInput(this)">
                             </div>
                             <div class="input-group" style="width: 100px;">
                                 <label>Apprec (%)</label>
@@ -282,46 +278,50 @@
                 </div>
 
                 <div class="input-group-box" style="grid-column: 1 / -1;">
-                    <h3>Timelines & Scenarios</h3>
+                    <h3>Timelines</h3>
                     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px;">
                         <div>
                             <div class="input-group">
-                                <label>Projection End Year</label>
+                                <label>Proj End Year</label>
                                 <input type="number" id="endYear" value="2055" oninput="calculate()">
                             </div>
                             <div class="input-group">
                                 <label>P4: WA Delay (Yrs)</label>
                                 <input type="number" id="delayedCaYears" value="7" oninput="calculate()">
                             </div>
+                            <div class="input-group">
+                                <label>P4: Months in CA</label>
+                                <input type="number" id="waWinterMonths" value="5" oninput="calculate()">
+                            </div>
                         </div>
                         <div>
                             <div class="input-group">
-                                <label>P2: CA Purchase Yr</label>
+                                <label>P2: CA Purch Yr</label>
                                 <input type="number" id="caPurchaseYrPath2" value="2026" oninput="calculate()">
                             </div>
                             <div class="input-group">
-                                <label>P4: CA Purchase Yr</label>
+                                <label>P4: CA Purch Yr</label>
                                 <input type="number" id="caPurchaseYrPath4" value="2026" oninput="calculate()">
                             </div>
                         </div>
                         <div>
                             <div class="input-group">
-                                <label>P3, P5: FL Purchase Yr</label>
+                                <label>P3, P5: FL Purch Yr</label>
                                 <input type="number" id="flPurchaseYr" value="2026" oninput="calculate()">
                             </div>
                             <div class="input-group">
-                                <label>P5: CA Purchase Yr</label>
+                                <label>P5: CA Purch Yr</label>
                                 <input type="number" id="caPurchaseYrPath5" value="2028" oninput="calculate()">
                             </div>
                         </div>
                         <div>
                             <div class="input-group">
-                                <label>P6: FL Purchase Yr</label>
+                                <label>P6: FL Purch Yr</label>
                                 <input type="number" id="flPurchaseYrP6" value="2026" oninput="calculate()">
                             </div>
                             <div class="input-group">
                                 <label>P6: WA Delay (Yrs)</label>
-                                <input type="number" id="delayedFlYears" value="5" oninput="calculate()">
+                                <input type="number" id="delayedFlYears" value="4" oninput="calculate()">
                             </div>
                         </div>
                     </div>
@@ -769,7 +769,7 @@
 
             // Push objects to results array with fully formatted detail strings
             results.push({ 
-                name: "Path 1: Stay in WA", liq: p1Liq, re: fvWa, tax: -p1Tax, net: p1Estate - p1Tax, 
+                name: "P1: Stay in WA", liq: p1Liq, re: fvWa, tax: -p1Tax, net: p1Estate - p1Tax, 
                 details: `
                     <div class="details-overview"><strong>Overview:</strong> Remain in our current Washington primary residence for the duration of retirement. This path requires the lowest initial capital output but exposes our final legacy to the aggressive WA state estate tax.</div>
                     <div><h4>Liquid Capital & Compounding Mechanics</h4><p>Our starting capital is <strong>${formatCurrency(startLiq)}</strong>. Every year, the simulation offsets our living expenses with any active income, withdraws the net shortfall from our portfolio, and then compounds the remaining balance by our assumed <strong>${formatPct(r)}</strong> market return.</p>
@@ -791,7 +791,7 @@
             });
 
             results.push({ 
-                name: "Path 2: Immediate CA", liq: p2Liq, re: p2Re, tax: 0, net: p2Liq + p2Re, 
+                name: "P2: Immediate CA", liq: p2Liq, re: p2Re, tax: 0, net: p2Liq + p2Re, 
                 details: `
                     <div class="details-overview"><strong>Overview:</strong> Relocate permanently to California early in retirement. Establishing legal domicile in CA shields our entire legacy from WA estate taxes, but incurs a higher ongoing lifestyle cost and a significant upfront tax hit if we liquidate stock assets to move.</div>
                     <div><h4>Liquid Capital & Compounding Mechanics</h4><p>Liquidating assets to fund the move potentially subjects our portfolio to a <strong>${formatCurrency(caEntryTax)} Capital Gains Tax (${formatPct(liquidationTaxRate)})</strong>. Because of this initial drain, our compounding engine is reduced from Day 1.</p>
@@ -809,7 +809,7 @@
             });
 
             results.push({ 
-                name: "Path 3: Immediate FL", liq: p3Liq, re: p3Re, tax: 0, net: p3Liq + p3Re, 
+                name: "P3: Immediate FL", liq: p3Liq, re: p3Re, tax: 0, net: p3Liq + p3Re, 
                 details: `
                     <div class="details-overview"><strong>Overview:</strong> Relocate permanently to Florida early in retirement. This highly efficient path establishes domicile in a tax haven, protecting capital compounding while avoiding WA taxes entirely.</div>
                     <div><h4>Liquid Capital & Compounding Mechanics</h4><p>Our starting capital is only reduced by our FL down payment (${formatCurrency(flDpAmt)}). With Florida's 0% state income tax, our "gross-up" to pull cash is perfectly efficient.</p>
@@ -827,7 +827,7 @@
             });
 
             results.push({ 
-                name: "Path 4: Delayed CA", liq: p4Liq, re: p4Re, tax: 0, net: p4Liq + p4Re, 
+                name: "P4: Delayed CA", liq: p4Liq, re: p4Re, tax: 0, net: p4Liq + p4Re, 
                 details: `
                     <div class="details-overview"><strong>Overview:</strong> Purchase a CA property early, but delay our official move for ${delayedCaYears} years.</div>
                     <div><h4>Liquid Capital Mechanics</h4><p>By waiting to legally change our domicile, we avoid the initial ${formatCurrency(caEntryTax)} capital gains tax hit on our portfolio.</p>
@@ -846,7 +846,7 @@
             });
 
             results.push({ 
-                name: "Path 5: Hybrid FL/CA", liq: p5Liq, re: p5Re, tax: 0, net: p5Liq + p5Re, 
+                name: "P5: Hybrid FL/CA", liq: p5Liq, re: p5Re, tax: 0, net: p5Liq + p5Re, 
                 details: `
                     <div class="details-overview"><strong>Overview:</strong> Establish tax domicile in FL while owning properties in WA, FL, and CA to subsidize a three-home lifestyle.</div>
                     <div><h4>Liquid Capital Mechanics</h4><p>We leverage three properties. We pay FL and CA Down Payments from liquid assets, subsidized by two streams of LTR income.</p>
@@ -864,7 +864,7 @@
             });
             
             results.push({
-                name: "Path 6: Delayed FL", liq: p6Liq, re: p6Re, tax: 0, net: p6Liq + p6Re,
+                name: "P6: Delayed FL", liq: p6Liq, re: p6Re, tax: 0, net: p6Liq + p6Re,
                 details: `
                     <div class="details-overview">
                         <strong>Overview:</strong> Purchase a FL property early to lock in appreciation and generate rental income, but delay the official move to FL for ${delayedFlYears} years. Because FL has no state income tax, we simply minimize portfolio withdrawals to avoid WA capital gains tax until we establish FL domicile.
@@ -924,7 +924,7 @@
             tbody.innerHTML = '';
             
             results.forEach((row, index) => {
-                labels.push(row.name.replace(/Path \d: /, ''));
+                labels.push(row.name.replace(/P\d: /, ''));
                 liquidData.push(row.liq);
                 realEstateData.push(row.re);
                 taxData.push(row.tax); 
@@ -959,21 +959,21 @@
             updateChart(labels, liquidData, realEstateData, taxData, netLegacyData);
 
             let taxRanks = [
-                { name: "Path 1 (WA Baseline)", val: p1CumTax },
-                { name: "Path 2 (Immediate CA)", val: p2CumTax },
-                { name: "Path 3 (Immediate FL)", val: p3CumTax },
-                { name: "Path 4 (Delayed CA)", val: p4CumTax },
-                { name: "Path 5 (Hybrid FL/CA)", val: p5CumTax },
-                { name: "Path 6 (Delayed FL)", val: p6CumTax }
+                { name: "P1 (WA Baseline)", val: p1CumTax },
+                { name: "P2 (Immediate CA)", val: p2CumTax },
+                { name: "P3 (Immediate FL)", val: p3CumTax },
+                { name: "P4 (Delayed CA)", val: p4CumTax },
+                { name: "P5 (Hybrid FL/CA)", val: p5CumTax },
+                { name: "P6 (Delayed FL)", val: p6CumTax }
             ].sort((a, b) => a.val - b.val);
 
             let swrRanks = [
-                { name: "Path 1 (WA Baseline)", val: p1PeakSWR },
-                { name: "Path 2 (Immediate CA)", val: p2PeakSWR },
-                { name: "Path 3 (Immediate FL)", val: p3PeakSWR },
-                { name: "Path 4 (Delayed CA)", val: p4PeakSWR },
-                { name: "Path 5 (Hybrid FL/CA)", val: p5PeakSWR },
-                { name: "Path 6 (Delayed FL)", val: p6PeakSWR }
+                { name: "P1 (WA Baseline)", val: p1PeakSWR },
+                { name: "P2 (Immediate CA)", val: p2PeakSWR },
+                { name: "P3 (Immediate FL)", val: p3PeakSWR },
+                { name: "P4 (Delayed CA)", val: p4PeakSWR },
+                { name: "P5 (Hybrid FL/CA)", val: p5PeakSWR },
+                { name: "P6 (Delayed FL)", val: p6PeakSWR }
             ].sort((a, b) => a.val - b.val);
 
             const getRankColor = (index) => {
@@ -1019,12 +1019,12 @@
                 data: {
                     labels: tsLabels,
                     datasets: [
-                        { label: 'Path 1 (WA)', data: tsP1, borderColor: '#94a3b8', backgroundColor: '#94a3b8', tension: 0.3, fill: false, borderWidth: 2, pointRadius: 0 },
-                        { label: 'Path 2 (CA)', data: tsP2, borderColor: '#fb923c', backgroundColor: '#fb923c', tension: 0.3, fill: false, borderWidth: 2, pointRadius: 0 },
-                        { label: 'Path 3 (FL)', data: tsP3, borderColor: '#34d399', backgroundColor: '#34d399', tension: 0.3, fill: false, borderWidth: 2, pointRadius: 0 },
-                        { label: 'Path 4 (Delay CA)', data: tsP4, borderColor: '#a78bfa', backgroundColor: '#a78bfa', tension: 0.3, fill: false, borderWidth: 3, pointRadius: 0 },
-                        { label: 'Path 5 (Hybrid)', data: tsP5, borderColor: '#38bdf8', backgroundColor: '#38bdf8', tension: 0.3, fill: false, borderWidth: 3, pointRadius: 0 },
-                        { label: 'Path 6 (Delay FL)', data: tsP6, borderColor: '#f472b6', backgroundColor: '#f472b6', tension: 0.3, fill: false, borderWidth: 3, pointRadius: 0 }
+                        { label: 'P1 (WA)', data: tsP1, borderColor: '#94a3b8', backgroundColor: '#94a3b8', tension: 0.3, fill: false, borderWidth: 2, pointRadius: 0 },
+                        { label: 'P2 (CA)', data: tsP2, borderColor: '#fb923c', backgroundColor: '#fb923c', tension: 0.3, fill: false, borderWidth: 2, pointRadius: 0 },
+                        { label: 'P3 (FL)', data: tsP3, borderColor: '#34d399', backgroundColor: '#34d399', tension: 0.3, fill: false, borderWidth: 2, pointRadius: 0 },
+                        { label: 'P4 (Delay CA)', data: tsP4, borderColor: '#a78bfa', backgroundColor: '#a78bfa', tension: 0.3, fill: false, borderWidth: 3, pointRadius: 0 },
+                        { label: 'P5 (Hybrid)', data: tsP5, borderColor: '#38bdf8', backgroundColor: '#38bdf8', tension: 0.3, fill: false, borderWidth: 3, pointRadius: 0 },
+                        { label: 'P6 (Delay FL)', data: tsP6, borderColor: '#f472b6', backgroundColor: '#f472b6', tension: 0.3, fill: false, borderWidth: 3, pointRadius: 0 }
                     ]
                 },
                 options: {
