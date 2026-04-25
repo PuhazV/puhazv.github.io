@@ -219,7 +219,51 @@
         for (let i = 0; i < 40; i++) {
             const yr = inp.startYear + i, b = inp.buckets[Math.floor(i/5)];
             const sLiq = liq;
-            const net = (b.spend * Math.pow(1 + inp.inflation, i));
+
+            // --- FIX STARTS HERE ---
+            // 1. Find if there is a one-time event for the current year
+            const eventThisYear = inp.events.find(e => e.yr === yr)?.val || 0;
+
+            // 2. Add the event to the pocket-need (Net Spendable Goal)
+            const net = (b.spend * Math.pow(1 + inp.inflation, i)) + eventThisYear;
+            // --- FIX ENDS HERE ---
+
+            const gross = net / (1 - Math.min(0.95, b.tax));
+            let wth = Math.max(0, gross - (b.income * Math.pow(1 + inp.inflation, i)));
+            
+            // Calculate taxes on total income (withdrawal + fixed income)
+            const tx = (wth + (b.income * Math.pow(1 + inp.inflation, i))) * b.tax;
+
+            if (liq <= 0) { liq = 0; wth = 0; } 
+            else if (wth > liq) { wth = liq; }
+
+            let g = inp.returns.find(r => r.yr === yr)?.val ?? inp.stockGrowth;
+            liq = Math.max(0, (liq - wth) * (1 + g)); 
+            hse *= (1 + inp.reApprec);
+
+            res.push({ 
+                yr, 
+                sLiq, 
+                taxableIncome: b.income * 12 * Math.pow(1 + inp.inflation, i), 
+                withdrawal: wth, 
+                taxes: tx, 
+                netSpendable: net, 
+                endLiq: liq, 
+                house: hse, 
+                total: liq + hse 
+            });
+        }
+        return res;
+    }
+
+    function run(inp) {
+        if (!inp) return null;
+        let res = [], liq = inp.startLiquid, hse = inp.startHouse;
+        for (let i = 0; i < 40; i++) {
+            const yr = inp.startYear + i, b = inp.buckets[Math.floor(i/5)];
+            const sLiq = liq;
+            const eventThisYear = inp.events.find(e => e.yr === yr)?.val || 0;
+            const net = (b.spend * Math.pow(1 + inp.inflation, i)) + eventThisYear;
             const gross = net / (1 - Math.min(0.95, b.tax));
             let wth = Math.max(0, gross - (b.income * Math.pow(1 + inp.inflation, i)));
             const tx = (wth + (b.income * Math.pow(1 + inp.inflation, i))) * b.tax;
