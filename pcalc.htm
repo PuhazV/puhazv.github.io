@@ -140,39 +140,36 @@
             <div id="sect-fundamentals" class="section-content collapsed">
                 <div class="input-grid-5">
                     <div class="input-group"><label>Start Year</label><input type="number" id="startYear" value="2028" oninput="calculate()"></div>
-                    <div class="input-group"><label>Inflation %</label><input type="number" id="inflation" value="4.0" step="0.1" oninput="calculate()"></div>
-                    
                     <div class="input-group"><label>Stocks $</label><input type="text" id="startStocks" value="5,000,000" oninput="formatCurrencyInput(this)"></div>
-                    <div class="input-group"><label>Stock Grwth %</label><input type="number" id="stockGrowth" value="7.0" step="0.1" oninput="calculate()"></div>
-                    
                     <div class="input-group"><label>Bonds $</label><input type="text" id="startBonds" value="2,000,000" oninput="formatCurrencyInput(this)"></div>
-                    <div class="input-group"><label>Bond Yield %</label><input type="number" id="bondYield" value="4.0" step="0.1" oninput="calculate()"></div>
-
                     <div class="input-group"><label>TIPS $</label><input type="text" id="startTips" value="2,000,000" oninput="formatCurrencyInput(this)"></div>
-                    <div class="input-group"><label>TIPS Yield %</label><input type="number" id="tipsYield" value="4.5" step="0.1" oninput="calculate()"></div>
-
                     <div class="input-group"><label>Cash $</label><input type="text" id="startCash" value="1,000,000" oninput="formatCurrencyInput(this)"></div>
-                    <div class="input-group"><label>Cash Yield %</label><input type="number" id="cashYield" value="2.0" step="0.1" oninput="calculate()"></div>
-
+                    <div class="input-group"><label>Cash Yield % (Static)</label><input type="number" id="cashYield" value="2.0" step="0.1" oninput="calculate()"></div>
                     <div class="input-group"><label>House Value $</label><input type="text" id="startHouse" value="3,000,000" oninput="formatCurrencyInput(this)"></div>
-                    <div class="input-group"><label>RE Apprec %</label><input type="number" id="reApprec" value="4.0" step="0.1" oninput="calculate()"></div>
+                    <div class="input-group"><label>RE Apprec % (Static)</label><input type="number" id="reApprec" value="4.0" step="0.1" oninput="calculate()"></div>
                 </div>
             </div>
+
+            <h3 class="section-header collapsed" onclick="toggleSection('inflation')">Inflation (%)</h3>
+            <div id="sect-inflation" class="section-content collapsed"><div class="input-grid-5" id="inflationGrid"></div></div>
+            
+            <h3 class="section-header collapsed" onclick="toggleSection('stockGrowth')">Stock Growth (%)</h3>
+            <div id="sect-stockGrowth" class="section-content collapsed"><div class="input-grid-5" id="stockGrowthGrid"></div></div>
+            
+            <h3 class="section-header collapsed" onclick="toggleSection('bondYield')">Bond Yield (%)</h3>
+            <div id="sect-bondYield" class="section-content collapsed"><div class="input-grid-5" id="bondYieldGrid"></div></div>
+
+            <h3 class="section-header collapsed" onclick="toggleSection('tipsYield')">TIPS Yield (%)</h3>
+            <div id="sect-tipsYield" class="section-content collapsed"><div class="input-grid-5" id="tipsYieldGrid"></div></div>
             
             <h3 class="section-header collapsed" onclick="toggleSection('spend')">Monthly Spend ($)</h3>
-            <div id="sect-spend" class="section-content collapsed">
-                <div class="input-grid-5" id="spendGrid"></div>
-            </div>
+            <div id="sect-spend" class="section-content collapsed"><div class="input-grid-5" id="spendGrid"></div></div>
             
             <h3 class="section-header collapsed" onclick="toggleSection('income')">Monthly Income ($)</h3>
-            <div id="sect-income" class="section-content collapsed">
-                <div class="input-grid-5" id="incomeGrid"></div>
-            </div>
+            <div id="sect-income" class="section-content collapsed"><div class="input-grid-5" id="incomeGrid"></div></div>
 
             <h3 class="section-header collapsed" onclick="toggleSection('tax')">Tax Estimates (%)</h3>
-            <div id="sect-tax" class="section-content collapsed">
-                <div class="input-grid-5" id="taxGrid"></div>
-            </div>
+            <div id="sect-tax" class="section-content collapsed"><div class="input-grid-5" id="taxGrid"></div></div>
             
             <h3 class="section-header collapsed" onclick="toggleSection('stress')">Stress Test & Events</h3>
             <div id="sect-stress" class="section-content collapsed">
@@ -198,9 +195,10 @@
 </div>
 
 <script>
-    let scenarios = JSON.parse(localStorage.getItem('scenData_v12')) || { A: null, B: null, C: null, D: null };
-    let scenarioNames = JSON.parse(localStorage.getItem('scenNames_v12')) || { A: '', B: '', C: '', D: '' };
-    let baselineSlot = localStorage.getItem('baseSlot_v12');
+    // Bumping storage version to clear old incompatible static inputs
+    let scenarios = JSON.parse(localStorage.getItem('scenData_v13')) || { A: null, B: null, C: null, D: null };
+    let scenarioNames = JSON.parse(localStorage.getItem('scenNames_v13')) || { A: '', B: '', C: '', D: '' };
+    let baselineSlot = localStorage.getItem('baseSlot_v13');
     
     if (baselineSlot === "null" || baselineSlot === null) baselineSlot = null;
 
@@ -217,13 +215,25 @@
     }
 
     function initGrids() {
-        ['spend', 'income', 'tax'].forEach(k => {
-            const container = document.getElementById(k + 'Grid');
+        const categories = [
+            { k: 'spend', def: (i) => i<=2?25000:i<=4?20000:15000, type: 'text' },
+            { k: 'income', def: () => 0, type: 'text' },
+            { k: 'tax', def: (i) => i<=2?15:i<=4?12:i<=6?10:8, type: 'number', step: '0.1' },
+            { k: 'inflation', def: () => 4.0, type: 'number', step: '0.1' },
+            { k: 'stockGrowth', def: () => 7.0, type: 'number', step: '0.1' },
+            { k: 'bondYield', def: () => 4.0, type: 'number', step: '0.1' },
+            { k: 'tipsYield', def: () => 4.5, type: 'number', step: '0.1' }
+        ];
+
+        categories.forEach(cat => {
+            const container = document.getElementById(cat.k + 'Grid');
+            if(!container) return;
             for (let i = 1; i <= 8; i++) {
-                let def = k==='spend' ? (i<=2?25000:i<=4?20000:15000) : (k==='tax'?(i<=2?15:i<=4?12:i<=6?10:8):0);
                 const div = document.createElement('div');
                 div.className = 'input-group';
-                div.innerHTML = `<label>${(i-1)*5+1}-${i*5}</label><input type="${k==='tax'?'number':'text'}" id="${k}${i}" value="${def.toLocaleString()}" oninput="calculate()">`;
+                let val = cat.def(i);
+                let valStr = cat.type === 'text' ? val.toLocaleString() : val.toFixed(1);
+                div.innerHTML = `<label>${(i-1)*5+1}-${i*5}</label><input type="${cat.type}" ${cat.step ? `step="${cat.step}"` : ''} id="${cat.k}${i}" value="${valStr}" oninput="${cat.type==='text' ? 'formatCurrencyInput(this)' : 'calculate()'}">`;
                 container.appendChild(div);
             }
         });
@@ -235,7 +245,6 @@
         calculate();
     }
 
-    // Auto-adjusts the rebalance inputs so they always equal 100%
     function adjustRebalance(el, changedType) {
         const row = el.closest('.event-row');
         const sEl = row.querySelector('.dyn-reb-s');
@@ -252,7 +261,6 @@
         let diff = 100 - total;
 
         if (diff !== 0) {
-            // Waterfall absorption priority
             let order = [
                 { type: 'c', el: cEl, get val() { return Number(this.el.value); } },
                 { type: 't', el: tEl, get val() { return Number(this.el.value); } },
@@ -274,26 +282,34 @@
                     }
                 }
             }
-            
-            if (diff < 0) {
-               el.value = Number(el.value) + diff; 
-            }
+            if (diff < 0) { el.value = Number(el.value) + diff; }
         }
         calculate();
     }
 
     function getInputs() {
-        const v = id => Number(document.getElementById(id).value.replace(/,/g, ''));
+        const v = id => {
+            const el = document.getElementById(id);
+            return el ? Number(el.value.replace(/,/g, '')) : 0;
+        };
         const inp = { 
-            startYear: v('startYear'), inflation: v('inflation')/100, 
-            startStocks: v('startStocks'), stockGrowth: v('stockGrowth')/100, 
-            startBonds: v('startBonds'), bondYield: v('bondYield')/100, 
-            startTips: v('startTips'), tipsYield: v('tipsYield')/100,
-            startCash: v('startCash'), cashYield: v('cashYield')/100, 
+            startYear: v('startYear'), 
+            startStocks: v('startStocks'), startBonds: v('startBonds'), 
+            startTips: v('startTips'), startCash: v('startCash'), cashYield: v('cashYield')/100, 
             startHouse: v('startHouse'), reApprec: v('reApprec')/100, 
             buckets: [], returns: [], events: [], rebalances: [] 
         };
-        for (let i = 1; i <= 8; i++) inp.buckets.push({ spend: v(`spend${i}`)*12, income: v(`income${i}`)*12, tax: v(`tax${i}`)/100 });
+        for (let i = 1; i <= 8; i++) {
+            inp.buckets.push({ 
+                spend: v(`spend${i}`)*12, 
+                income: v(`income${i}`)*12, 
+                tax: v(`tax${i}`)/100,
+                inflation: v(`inflation${i}`)/100,
+                stockGrowth: v(`stockGrowth${i}`)/100,
+                bondYield: v(`bondYield${i}`)/100,
+                tipsYield: v(`tipsYield${i}`)/100
+            });
+        }
         
         document.querySelectorAll('.dyn-ret-yr').forEach((node, idx) => {
             inp.returns.push({ yr: Number(node.value), val: Number(document.querySelectorAll('.dyn-ret-val')[idx].value)/100 });
@@ -318,8 +334,11 @@
         let res = [];
         let st = inp.startStocks, bd = inp.startBonds, tp = inp.startTips, csh = inp.startCash, hse = inp.startHouse;
         
+        let cumInflation = 1.0; 
+
         for (let i = 0; i < 40; i++) {
-            const yr = inp.startYear + i, b = inp.buckets[Math.floor(i/5)];
+            const yr = inp.startYear + i;
+            const b = inp.buckets[Math.floor(i/5)];
             
             const reb = inp.rebalances.find(r => r.yr === yr);
             if (reb) {
@@ -335,15 +354,21 @@
 
             const cRet = inp.returns.find(r => r.yr === yr);
             const evt = inp.events.find(e => e.yr === yr);
-
             const eventThisYear = evt?.val || 0;
-            const net = (b.spend * Math.pow(1 + inp.inflation, i)) + eventThisYear;
-            const gross = net / (1 - Math.min(0.95, b.tax));
             
-            let reqWth = Math.max(0, gross - (b.income * Math.pow(1 + inp.inflation, i)));
-            const tx = (reqWth + (b.income * Math.pow(1 + inp.inflation, i))) * b.tax;
+            // CORRECTED: Spending & Income in Today's Dollars multiplied by Cumulative Inflation
+            const netSpendingNeed = (b.spend * cumInflation) + eventThisYear;
+            const taxableIncome = b.income * cumInflation;
+            
+            // Calculate total gross income needed: netSpendingNeed = totalIncome * (1 - taxRate)
+            const totalIncomeNeeded = netSpendingNeed / (1 - Math.min(0.95, b.tax));
+            const requiredWithdrawal = Math.max(0, totalIncomeNeeded - taxableIncome);
+            
+            // Taxes are calculated on total income (withdrawal + other income)
+            const totalActualIncome = requiredWithdrawal + taxableIncome;
+            const totalTaxes = totalActualIncome * b.tax;
 
-            let remainingWth = reqWth;
+            let remainingWth = requiredWithdrawal;
             
             let drawCash = Math.min(csh, remainingWth);
             csh -= drawCash; remainingWth -= drawCash;
@@ -357,14 +382,14 @@
             let drawStocks = Math.min(st, remainingWth);
             st -= drawStocks; remainingWth -= drawStocks;
 
-            let actualWth = reqWth - remainingWth;
+            let actualWth = requiredWithdrawal - remainingWth;
 
-            let sg = cRet?.val ?? inp.stockGrowth;
+            let sg = cRet?.val ?? b.stockGrowth;
             st *= (1 + sg);
-            bd *= (1 + inp.bondYield);
-            tp *= (1 + inp.tipsYield);
-            csh *= (1 + inp.cashYield);
-            hse *= (1 + inp.reApprec);
+            bd *= (1 + b.bondYield);
+            tp *= (1 + b.tipsYield);
+            csh *= (1 + inp.cashYield); // Static
+            hse *= (1 + inp.reApprec); // Static
 
             let endTotalLiq = st + bd + tp + csh;
 
@@ -373,18 +398,22 @@
                 hasRebalance: !!reb,
                 hasCustomReturn: !!cRet,
                 hasCashEvent: !!evt,
-                taxableIncome: b.income * 12 * Math.pow(1 + inp.inflation, i), 
+                taxableIncome: taxableIncome, 
                 withdrawal: actualWth, 
-                taxes: tx, 
-                netSpendable: net, 
+                taxes: totalTaxes, 
+                netSpendable: netSpendingNeed, 
                 endStocks: st,
                 endBonds: bd,
                 endTips: tp,
                 endCash: csh,
                 endLiq: endTotalLiq, 
                 house: hse, 
-                total: endTotalLiq + hse 
+                total: endTotalLiq + hse,
+                cumInf: cumInflation // Save for Real Power calculation
             });
+            
+            // Compoud Inflation for next year's loop
+            cumInflation *= (1 + b.inflation);
         }
         return res;
     }
@@ -421,9 +450,9 @@
             if (base) {
                 const dL = r.endLiq - base[i].endLiq;
                 const dH = r.house - base[i].house;
-                tr.innerHTML = `${yearStr}<td>${fmt.format(r.withdrawal)}</td><td style="color:var(--primary); font-weight:bold">${fmt.format(r.endLiq)}</td><td class="base-col">${fmt.format(base[i].endLiq)}</td><td class="delta-col ${dL >= 0 ? 'delta-pos' : 'delta-neg'}">${(dL>=0?'+':'')+fmt.format(dL)}</td><td style="color:#fb923c">${fmt.format(r.house)}</td><td class="base-col">${fmt.format(base[i].house)}</td><td class="delta-col ${dH >= 0 ? 'delta-pos' : 'delta-neg'}">${(dH>=0?'+':'')+fmt.format(dH)}</td><td>${fmt.format(r.total)}</td><td class="col-power">${fmt.format(r.total / Math.pow(1 + getInputs().inflation, i))}</td>`;
+                tr.innerHTML = `${yearStr}<td>${fmt.format(r.withdrawal)}</td><td style="color:var(--primary); font-weight:bold">${fmt.format(r.endLiq)}</td><td class="base-col">${fmt.format(base[i].endLiq)}</td><td class="delta-col ${dL >= 0 ? 'delta-pos' : 'delta-neg'}">${(dL>=0?'+':'')+fmt.format(dL)}</td><td style="color:#fb923c">${fmt.format(r.house)}</td><td class="base-col">${fmt.format(base[i].house)}</td><td class="delta-col ${dH >= 0 ? 'delta-pos' : 'delta-neg'}">${(dH>=0?'+':'')+fmt.format(dH)}</td><td>${fmt.format(r.total)}</td><td class="col-power">${fmt.format(r.total / r.cumInf)}</td>`;
             } else {
-                tr.innerHTML = `${yearStr}<td class="col-withdrawal">${fmt.format(r.withdrawal)}</td><td class="col-taxes">${fmt.format(r.taxes)}</td><td>${fmt.format(r.netSpendable)}</td><td style="color:#94a3b8">${fmt.format(r.endCash)}</td><td style="color:#f59e0b">${fmt.format(r.endTips)}</td><td style="color:#a855f7">${fmt.format(r.endBonds)}</td><td style="color:#3b82f6">${fmt.format(r.endStocks)}</td><td style="font-weight:bold">${fmt.format(r.endLiq)}</td><td>${fmt.format(r.total)}</td><td class="col-power">${fmt.format(r.total / Math.pow(1 + getInputs().inflation, i))}</td>`;
+                tr.innerHTML = `${yearStr}<td class="col-withdrawal">${fmt.format(r.withdrawal)}</td><td class="col-taxes">${fmt.format(r.taxes)}</td><td>${fmt.format(r.netSpendable)}</td><td style="color:#94a3b8">${fmt.format(r.endCash)}</td><td style="color:#f59e0b">${fmt.format(r.endTips)}</td><td style="color:#a855f7">${fmt.format(r.endBonds)}</td><td style="color:#3b82f6">${fmt.format(r.endStocks)}</td><td style="font-weight:bold">${fmt.format(r.endLiq)}</td><td>${fmt.format(r.total)}</td><td class="col-power">${fmt.format(r.total / r.cumInf)}</td>`;
             }
             tbody.appendChild(tr);
         });
@@ -477,18 +506,14 @@
         }
     }
 
-    function saveSlot(s) { scenarios[s] = getInputs(); if (!scenarioNames[s]) scenarioNames[s] = `Scenario ${s}`; localStorage.setItem('scenData_v12', JSON.stringify(scenarios)); localStorage.setItem('scenNames_v12', JSON.stringify(scenarioNames)); updateScenarioCards(); calculate(); }
+    function saveSlot(s) { scenarios[s] = getInputs(); if (!scenarioNames[s]) scenarioNames[s] = `Scenario ${s}`; localStorage.setItem('scenData_v13', JSON.stringify(scenarios)); localStorage.setItem('scenNames_v13', JSON.stringify(scenarioNames)); updateScenarioCards(); calculate(); }
     
     function loadSlot(s) { 
         const d = scenarios[s]; if (!d) return;
         document.getElementById('startYear').value = d.startYear;
-        document.getElementById('inflation').value = (d.inflation*100).toFixed(1);
         document.getElementById('startStocks').value = d.startStocks.toLocaleString();
-        document.getElementById('stockGrowth').value = (d.stockGrowth*100).toFixed(1);
         document.getElementById('startBonds').value = d.startBonds.toLocaleString();
-        document.getElementById('bondYield').value = (d.bondYield*100).toFixed(1);
-        document.getElementById('startTips').value = (d.startTips || 2000000).toLocaleString();
-        document.getElementById('tipsYield').value = ((d.tipsYield || 0.045)*100).toFixed(1);
+        document.getElementById('startTips').value = d.startTips.toLocaleString();
         document.getElementById('startCash').value = d.startCash.toLocaleString();
         document.getElementById('cashYield').value = (d.cashYield*100).toFixed(1);
         document.getElementById('startHouse').value = d.startHouse.toLocaleString();
@@ -498,6 +523,10 @@
             document.getElementById(`spend${i+1}`).value = (b.spend/12).toLocaleString(); 
             document.getElementById(`income${i+1}`).value = (b.income/12).toLocaleString(); 
             document.getElementById(`tax${i+1}`).value = (b.tax*100).toFixed(1); 
+            document.getElementById(`inflation${i+1}`).value = (b.inflation*100).toFixed(1); 
+            document.getElementById(`stockGrowth${i+1}`).value = (b.stockGrowth*100).toFixed(1); 
+            document.getElementById(`bondYield${i+1}`).value = (b.bondYield*100).toFixed(1); 
+            document.getElementById(`tipsYield${i+1}`).value = (b.tipsYield*100).toFixed(1); 
         });
         document.getElementById('dynamicReturns').innerHTML = ''; d.returns.forEach(r => addRow('return', r.yr, r.val*100));
         document.getElementById('dynamicEvents').innerHTML = ''; d.events.forEach(e => addRow('event', e.yr, e.val));
@@ -509,9 +538,9 @@
         if(fundContent.classList.contains('collapsed')) { toggleSection('fundamentals'); }
     }
 
-    function clearSlot(s) { scenarios[s] = null; scenarioNames[s] = ''; if (baselineSlot === s) baselineSlot = null; localStorage.setItem('scenData_v12', JSON.stringify(scenarios)); localStorage.setItem('scenNames_v12', JSON.stringify(scenarioNames)); localStorage.setItem('baseSlot_v12', baselineSlot); updateScenarioCards(); calculate(); }
-    function setBaseline(s) { baselineSlot = (baselineSlot === s) ? null : s; localStorage.setItem('baseSlot_v12', baselineSlot); updateScenarioCards(); calculate(); }
-    function updateScenarioNames() { ['A', 'B', 'C', 'D'].forEach(s => { const el = document.getElementById(`name-${s}`); if (el) scenarioNames[s] = el.value; }); localStorage.setItem('scenNames_v12', JSON.stringify(scenarioNames)); updateScenarioCards(); }
+    function clearSlot(s) { scenarios[s] = null; scenarioNames[s] = ''; if (baselineSlot === s) baselineSlot = null; localStorage.setItem('scenData_v13', JSON.stringify(scenarios)); localStorage.setItem('scenNames_v13', JSON.stringify(scenarioNames)); localStorage.setItem('baseSlot_v13', baselineSlot); updateScenarioCards(); calculate(); }
+    function setBaseline(s) { baselineSlot = (baselineSlot === s) ? null : s; localStorage.setItem('baseSlot_v13', baselineSlot); updateScenarioCards(); calculate(); }
+    function updateScenarioNames() { ['A', 'B', 'C', 'D'].forEach(s => { const el = document.getElementById(`name-${s}`); if (el) scenarioNames[s] = el.value; }); localStorage.setItem('scenNames_v13', JSON.stringify(scenarioNames)); updateScenarioCards(); }
 
     function addRow(t, yO, vO, rO) {
         let c, yr;
