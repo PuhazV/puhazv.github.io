@@ -15,6 +15,7 @@
             --crash: #8b5cf6;
             --rebalance: #eab308;
             --tax-event: #f97316;
+            --strat-event: #06b6d4;
             --midnight: #0f172a;
             --slate-panel: #1e293b;
             --bg-light: #f1f5f9;
@@ -76,7 +77,7 @@
 
         .input-grid-5 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
         .input-group label { display: block; font-size: 10px; font-weight: 700; color: #cbd5e1; margin-bottom: 5px; }
-        .input-group input { width: 100%; padding: 8px; border: 1px solid #475569; border-radius: 6px; background: #0f172a; color: white; font-size: 13px; font-family: monospace; box-sizing: border-box; }
+        .input-group input, .input-group select { width: 100%; padding: 8px; border: 1px solid #475569; border-radius: 6px; background: #0f172a; color: white; font-size: 13px; font-family: monospace; box-sizing: border-box; }
 
         .outputs-section { display: flex; flex-direction: column; gap: 30px; }
         .chart-container { background: white; padding: 25px; border-radius: 16px; border: 1px solid #e2e8f0; height: 650px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
@@ -111,6 +112,7 @@
         .btn-crash { background: var(--crash); color: white; width: 100%; margin-top: 10px; height: 35px; }
         .btn-event { background: var(--primary); color: white; width: 100%; margin-top: 10px; height: 35px; }
         .btn-tax { background: var(--tax-event); color: white; width: 100%; margin-top: 10px; height: 35px; }
+        .btn-strat { background: var(--strat-event); color: white; width: 100%; margin-top: 10px; height: 35px; }
         .btn-rebalance { background: var(--rebalance); color: #000; width: 100%; margin-top: 10px; height: 35px; }
         
         .event-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; background: #334155; padding: 10px; border-radius: 8px; }
@@ -147,10 +149,18 @@
             <h3 class="section-header collapsed" onclick="toggleSection('fundamentals')">Fundamentals</h3>
             <div id="sect-fundamentals" class="section-content collapsed">
                 <div class="input-grid-5">
+                    <div class="input-group" style="grid-column: span 2;">
+                        <label>Global Withdrawal Strategy</label>
+                        <select id="wthStrategy" onchange="calculate()">
+                            <option value="defensive">Defensive (Cash ➔ TIPS ➔ Bonds ➔ Stocks ➔ Roth)</option>
+                            <option value="proportional">Proportional (All Taxable Evenly ➔ Roth)</option>
+                            <option value="aggressive">Aggressive (Stocks ➔ Bonds ➔ TIPS ➔ Cash ➔ Roth)</option>
+                        </select>
+                    </div>
                     <div class="input-group"><label>Start Year</label><input type="number" id="startYear" value="2028" oninput="calculate()"></div>
                     <div class="input-group"><label>Stocks (Pre-Tax) $</label><input type="text" id="startStocks" value="4,000,000" oninput="formatCurrencyInput(this)"></div>
                     <div class="input-group"><label>Roth (Tax-Free) $</label><input type="text" id="startRoth" value="1,000,000" oninput="formatCurrencyInput(this)"></div>
-                    <div class="input-group"><label>Bonds $</label><input type="text" id="startBonds" value="2,000,000" oninput="formatCurrencyInput(this)"></div>
+                    <div class="input-group"><label>Bonds (Pre-Tax) $</label><input type="text" id="startBonds" value="2,000,000" oninput="formatCurrencyInput(this)"></div>
                     <div class="input-group"><label>TIPS $</label><input type="text" id="startTips" value="2,000,000" oninput="formatCurrencyInput(this)"></div>
                     <div class="input-group"><label>Cash $</label><input type="text" id="startCash" value="1,000,000" oninput="formatCurrencyInput(this)"></div>
                     <div class="input-group"><label>Cash Yield % (Static)</label><input type="number" id="cashYield" value="2.0" step="0.1" oninput="calculate()"></div>
@@ -188,6 +198,8 @@
                 <button class="btn btn-event" onclick="addRow('event')">+ Add Expense/Windfall Event (-/+)</button>
                 <div id="dynamicTaxes" style="margin-top:10px;"></div>
                 <button class="btn btn-tax" onclick="addRow('tax')">+ Add Single-Year Tax Override</button>
+                <div id="dynamicStrats" style="margin-top:10px;"></div>
+                <button class="btn btn-strat" onclick="addRow('strategy')">+ Add Strategy Override</button>
                 <div id="dynamicRebalances" style="margin-top:10px;"></div>
                 <button class="btn btn-rebalance" onclick="addRow('rebalance')">+ Add Portfolio Rebalance</button>
             </div>
@@ -230,19 +242,37 @@
     let storageAvailable = testLocalStorage();
     let scenarios, scenarioNames, baselineSlot;
     
+    // Migrate from older versions
+    function migrateStorage() {
+        const versions = ['v16', 'v17', 'v18'];
+        for (let version of versions) {
+            const oldData = localStorage.getItem(`scenData_${version}`);
+            if (oldData && !localStorage.getItem('scenData_v19')) {
+                console.log(`🔄 Migrating scenarios from ${version} to v19`);
+                localStorage.setItem('scenData_v19', oldData);
+                const oldNames = localStorage.getItem(`scenNames_${version}`);
+                if (oldNames) localStorage.setItem('scenNames_v19', oldNames);
+                const oldBase = localStorage.getItem(`baseSlot_${version}`);
+                if (oldBase) localStorage.setItem('baseSlot_v19', oldBase);
+                break;
+            }
+        }
+    }
+    
     if (storageAvailable) {
         try {
-            scenarios = JSON.parse(localStorage.getItem('scenData_v16')) || { A: null, B: null, C: null, D: null };
-            scenarioNames = JSON.parse(localStorage.getItem('scenNames_v16')) || { A: '', B: '', C: '', D: '' };
-            baselineSlot = localStorage.getItem('baseSlot_v16');
+            migrateStorage();
+            scenarios = JSON.parse(localStorage.getItem('scenData_v19')) || { A: null, B: null, C: null, D: null };
+            scenarioNames = JSON.parse(localStorage.getItem('scenNames_v19')) || { A: '', B: '', C: '', D: '' };
+            baselineSlot = localStorage.getItem('baseSlot_v19');
             
             // Debug: Show what was loaded
             const savedCount = Object.values(scenarios).filter(s => s !== null).length;
             if (savedCount > 0) {
-                console.log(`📂 Loaded ${savedCount} saved scenarios from localStorage`);
+                console.log(`💾 Loaded ${savedCount} saved scenarios from localStorage v19`);
                 console.log('Scenarios:', Object.keys(scenarios).filter(k => scenarios[k] !== null));
             } else {
-                console.log('📂 No saved scenarios found in localStorage');
+                console.log('💾 No saved scenarios found in localStorage v19');
             }
         } catch (e) {
             console.error('❌ Error parsing saved scenarios:', e);
@@ -295,7 +325,6 @@
         });
     }
 
-    // Supports negative signs for windfalls
     function formatCurrencyInput(el) {
         let isNegative = el.value.startsWith('-');
         let v = el.value.replace(/,/g, '').replace(/[^\d.]/g, '');
@@ -357,12 +386,13 @@
             return Number(strVal) || 0;
         };
         const inp = { 
+            wthStrategy: document.getElementById('wthStrategy').value,
             startYear: v('startYear'), 
             startStocks: v('startStocks'), startRoth: v('startRoth'),
             startBonds: v('startBonds'), startTips: v('startTips'), 
             startCash: v('startCash'), cashYield: v('cashYield')/100, 
             startHouse: v('startHouse'), reApprec: v('reApprec')/100, 
-            buckets: [], returns: [], events: [], taxes: [], rebalances: [] 
+            buckets: [], returns: [], events: [], taxes: [], strategyOverrides: [], rebalances: [] 
         };
         for (let i = 1; i <= 8; i++) {
             inp.buckets.push({ 
@@ -384,6 +414,9 @@
         });
         document.querySelectorAll('.dyn-tax-yr').forEach((node, idx) => {
             inp.taxes.push({ yr: Number(node.value), val: Number(document.querySelectorAll('.dyn-tax-val')[idx].value)/100 });
+        });
+        document.querySelectorAll('.dyn-strat-yr').forEach((node, idx) => {
+            inp.strategyOverrides.push({ yr: Number(node.value), strat: document.querySelectorAll('.dyn-strat-val')[idx].value });
         });
         document.querySelectorAll('.dyn-reb-yr').forEach((node, idx) => {
             inp.rebalances.push({ 
@@ -409,6 +442,7 @@
             const yr = inp.startYear + i;
             const b = inp.buckets[Math.floor(i/5)];
             
+            // 1. Process Rebalances first
             const reb = inp.rebalances.find(r => r.yr === yr);
             if (reb) {
                 let totalLiq = st + rth + bd + tp + csh;
@@ -422,29 +456,31 @@
                 }
             }
 
+            // 2. Setup Year Variables
             const cRet = inp.returns.find(r => r.yr === yr);
             const evt = inp.events.find(e => e.yr === yr);
             const tOvr = inp.taxes.find(t => t.yr === yr);
+            const stratOvr = inp.strategyOverrides.find(s => s.yr === yr);
             
             const eventThisYear = evt?.val || 0;
             const currentTaxRate = tOvr?.val ?? b.tax;
+            const activeStrategy = stratOvr ? stratOvr.strat : inp.wthStrategy;
             
             const netNeed = (b.spend * cumInflation) + eventThisYear;
             const taxableIncome = b.income * cumInflation;
-            
             const afterTaxIncome = taxableIncome * (1 - currentTaxRate);
             
             let remainingNet = netNeed - afterTaxIncome;
             let actualGrossWth = 0; 
             let actualTaxes = taxableIncome * currentTaxRate; 
 
-            // Windfall / Surplus capture
+            // 3. Windfall Sweep
             if (remainingNet < 0) {
-                // We have more income/windfall than we need to spend. Deposit surplus to Cash.
                 csh += Math.abs(remainingNet);
                 remainingNet = 0;
             }
 
+            // 4. Apply Active Withdrawal Strategy
             function drawTaxable(bucketVal, netNeeded) {
                 if (netNeeded <= 0 || bucketVal <= 0) return { drawnGross: 0, netYield: 0, remainingBucket: bucketVal, taxes: 0 };
                 let grossNeeded = netNeeded / (1 - currentTaxRate);
@@ -454,19 +490,42 @@
                 return { drawnGross: drawGross, netYield: netYield, taxes: taxesGenerated, remainingBucket: bucketVal - drawGross };
             }
 
-            let dRes;
-            dRes = drawTaxable(csh, remainingNet);
-            csh = dRes.remainingBucket; remainingNet -= dRes.netYield; actualGrossWth += dRes.drawnGross; actualTaxes += dRes.taxes;
+            if (activeStrategy === 'proportional') {
+                let totalTaxable = csh + tp + bd + st;
+                if (totalTaxable > 0 && remainingNet > 0) {
+                    let grossNeeded = remainingNet / (1 - currentTaxRate);
+                    let drawGross = Math.min(totalTaxable, grossNeeded);
+                    
+                    let cshRatio = csh / totalTaxable;
+                    let tpRatio = tp / totalTaxable;
+                    let bdRatio = bd / totalTaxable;
+                    let stRatio = st / totalTaxable;
+                    
+                    csh -= drawGross * cshRatio;
+                    tp -= drawGross * tpRatio;
+                    bd -= drawGross * bdRatio;
+                    st -= drawGross * stRatio;
+                    
+                    let netYield = drawGross * (1 - currentTaxRate);
+                    remainingNet -= netYield;
+                    actualGrossWth += drawGross;
+                    actualTaxes += drawGross * currentTaxRate;
+                }
+            } else if (activeStrategy === 'aggressive') {
+                let dRes;
+                dRes = drawTaxable(st, remainingNet); st = dRes.remainingBucket; remainingNet -= dRes.netYield; actualGrossWth += dRes.drawnGross; actualTaxes += dRes.taxes;
+                dRes = drawTaxable(bd, remainingNet); bd = dRes.remainingBucket; remainingNet -= dRes.netYield; actualGrossWth += dRes.drawnGross; actualTaxes += dRes.taxes;
+                dRes = drawTaxable(tp, remainingNet); tp = dRes.remainingBucket; remainingNet -= dRes.netYield; actualGrossWth += dRes.drawnGross; actualTaxes += dRes.taxes;
+                dRes = drawTaxable(csh, remainingNet); csh = dRes.remainingBucket; remainingNet -= dRes.netYield; actualGrossWth += dRes.drawnGross; actualTaxes += dRes.taxes;
+            } else { // defensive
+                let dRes;
+                dRes = drawTaxable(csh, remainingNet); csh = dRes.remainingBucket; remainingNet -= dRes.netYield; actualGrossWth += dRes.drawnGross; actualTaxes += dRes.taxes;
+                dRes = drawTaxable(tp, remainingNet); tp = dRes.remainingBucket; remainingNet -= dRes.netYield; actualGrossWth += dRes.drawnGross; actualTaxes += dRes.taxes;
+                dRes = drawTaxable(bd, remainingNet); bd = dRes.remainingBucket; remainingNet -= dRes.netYield; actualGrossWth += dRes.drawnGross; actualTaxes += dRes.taxes;
+                dRes = drawTaxable(st, remainingNet); st = dRes.remainingBucket; remainingNet -= dRes.netYield; actualGrossWth += dRes.drawnGross; actualTaxes += dRes.taxes;
+            }
 
-            dRes = drawTaxable(tp, remainingNet);
-            tp = dRes.remainingBucket; remainingNet -= dRes.netYield; actualGrossWth += dRes.drawnGross; actualTaxes += dRes.taxes;
-
-            dRes = drawTaxable(bd, remainingNet);
-            bd = dRes.remainingBucket; remainingNet -= dRes.netYield; actualGrossWth += dRes.drawnGross; actualTaxes += dRes.taxes;
-
-            dRes = drawTaxable(st, remainingNet);
-            st = dRes.remainingBucket; remainingNet -= dRes.netYield; actualGrossWth += dRes.drawnGross; actualTaxes += dRes.taxes;
-
+            // Roth is always last
             if (remainingNet > 0 && rth > 0) {
                 let drawRoth = Math.min(rth, remainingNet);
                 rth -= drawRoth;
@@ -474,6 +533,7 @@
                 actualGrossWth += drawRoth; 
             }
 
+            // 5. Apply Returns
             let sg = cRet?.val ?? b.stockGrowth;
             st *= (1 + sg);
             rth *= (1 + sg); 
@@ -490,6 +550,7 @@
                 hasCustomReturn: !!cRet,
                 hasCashEvent: !!evt,
                 hasTaxOverride: !!tOvr,
+                hasStratOverride: !!stratOvr,
                 taxableIncome: taxableIncome, 
                 withdrawal: actualGrossWth, 
                 taxes: actualTaxes, 
@@ -534,6 +595,7 @@
             const tr = document.createElement('tr');
             
             let icons = '';
+            if (r.hasStratOverride) icons += ' <span title="Strategy Override Applied">🔀</span>';
             if (r.hasCustomReturn) icons += ' <span title="Custom Return Applied">📉</span>';
             if (r.hasCashEvent) icons += ' <span title="Cash Event/Windfall Applied">💵</span>';
             if (r.hasTaxOverride) icons += ' <span title="Tax Rate Override Applied">🏛️</span>';
@@ -565,7 +627,7 @@
         const ds = [
             { label: 'Cash', data: live.map(r => r.endCash), backgroundColor: 'rgba(148, 163, 184, 0.8)', stack: 'A' },
             { label: 'TIPS', data: live.map(r => r.endTips), backgroundColor: 'rgba(245, 158, 11, 0.8)', stack: 'A' },
-            { label: 'Bonds', data: live.map(r => r.endBonds), backgroundColor: 'rgba(168, 85, 247, 0.8)', stack: 'A' },
+            { label: 'Bonds (Pre-Tax)', data: live.map(r => r.endBonds), backgroundColor: 'rgba(168, 85, 247, 0.8)', stack: 'A' },
             { label: 'Stocks (Pre-Tax)', data: live.map(r => r.endStocks), backgroundColor: 'rgba(59, 130, 246, 0.8)', stack: 'A' },
             { label: 'Roth (Tax-Free)', data: live.map(r => r.endRoth), backgroundColor: 'rgba(236, 72, 153, 0.8)', stack: 'A' },
             { label: 'Real Estate', data: live.map(r => r.house), backgroundColor: 'rgba(16, 185, 129, 0.8)', stack: 'A' }
@@ -629,7 +691,6 @@
             `;
             
             card.innerHTML = cardContent;
-            
             grid.appendChild(card);
         });
         
@@ -656,11 +717,11 @@
             scenarios[s] = getInputs(); 
             if (!scenarioNames[s]) scenarioNames[s] = `Scenario ${s}`; 
             
-            localStorage.setItem('scenData_v16', JSON.stringify(scenarios)); 
-            localStorage.setItem('scenNames_v16', JSON.stringify(scenarioNames)); 
+            localStorage.setItem('scenData_v19', JSON.stringify(scenarios)); 
+            localStorage.setItem('scenNames_v19', JSON.stringify(scenarioNames)); 
             
             // Verify save was successful
-            const verification = JSON.parse(localStorage.getItem('scenData_v16'));
+            const verification = JSON.parse(localStorage.getItem('scenData_v19'));
             if (!verification || !verification[s]) {
                 throw new Error('Save verification failed');
             }
@@ -676,6 +737,7 @@
     
     function loadSlot(s) { 
         const d = scenarios[s]; if (!d) return;
+        document.getElementById('wthStrategy').value = d.wthStrategy || 'defensive';
         document.getElementById('startYear').value = d.startYear;
         document.getElementById('startStocks').value = d.startStocks.toLocaleString();
         document.getElementById('startRoth').value = (d.startRoth || 0).toLocaleString();
@@ -698,6 +760,7 @@
         document.getElementById('dynamicReturns').innerHTML = ''; d.returns.forEach(r => addRow('return', r.yr, r.val*100));
         document.getElementById('dynamicEvents').innerHTML = ''; d.events.forEach(e => addRow('event', e.yr, e.val));
         document.getElementById('dynamicTaxes').innerHTML = ''; if(d.taxes) d.taxes.forEach(t => addRow('tax', t.yr, t.val*100));
+        document.getElementById('dynamicStrats').innerHTML = ''; if(d.strategyOverrides) d.strategyOverrides.forEach(s => addRow('strategy', s.yr, s.strat));
         document.getElementById('dynamicRebalances').innerHTML = ''; 
         if(d.rebalances) d.rebalances.forEach(r => addRow('rebalance', r.yr, null, r));
         calculate();
@@ -718,9 +781,9 @@
             scenarios[s] = null; scenarioNames[s] = ''; 
             if (baselineSlot === s) baselineSlot = null; 
             
-            localStorage.setItem('scenData_v16', JSON.stringify(scenarios)); 
-            localStorage.setItem('scenNames_v16', JSON.stringify(scenarioNames)); 
-            localStorage.setItem('baseSlot_v16', baselineSlot); 
+            localStorage.setItem('scenData_v19', JSON.stringify(scenarios)); 
+            localStorage.setItem('scenNames_v19', JSON.stringify(scenarioNames)); 
+            localStorage.setItem('baseSlot_v19', baselineSlot); 
             
             console.log(`🗑️ Cleared Scenario ${s}`);
             updateScenarioCards(); calculate();
@@ -733,7 +796,7 @@
         
         if (storageAvailable) {
             try {
-                localStorage.setItem('baseSlot_v16', baselineSlot);
+                localStorage.setItem('baseSlot_v19', baselineSlot);
             } catch (e) {
                 console.error('Failed to save baseline setting:', e);
             }
@@ -749,7 +812,7 @@
         
         if (storageAvailable) {
             try {
-                localStorage.setItem('scenNames_v16', JSON.stringify(scenarioNames));
+                localStorage.setItem('scenNames_v19', JSON.stringify(scenarioNames));
             } catch (e) {
                 console.error('Failed to save scenario names:', e);
             }
@@ -763,13 +826,14 @@
         if (t === 'return') c = document.getElementById('dynamicReturns');
         else if (t === 'event') c = document.getElementById('dynamicEvents');
         else if (t === 'tax') c = document.getElementById('dynamicTaxes');
+        else if (t === 'strategy') c = document.getElementById('dynamicStrats');
         else c = document.getElementById('dynamicRebalances');
         
         yr = yO || (Number(document.getElementById('startYear').value) + 2 + c.children.length);
         const div = document.createElement('div');
         div.className = 'event-row';
         
-        let content = `<div style="font-size:10px; font-weight:bold; color:#cbd5e1; width:25px;">Yr</div><input type="number" class="dyn-${t=== 'rebalance' ? 'reb' : (t==='tax'?'tax':(t==='return'?'ret':'evt'))}-yr" value="${yr}" style="width:50px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" oninput="calculate()">`;
+        let content = `<div style="font-size:10px; font-weight:bold; color:#cbd5e1; width:25px;">Yr</div><input type="number" class="dyn-${t=== 'rebalance' ? 'reb' : (t==='tax'?'tax':(t==='strategy'?'strat':(t==='return'?'ret':'evt')))}-yr" value="${yr}" style="width:50px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" oninput="calculate()">`;
         
         if (t === 'rebalance') {
             const s = rO ? rO.s * 100 : 40;
@@ -784,6 +848,17 @@
                     <div style="display:flex; justify-content: space-between; align-items:center;"><span class="inline-label">Bnd%</span><input type="number" class="dyn-reb-b" value="${b}" style="width:40px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" onchange="adjustRebalance(this, 'b')"></div>
                     <div style="display:flex; justify-content: space-between; align-items:center;"><span class="inline-label">Tip%</span><input type="number" class="dyn-reb-t" value="${tp}" style="width:40px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" onchange="adjustRebalance(this, 't')"></div>
                     <div style="display:flex; justify-content: space-between; align-items:center;"><span class="inline-label">Csh%</span><input type="number" class="dyn-reb-c" value="${csh}" style="width:40px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" onchange="adjustRebalance(this, 'c')"></div>
+                </div>`;
+        } else if (t === 'strategy') {
+            const defStrat = vO || 'proportional';
+            content += `
+                <div style="font-size:10px; font-weight:bold; color:#cbd5e1; margin-left:5px;">Strat:</div>
+                <div class="input-wrapper">
+                    <select class="dyn-strat-val" style="background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px; width:100%" onchange="calculate()">
+                        <option value="defensive" ${defStrat==='defensive'?'selected':''}>Defensive</option>
+                        <option value="proportional" ${defStrat==='proportional'?'selected':''}>Proportional</option>
+                        <option value="aggressive" ${defStrat==='aggressive'?'selected':''}>Aggressive</option>
+                    </select>
                 </div>`;
         } else {
             let symbolLeft = t==='event' ? '<span class="symbol-left">$</span>' : '';
@@ -814,14 +889,14 @@
             return;
         }
         
-        const scenData = localStorage.getItem('scenData_v16');
-        const scenNames = localStorage.getItem('scenNames_v16');
-        const baseSlot = localStorage.getItem('baseSlot_v16');
+        const scenData = localStorage.getItem('scenData_v19');
+        const scenNames = localStorage.getItem('scenNames_v19');
+        const baseSlot = localStorage.getItem('baseSlot_v19');
         
         console.log('📦 Raw localStorage data:');
-        console.log('  scenData_v16:', scenData);
-        console.log('  scenNames_v16:', scenNames);
-        console.log('  baseSlot_v16:', baseSlot);
+        console.log('  scenData_v19:', scenData);
+        console.log('  scenNames_v19:', scenNames);
+        console.log('  baseSlot_v19:', baseSlot);
         
         if (scenData) {
             try {
