@@ -821,19 +821,29 @@
                 `
             });
 
+            // --- UPDATED PATH 2 (IMMEDIATE CA) DETAILS ---
             results.push({ 
                 name: "P2: Immediate CA", liq: p2Liq, re: p2Re, tax: 0, net: p2Liq + p2Re, 
                 details: `
                     <div class="details-overview"><strong>Overview:</strong> Relocate permanently to California early in retirement. We perform a "Partial Basis Reset" by liquidating a set amount of assets while still in WA. This locks in the WA capital gains rate and creates a tax-free runway for our early years in CA.</div>
                     <div><h4>Liquid Capital & Compounding Mechanics</h4><p>Liquidating a portion of assets (${formatCurrency(caResetAmt)}) to fund the move subjects us to a <strong>${formatCurrency(caEntryTax)} Capital Gains Tax (${formatPct(liquidationTaxRate)})</strong>. This creates a High-Basis/Tax-Free Bucket of <strong>${formatCurrency(initialTaxFreeBucket)}</strong> (after paying the tax and CA Down Payment). We withdraw from this bucket tax-free until it runs dry, at which point CA taxes apply.</p>
-                        <h5>Year 1 Detailed Calculation Formulas:</h5>
+                        <h5>Phase 1: Tax-Free Runway (Initial Years)</h5>
                         <div class="math-box">Starting Portfolio: ${formatCurrency(startLiq - caEntryTax - caDpAmt)} <span class="math-subtext">(${formatCurrency(startLiq)} initial - ${formatCurrency(caEntryTax)} Capital Gains Tax - ${formatCurrency(caDpAmt)} CA Down Payment)</span><br>
                             + Base Spend: ${formatCurrency(y1Spend)} <br>+ CA Mortgage P&I: ${formatCurrency(caMortgage)} <br>+ CA Taxes/HOA: ${formatCurrency(caStaticBase)} <br>+ WA Carry: ${formatCurrency(waCarry)} <br>- WA LTR Income: -${formatCurrency(netRentWA_Base)}
                             <br>---------------------------------------------------------<br>= <strong>Total Expenses: ${formatCurrency(p2Exp)}</strong><br><br>
                             - Net Income: -${formatCurrency(p2NetInc)} <span class="math-subtext">(minus ${formatPct(Math.min(tax1 + caStateTax, 0.99))} Fed+CA Tax)</span><br>
                             ---------------------------------------------------------<br>= <strong>Net Portfolio Shortfall: ${formatCurrency(p2Short)}</strong><br><br>
                             Withdrawal Source: ${initialTaxFreeBucket >= p2Short ? '100% Tax-Free Bucket (No CA Tax Applied)' : 'Tax-Free Bucket Empty. Normal CA tax rates applied.'}<br>= <strong>Gross Withdrawal: ${formatCurrency(p2GrossW)}</strong>
-                        </div></div>
+                        </div>
+                        <h5>Phase 2: Depleted Basis (Standard CA Taxation)</h5>
+                        <p>Once the ${formatCurrency(initialTaxFreeBucket)} high-basis bucket is exhausted, every dollar withdrawn to cover the shortfall must be "grossed up" for both Federal and CA State taxes.</p>
+                        <div class="math-box">
+                            Required Cash: Net Portfolio Shortfall<br>
+                            ÷ (1 - (${formatPct(tax1)} Fed + ${formatPct(caStateTax)} CA State Tax))<br>
+                            = <strong>Gross Portfolio Withdrawal</strong>
+                            <span class="math-subtext">Note: This phase increases the "burn rate" of the portfolio significantly compared to Phase 1.</span>
+                        </div>
+                    </div>
                     <div><h4>Real Estate & Estate Shielding</h4><ul><li><strong>WA Home Growth (${years} years):</strong> ${formatCurrency(fvWa)}</li><li><strong>CA Home Growth (${endYear - caPurchaseYrPath2} years):</strong> ${formatCurrency(fvCaPath2)}.</li><li><strong>Total Tax Forfeited at Death:</strong> $0.</li></ul></div>
                     ${buildHistoryTable(p2Hist)}
                 `
@@ -857,6 +867,8 @@
                 `
             });
 
+
+            // --- UPDATED PATH 4 (DELAYED CA) DETAILS ---
             results.push({ 
                 name: "P4: Delayed CA", liq: p4Liq, re: p4Re, tax: 0, net: p4Liq + p4Re, 
                 details: `
@@ -870,7 +882,16 @@
                             ---------------------------------------------------------<br>= <strong>Net Portfolio Shortfall: ${formatCurrency(p4Short)}</strong><br><br>
                             ÷ (1 - ${formatPct(tax1)} Fed Tax)<br>= <strong>Gross Withdrawal: ${formatCurrency(p4GrossW)}</strong>
                         </div>
-                        <h5>Phase 2: CA Domicile (Years ${delayedCaYears + 1}+):</h5><p>We officially move to CA. We lose CA rental income, and effective tax jumps by <strong>${formatPct(caStateTax)}</strong> CA premium.</p></div>
+                        <h5>Phase 2: CA Domicile (Years ${delayedCaYears + 1}+):</h5>
+                        <p>We officially move to CA. The financial profile changes in three ways:</p>
+                        <div class="math-box">
+                            1. <strong>Lost Income:</strong> The CA rental income (-${formatCurrency(netRentCA_Base)}) disappears as we move in.<br>
+                            2. <strong>New Income:</strong> We begin renting out the WA home (+${formatCurrency(netRentWA_Base)}).<br>
+                            3. <strong>Tax Jump:</strong> Effective tax rate increases by <strong>${formatPct(caStateTax)}</strong> (CA State Income Tax).<br><br>
+                            <strong>New Withdrawal Formula:</strong><br>
+                            (Total Expenses - Net Income) ÷ (1 - (Fed Tax + ${formatPct(caStateTax)} CA Tax))
+                        </div>
+                    </div>
                     <div><h4>Real Estate & Estate Shielding</h4><ul><li><strong>WA Home Growth (${years} years):</strong> ${formatCurrency(fvWa)}</li><li><strong>CA Home Growth (${endYear - caPurchaseYrPath4} years):</strong> ${formatCurrency(fvCaPath4)}.</li><li><strong>Total Tax Forfeited at Death:</strong> $0.</li></ul></div>
                     ${buildHistoryTable(p4Hist)}
                 `
