@@ -11,8 +11,10 @@
             --baseline: #94a3b8; 
             --success: #10b981; 
             --danger: #ef4444; 
+            --accent: #8b5cf6;
             --crash: #8b5cf6;
             --rebalance: #eab308;
+            --tax-event: #f97316;
             --midnight: #0f172a;
             --slate-panel: #1e293b;
             --bg-light: #f1f5f9;
@@ -44,10 +46,14 @@
             transition: all 0.3s; display: flex; flex-direction: column; gap: 10px; color: #333;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
+        .scenario-card.saved { border: 2px solid var(--primary); }
+        .scenario-card.baseline { border: 2px solid var(--success); background: #ecfdf5; }
+        .scenario-card.empty { border-style: dashed; opacity: 0.7; }
         .scenario-card.active-baseline { border: 2px solid var(--primary); background: #f0f7ff; }
         
-        .name-input { width: 100%; border: 1px solid #cbd5e1; border-radius: 4px; padding: 6px; font-weight: bold; font-size: 12px; box-sizing: border-box; }
-        .card-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; }
+        .name-input { width: 100%; border: 1px solid #cbd5e1; border-radius: 4px; padding: 8px; font-weight: bold; font-size: 12px; box-sizing: border-box; margin: 8px 0; }
+        .card-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+        .btn-active { background: var(--success) !important; color: white !important; }
 
         .dashboard-grid { display: grid; grid-template-columns: 440px 1fr; gap: 30px; padding: 25px 0; }
         .inputs-section { 
@@ -104,6 +110,7 @@
         .btn-manage { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 30px; padding: 8px 20px; }
         .btn-crash { background: var(--crash); color: white; width: 100%; margin-top: 10px; height: 35px; }
         .btn-event { background: var(--primary); color: white; width: 100%; margin-top: 10px; height: 35px; }
+        .btn-tax { background: var(--tax-event); color: white; width: 100%; margin-top: 10px; height: 35px; }
         .btn-rebalance { background: var(--rebalance); color: #000; width: 100%; margin-top: 10px; height: 35px; }
         
         .event-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; background: #334155; padding: 10px; border-radius: 8px; }
@@ -129,6 +136,7 @@
 </div>
 
 <div class="scenario-drawer" id="drawer">
+    <div id="storage-status" style="text-align: center; padding: 10px; margin-bottom: 10px; font-size: 11px; color: #94a3b8;"></div>
     <div class="scenario-grid" id="scenarioGrid"></div>
 </div>
 
@@ -142,7 +150,6 @@
                     <div class="input-group"><label>Start Year</label><input type="number" id="startYear" value="2028" oninput="calculate()"></div>
                     <div class="input-group"><label>Stocks (Pre-Tax) $</label><input type="text" id="startStocks" value="4,000,000" oninput="formatCurrencyInput(this)"></div>
                     <div class="input-group"><label>Roth (Tax-Free) $</label><input type="text" id="startRoth" value="1,000,000" oninput="formatCurrencyInput(this)"></div>
-                    <div class="input-group"><label>Roth Grwth % (Static)</label><input type="number" id="rothGrowth" value="7.0" step="0.1" oninput="calculate()"></div>
                     <div class="input-group"><label>Bonds $</label><input type="text" id="startBonds" value="2,000,000" oninput="formatCurrencyInput(this)"></div>
                     <div class="input-group"><label>TIPS $</label><input type="text" id="startTips" value="2,000,000" oninput="formatCurrencyInput(this)"></div>
                     <div class="input-group"><label>Cash $</label><input type="text" id="startCash" value="1,000,000" oninput="formatCurrencyInput(this)"></div>
@@ -155,7 +162,7 @@
             <h3 class="section-header collapsed" onclick="toggleSection('inflation')">Inflation (%)</h3>
             <div id="sect-inflation" class="section-content collapsed"><div class="input-grid-5" id="inflationGrid"></div></div>
             
-            <h3 class="section-header collapsed" onclick="toggleSection('stockGrowth')">Stock Growth (%)</h3>
+            <h3 class="section-header collapsed" onclick="toggleSection('stockGrowth')">Stock/Roth Growth (%)</h3>
             <div id="sect-stockGrowth" class="section-content collapsed"><div class="input-grid-5" id="stockGrowthGrid"></div></div>
             
             <h3 class="section-header collapsed" onclick="toggleSection('bondYield')">Bond Yield (%)</h3>
@@ -176,9 +183,11 @@
             <h3 class="section-header collapsed" onclick="toggleSection('stress')">Stress Test & Events</h3>
             <div id="sect-stress" class="section-content collapsed">
                 <div id="dynamicReturns"></div>
-                <button class="btn btn-crash" onclick="addRow('return')">+ Add Stock Market Crash Event</button>
+                <button class="btn btn-crash" onclick="addRow('return')">+ Add Stock/Roth Crash Event</button>
                 <div id="dynamicEvents" style="margin-top:10px;"></div>
-                <button class="btn btn-event" onclick="addRow('event')">+ Add One-Time Cash Event</button>
+                <button class="btn btn-event" onclick="addRow('event')">+ Add Expense/Windfall Event (-/+)</button>
+                <div id="dynamicTaxes" style="margin-top:10px;"></div>
+                <button class="btn btn-tax" onclick="addRow('tax')">+ Add Single-Year Tax Override</button>
                 <div id="dynamicRebalances" style="margin-top:10px;"></div>
                 <button class="btn btn-rebalance" onclick="addRow('rebalance')">+ Add Portfolio Rebalance</button>
             </div>
@@ -197,9 +206,55 @@
 </div>
 
 <script>
-    let scenarios = JSON.parse(localStorage.getItem('scenData_v14')) || { A: null, B: null, C: null, D: null };
-    let scenarioNames = JSON.parse(localStorage.getItem('scenNames_v14')) || { A: '', B: '', C: '', D: '' };
-    let baselineSlot = localStorage.getItem('baseSlot_v14');
+    // Enhanced localStorage diagnostic and error handling
+    function testLocalStorage() {
+        try {
+            const testKey = 'localStorage_test';
+            localStorage.setItem(testKey, 'test_value');
+            const retrieved = localStorage.getItem(testKey);
+            localStorage.removeItem(testKey);
+            
+            if (retrieved !== 'test_value') {
+                throw new Error('localStorage read/write mismatch');
+            }
+            
+            console.log('✅ localStorage is working correctly');
+            return true;
+        } catch (e) {
+            console.error('❌ localStorage Error:', e.message);
+            alert('Warning: Browser storage is not available. Scenarios will not persist across sessions.\n\nThis could be caused by:\n• Private/Incognito browsing mode\n• Browser privacy settings\n• Storage quota exceeded\n• Third-party cookies disabled');
+            return false;
+        }
+    }
+
+    let storageAvailable = testLocalStorage();
+    let scenarios, scenarioNames, baselineSlot;
+    
+    if (storageAvailable) {
+        try {
+            scenarios = JSON.parse(localStorage.getItem('scenData_v16')) || { A: null, B: null, C: null, D: null };
+            scenarioNames = JSON.parse(localStorage.getItem('scenNames_v16')) || { A: '', B: '', C: '', D: '' };
+            baselineSlot = localStorage.getItem('baseSlot_v16');
+            
+            // Debug: Show what was loaded
+            const savedCount = Object.values(scenarios).filter(s => s !== null).length;
+            if (savedCount > 0) {
+                console.log(`📂 Loaded ${savedCount} saved scenarios from localStorage`);
+                console.log('Scenarios:', Object.keys(scenarios).filter(k => scenarios[k] !== null));
+            } else {
+                console.log('📂 No saved scenarios found in localStorage');
+            }
+        } catch (e) {
+            console.error('❌ Error parsing saved scenarios:', e);
+            scenarios = { A: null, B: null, C: null, D: null };
+            scenarioNames = { A: '', B: '', C: '', D: '' };
+            baselineSlot = null;
+        }
+    } else {
+        scenarios = { A: null, B: null, C: null, D: null };
+        scenarioNames = { A: '', B: '', C: '', D: '' };
+        baselineSlot = null;
+    }
     
     if (baselineSlot === "null" || baselineSlot === null) baselineSlot = null;
 
@@ -240,9 +295,12 @@
         });
     }
 
+    // Supports negative signs for windfalls
     function formatCurrencyInput(el) {
+        let isNegative = el.value.startsWith('-');
         let v = el.value.replace(/,/g, '').replace(/[^\d.]/g, '');
-        if (v) el.value = Number(v).toLocaleString();
+        if (v) el.value = (isNegative ? '-' : '') + Number(v).toLocaleString();
+        else if (isNegative) el.value = '-';
         calculate();
     }
 
@@ -294,15 +352,17 @@
     function getInputs() {
         const v = id => {
             const el = document.getElementById(id);
-            return el ? Number(el.value.replace(/,/g, '')) : 0;
+            if (!el) return 0;
+            const strVal = el.value.replace(/,/g, '');
+            return Number(strVal) || 0;
         };
         const inp = { 
             startYear: v('startYear'), 
-            startStocks: v('startStocks'), startRoth: v('startRoth'), rothGrowth: v('rothGrowth')/100,
+            startStocks: v('startStocks'), startRoth: v('startRoth'),
             startBonds: v('startBonds'), startTips: v('startTips'), 
             startCash: v('startCash'), cashYield: v('cashYield')/100, 
             startHouse: v('startHouse'), reApprec: v('reApprec')/100, 
-            buckets: [], returns: [], events: [], rebalances: [] 
+            buckets: [], returns: [], events: [], taxes: [], rebalances: [] 
         };
         for (let i = 1; i <= 8; i++) {
             inp.buckets.push({ 
@@ -321,6 +381,9 @@
         });
         document.querySelectorAll('.dyn-evt-yr').forEach((node, idx) => {
             inp.events.push({ yr: Number(node.value), val: Number(document.querySelectorAll('.dyn-evt-val')[idx].value.replace(/,/g, '')) });
+        });
+        document.querySelectorAll('.dyn-tax-yr').forEach((node, idx) => {
+            inp.taxes.push({ yr: Number(node.value), val: Number(document.querySelectorAll('.dyn-tax-val')[idx].value)/100 });
         });
         document.querySelectorAll('.dyn-reb-yr').forEach((node, idx) => {
             inp.rebalances.push({ 
@@ -361,24 +424,33 @@
 
             const cRet = inp.returns.find(r => r.yr === yr);
             const evt = inp.events.find(e => e.yr === yr);
+            const tOvr = inp.taxes.find(t => t.yr === yr);
+            
             const eventThisYear = evt?.val || 0;
+            const currentTaxRate = tOvr?.val ?? b.tax;
             
             const netNeed = (b.spend * cumInflation) + eventThisYear;
             const taxableIncome = b.income * cumInflation;
             
-            const afterTaxIncome = taxableIncome * (1 - b.tax);
-            let remainingNet = Math.max(0, netNeed - afterTaxIncome);
-
+            const afterTaxIncome = taxableIncome * (1 - currentTaxRate);
+            
+            let remainingNet = netNeed - afterTaxIncome;
             let actualGrossWth = 0; 
-            let actualTaxes = taxableIncome * b.tax; 
+            let actualTaxes = taxableIncome * currentTaxRate; 
 
-            // Helper to handle tax gross-up for taxable accounts
+            // Windfall / Surplus capture
+            if (remainingNet < 0) {
+                // We have more income/windfall than we need to spend. Deposit surplus to Cash.
+                csh += Math.abs(remainingNet);
+                remainingNet = 0;
+            }
+
             function drawTaxable(bucketVal, netNeeded) {
                 if (netNeeded <= 0 || bucketVal <= 0) return { drawnGross: 0, netYield: 0, remainingBucket: bucketVal, taxes: 0 };
-                let grossNeeded = netNeeded / (1 - b.tax);
+                let grossNeeded = netNeeded / (1 - currentTaxRate);
                 let drawGross = Math.min(bucketVal, grossNeeded);
-                let netYield = drawGross * (1 - b.tax);
-                let taxesGenerated = drawGross * b.tax;
+                let netYield = drawGross * (1 - currentTaxRate);
+                let taxesGenerated = drawGross * currentTaxRate;
                 return { drawnGross: drawGross, netYield: netYield, taxes: taxesGenerated, remainingBucket: bucketVal - drawGross };
             }
 
@@ -395,18 +467,16 @@
             dRes = drawTaxable(st, remainingNet);
             st = dRes.remainingBucket; remainingNet -= dRes.netYield; actualGrossWth += dRes.drawnGross; actualTaxes += dRes.taxes;
 
-            // Roth logic - Tax Free (No Gross Up)
             if (remainingNet > 0 && rth > 0) {
                 let drawRoth = Math.min(rth, remainingNet);
                 rth -= drawRoth;
                 remainingNet -= drawRoth;
                 actualGrossWth += drawRoth; 
-                // Notice: NO taxes added to actualTaxes
             }
 
             let sg = cRet?.val ?? b.stockGrowth;
             st *= (1 + sg);
-            rth *= (1 + inp.rothGrowth); 
+            rth *= (1 + sg); 
             bd *= (1 + b.bondYield);
             tp *= (1 + b.tipsYield);
             csh *= (1 + inp.cashYield); 
@@ -419,6 +489,7 @@
                 hasRebalance: !!reb,
                 hasCustomReturn: !!cRet,
                 hasCashEvent: !!evt,
+                hasTaxOverride: !!tOvr,
                 taxableIncome: taxableIncome, 
                 withdrawal: actualGrossWth, 
                 taxes: actualTaxes, 
@@ -464,7 +535,8 @@
             
             let icons = '';
             if (r.hasCustomReturn) icons += ' <span title="Custom Return Applied">📉</span>';
-            if (r.hasCashEvent) icons += ' <span title="Cash Event Applied">💵</span>';
+            if (r.hasCashEvent) icons += ' <span title="Cash Event/Windfall Applied">💵</span>';
+            if (r.hasTaxOverride) icons += ' <span title="Tax Rate Override Applied">🏛️</span>';
             if (r.hasRebalance) icons += ' <span title="Portfolio Rebalanced">⚖️</span>';
             const yearStr = `<td style="white-space:nowrap;">${r.yr} <span style="font-size:12px">${icons}</span></td>`;
 
@@ -502,20 +574,66 @@
         chartObj = new Chart(ctx, { type: 'bar', data: { labels: live.map(r => r.yr), datasets: ds }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { stacked: true, ticks: { callback: v => '$' + (v/1e6).toFixed(1) + 'M' } }, x: { stacked: true } }, plugins: { legend: { position: 'bottom' } } } });
     }
 
+    function updateStorageStatus() {
+        const statusEl = document.getElementById('storage-status');
+        if (!statusEl) return;
+        
+        if (!storageAvailable) {
+            statusEl.innerHTML = '⚠️ Browser storage disabled - scenarios will not persist across sessions';
+            statusEl.style.color = '#f59e0b';
+            return;
+        }
+        
+        const savedCount = Object.values(scenarios).filter(s => s !== null).length;
+        const storageUsed = JSON.stringify(scenarios).length + JSON.stringify(scenarioNames).length;
+        
+        if (savedCount === 0) {
+            statusEl.innerHTML = '💾 Storage available - no saved scenarios yet';
+            statusEl.style.color = '#94a3b8';
+        } else {
+            statusEl.innerHTML = `💾 ${savedCount} scenarios saved (${(storageUsed/1024).toFixed(1)}KB used) - data will persist`;
+            statusEl.style.color = '#22c55e';
+        }
+    }
+
     function updateScenarioCards() {
+        updateStorageStatus(); // Update storage status first
         const grid = document.getElementById('scenarioGrid');
+        if (!grid) return;
+        
         grid.innerHTML = '';
+        
         ['A', 'B', 'C', 'D'].forEach(s => {
-            const isEmpty = !scenarios[s];
-            const div = document.createElement('div');
-            div.className = `scenario-card ${isEmpty ? 'empty' : ''} ${baselineSlot === s ? 'active-baseline' : ''}`;
-            if (isEmpty) { div.innerHTML = `<span>+ Save Scenario ${s}</span>`; div.onclick = () => saveSlot(s); }
-            else {
-                div.innerHTML = `<div style="font-size:10px; font-weight:900; color:#94a3b8;">Slot ${s}</div><input type="text" class="name-input" id="name-${s}" placeholder="Name..." value="${scenarioNames[s]}" onchange="updateScenarioNames()"><div class="card-actions"><button class="btn" onclick="saveSlot('${s}')">Update</button><button class="btn" onclick="loadSlot('${s}')">Load</button><button class="btn" onclick="clearSlot('${s}')" style="color:var(--danger)">Clear</button></div><button class="btn ${baselineSlot === s ? 'btn-active' : ''}" style="width:100%" onclick="setBaseline('${s}')">${baselineSlot === s ? 'Stop Comparing' : 'Compare This'}</button>`;
-            }
-            grid.appendChild(div);
+            const saved = scenarios[s] !== null;
+            const name = scenarioNames[s] || `Scenario ${s}`;
+            const isBaseline = baselineSlot === s;
+            
+            const card = document.createElement('div');
+            card.className = `scenario-card ${saved ? 'saved' : 'empty'} ${isBaseline ? 'baseline' : ''}`;
+            
+            const cardContent = saved ? `
+                <div style="font-size:10px; font-weight:900; color:#94a3b8; margin-bottom:8px;">Slot ${s}</div>
+                <input type="text" class="name-input" id="name-${s}" placeholder="Name..." value="${name}" onchange="updateScenarioNames()">
+                <div class="card-actions">
+                    <button class="btn" onclick="saveSlot('${s}')" style="background: var(--primary); color: white; border: none; padding: 6px; border-radius: 4px; font-size: 11px;">Update</button>
+                    <button class="btn" onclick="loadSlot('${s}')" style="background: var(--success); color: white; border: none; padding: 6px; border-radius: 4px; font-size: 11px;">Load</button>
+                    <button class="btn" onclick="clearSlot('${s}')" style="background: var(--danger); color: white; border: none; padding: 6px; border-radius: 4px; font-size: 11px;">Clear</button>
+                </div>
+                <button class="btn ${isBaseline ? 'btn-active' : ''}" style="width:100%; margin-top:8px; background: ${isBaseline ? 'var(--success)' : 'var(--baseline)'}; color: ${isBaseline ? 'white' : '#333'}; border: none; padding: 8px; border-radius: 4px; font-size: 11px;" onclick="setBaseline('${s}')">${isBaseline ? 'Stop Comparing' : 'Compare This'}</button>
+            ` : `
+                <div style="text-align: center; padding: 20px 0; color: #94a3b8;">
+                    <div style="font-size: 24px; margin-bottom: 8px;">+</div>
+                    <div style="font-size: 12px; font-weight: bold;">Save Scenario ${s}</div>
+                </div>
+                <button onclick="saveSlot('${s}')" style="width: 100%; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: bold;">Save Current</button>
+            `;
+            
+            card.innerHTML = cardContent;
+            
+            grid.appendChild(card);
         });
         
+        // Update comparison labels
         const labelEl = document.getElementById('baselineLabel');
         const textEl = document.getElementById('comparingToText');
         
@@ -528,14 +646,39 @@
         }
     }
 
-    function saveSlot(s) { scenarios[s] = getInputs(); if (!scenarioNames[s]) scenarioNames[s] = `Scenario ${s}`; localStorage.setItem('scenData_v14', JSON.stringify(scenarios)); localStorage.setItem('scenNames_v14', JSON.stringify(scenarioNames)); updateScenarioCards(); calculate(); }
+    function saveSlot(s) { 
+        if (!storageAvailable) {
+            alert('Cannot save scenario - browser storage is not available');
+            return;
+        }
+        
+        try {
+            scenarios[s] = getInputs(); 
+            if (!scenarioNames[s]) scenarioNames[s] = `Scenario ${s}`; 
+            
+            localStorage.setItem('scenData_v16', JSON.stringify(scenarios)); 
+            localStorage.setItem('scenNames_v16', JSON.stringify(scenarioNames)); 
+            
+            // Verify save was successful
+            const verification = JSON.parse(localStorage.getItem('scenData_v16'));
+            if (!verification || !verification[s]) {
+                throw new Error('Save verification failed');
+            }
+            
+            console.log(`💾 Successfully saved Scenario ${s}`);
+            updateScenarioCards(); 
+            calculate();
+        } catch (e) {
+            console.error(`❌ Failed to save Scenario ${s}:`, e);
+            alert(`Failed to save Scenario ${s}. Error: ${e.message}`);
+        }
+    }
     
     function loadSlot(s) { 
         const d = scenarios[s]; if (!d) return;
         document.getElementById('startYear').value = d.startYear;
         document.getElementById('startStocks').value = d.startStocks.toLocaleString();
         document.getElementById('startRoth').value = (d.startRoth || 0).toLocaleString();
-        document.getElementById('rothGrowth').value = ((d.rothGrowth || 0.07)*100).toFixed(1);
         document.getElementById('startBonds').value = d.startBonds.toLocaleString();
         document.getElementById('startTips').value = d.startTips.toLocaleString();
         document.getElementById('startCash').value = d.startCash.toLocaleString();
@@ -554,6 +697,7 @@
         });
         document.getElementById('dynamicReturns').innerHTML = ''; d.returns.forEach(r => addRow('return', r.yr, r.val*100));
         document.getElementById('dynamicEvents').innerHTML = ''; d.events.forEach(e => addRow('event', e.yr, e.val));
+        document.getElementById('dynamicTaxes').innerHTML = ''; if(d.taxes) d.taxes.forEach(t => addRow('tax', t.yr, t.val*100));
         document.getElementById('dynamicRebalances').innerHTML = ''; 
         if(d.rebalances) d.rebalances.forEach(r => addRow('rebalance', r.yr, null, r));
         calculate();
@@ -562,21 +706,70 @@
         if(fundContent.classList.contains('collapsed')) { toggleSection('fundamentals'); }
     }
 
-    function clearSlot(s) { scenarios[s] = null; scenarioNames[s] = ''; if (baselineSlot === s) baselineSlot = null; localStorage.setItem('scenData_v14', JSON.stringify(scenarios)); localStorage.setItem('scenNames_v14', JSON.stringify(scenarioNames)); localStorage.setItem('baseSlot_v14', baselineSlot); updateScenarioCards(); calculate(); }
-    function setBaseline(s) { baselineSlot = (baselineSlot === s) ? null : s; localStorage.setItem('baseSlot_v14', baselineSlot); updateScenarioCards(); calculate(); }
-    function updateScenarioNames() { ['A', 'B', 'C', 'D'].forEach(s => { const el = document.getElementById(`name-${s}`); if (el) scenarioNames[s] = el.value; }); localStorage.setItem('scenNames_v14', JSON.stringify(scenarioNames)); updateScenarioCards(); }
+    function clearSlot(s) { 
+        if (!storageAvailable) {
+            scenarios[s] = null; scenarioNames[s] = ''; 
+            if (baselineSlot === s) baselineSlot = null;
+            updateScenarioCards(); calculate();
+            return;
+        }
+        
+        try {
+            scenarios[s] = null; scenarioNames[s] = ''; 
+            if (baselineSlot === s) baselineSlot = null; 
+            
+            localStorage.setItem('scenData_v16', JSON.stringify(scenarios)); 
+            localStorage.setItem('scenNames_v16', JSON.stringify(scenarioNames)); 
+            localStorage.setItem('baseSlot_v16', baselineSlot); 
+            
+            console.log(`🗑️ Cleared Scenario ${s}`);
+            updateScenarioCards(); calculate();
+        } catch (e) {
+            console.error(`❌ Failed to clear Scenario ${s}:`, e);
+        }
+    }
+    function setBaseline(s) { 
+        baselineSlot = (baselineSlot === s) ? null : s; 
+        
+        if (storageAvailable) {
+            try {
+                localStorage.setItem('baseSlot_v16', baselineSlot);
+            } catch (e) {
+                console.error('Failed to save baseline setting:', e);
+            }
+        }
+        
+        updateScenarioCards(); calculate(); 
+    }
+    function updateScenarioNames() { 
+        ['A', 'B', 'C', 'D'].forEach(s => { 
+            const el = document.getElementById(`name-${s}`); 
+            if (el) scenarioNames[s] = el.value; 
+        }); 
+        
+        if (storageAvailable) {
+            try {
+                localStorage.setItem('scenNames_v16', JSON.stringify(scenarioNames));
+            } catch (e) {
+                console.error('Failed to save scenario names:', e);
+            }
+        }
+        
+        updateScenarioCards(); 
+    }
 
     function addRow(t, yO, vO, rO) {
         let c, yr;
         if (t === 'return') c = document.getElementById('dynamicReturns');
         else if (t === 'event') c = document.getElementById('dynamicEvents');
+        else if (t === 'tax') c = document.getElementById('dynamicTaxes');
         else c = document.getElementById('dynamicRebalances');
         
         yr = yO || (Number(document.getElementById('startYear').value) + 2 + c.children.length);
         const div = document.createElement('div');
         div.className = 'event-row';
         
-        let content = `<div style="font-size:10px; font-weight:bold; color:#cbd5e1; width:25px;">Yr</div><input type="number" class="dyn-${t=== 'rebalance' ? 'reb' : (t==='return'?'ret':'evt')}-yr" value="${yr}" style="width:50px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" oninput="calculate()">`;
+        let content = `<div style="font-size:10px; font-weight:bold; color:#cbd5e1; width:25px;">Yr</div><input type="number" class="dyn-${t=== 'rebalance' ? 'reb' : (t==='tax'?'tax':(t==='return'?'ret':'evt'))}-yr" value="${yr}" style="width:50px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" oninput="calculate()">`;
         
         if (t === 'rebalance') {
             const s = rO ? rO.s * 100 : 40;
@@ -593,12 +786,15 @@
                     <div style="display:flex; justify-content: space-between; align-items:center;"><span class="inline-label">Csh%</span><input type="number" class="dyn-reb-c" value="${csh}" style="width:40px; background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px;" onchange="adjustRebalance(this, 'c')"></div>
                 </div>`;
         } else {
+            let symbolLeft = t==='event' ? '<span class="symbol-left">$</span>' : '';
+            let symbolRight = (t==='return' || t==='tax') ? '<span class="symbol-right">%</span>' : '';
+            let defaultVal = t==='return' ? -20 : (t==='tax' ? 25 : 50000);
             content += `
-                <div style="font-size:10px; font-weight:bold; color:#cbd5e1; margin-left:5px;">${t==='return'?'%':'$'}:</div>
+                <div style="font-size:10px; font-weight:bold; color:#cbd5e1; margin-left:5px;">${t==='event'?'$':'%'}:</div>
                 <div class="input-wrapper">
-                    ${t==='event'?'<span class="symbol-left">$</span>':''}
-                    <input type="${t==='return'?'number':'text'}" class="${t==='return'?'has-right dyn-ret-val':'has-left dyn-evt-val'}" value="${(vO||(t==='return'?-20:50000)).toLocaleString()}" style="background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px; width:100%" oninput="${t==='return'?'calculate()':'formatCurrencyInput(this)'}">
-                    ${t==='return'?'<span class="symbol-right">%</span>':''}
+                    ${symbolLeft}
+                    <input type="${t==='event'?'text':'number'}" class="dyn-${t=== 'tax' ? 'tax' : (t==='return'?'ret':'evt')}-val" value="${(vO||defaultVal).toLocaleString()}" style="background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:4px; width:100%" oninput="${t==='event'?'formatCurrencyInput(this)':'calculate()'}">
+                    ${symbolRight}
                 </div>`;
         }
         
@@ -607,6 +803,42 @@
         c.appendChild(div); 
         if (!yO) calculate();
     }
+
+    // Debug helper function - call debugStorage() in browser console to check localStorage
+    window.debugStorage = function() {
+        console.log('=== RETIREMENT CALCULATOR STORAGE DEBUG ===');
+        console.log('🔧 localStorage Available:', storageAvailable);
+        
+        if (!storageAvailable) {
+            console.log('❌ localStorage is not available - check browser settings');
+            return;
+        }
+        
+        const scenData = localStorage.getItem('scenData_v16');
+        const scenNames = localStorage.getItem('scenNames_v16');
+        const baseSlot = localStorage.getItem('baseSlot_v16');
+        
+        console.log('📦 Raw localStorage data:');
+        console.log('  scenData_v16:', scenData);
+        console.log('  scenNames_v16:', scenNames);
+        console.log('  baseSlot_v16:', baseSlot);
+        
+        if (scenData) {
+            try {
+                const parsed = JSON.parse(scenData);
+                console.log('✅ Parsed scenarios:', parsed);
+                console.log('📊 Saved scenario count:', Object.values(parsed).filter(s => s !== null).length);
+            } catch(e) {
+                console.log('❌ JSON parse error:', e.message);
+            }
+        }
+        
+        console.log('💾 Current in-memory state:');
+        console.log('  scenarios:', scenarios);
+        console.log('  scenarioNames:', scenarioNames);
+        console.log('  baselineSlot:', baselineSlot);
+        console.log('=======================================');
+    };
 
     window.onload = () => { initGrids(); updateScenarioCards(); calculate(); };
 </script>
