@@ -161,13 +161,17 @@
                     <div class="input-group">
                         <label>Portfolio Liquidation Tax (%)</label>
                         <div class="input-wrapper">
-                            <input type="number" id="liquidationTaxRate" value="10.6" step="0.1" class="has-right" oninput="calculate()">
+                            <input type="number" id="liquidationTaxRate" value="32" step="0.1" class="has-right" oninput="calculate()">
                             <span class="symbol-right">%</span>
                         </div>
                     </div>
                     <div class="input-group">
-                        <label>Upfront P2 CA Reset ($)</label>
+                        <label>Upfront P2 CA Reset Total ($)</label>
                         <input type="text" id="caResetAmt" value="4,000,000" oninput="formatCurrencyInput(this)">
+                    </div>
+                    <div class="input-group">
+                        <label>Upfront P2 CA Reset Cap Gains ($)</label>
+                        <input type="text" id="caResetCapGains" value="2,500,000" oninput="formatCurrencyInput(this)">
                     </div>
                 </div>
 
@@ -518,10 +522,15 @@
             const liquidationTaxRateInput = getNum('liquidationTaxRate');
             const liquidationTaxRate = liquidationTaxRateInput / 100;
             const caResetAmtInput = getNum('caResetAmt');
+            const caResetCapGainsInput = getNum('caResetCapGains');
             
             // Cannot reset more than we actually have
             const caResetAmt = Math.min(caResetAmtInput, startLiq); 
-            const caEntryTax = caResetAmt * liquidationTaxRate;
+            // Capital gains cannot exceed total reset amount
+            const caResetCapGains = Math.min(caResetCapGainsInput, caResetAmt); 
+            
+            // Tax is applied ONLY to the capital gains portion
+            const caEntryTax = caResetCapGains * liquidationTaxRate;
             
             const caPurchaseYrPath2 = getNum('caPurchaseYrPath2');
             const flPurchaseYr = getNum('flPurchaseYr');
@@ -590,18 +599,15 @@
             let p1CumTax = 0, p2CumTax = 0, p3CumTax = 0, p4CumTax = 0, p5CumTax = 0, p6CumTax = 0;
             let p1PeakSWR = 0, p2PeakSWR = 0, p3PeakSWR = 0, p4PeakSWR = 0, p5PeakSWR = 0, p6PeakSWR = 0;
 
-            // Updated Process Shortfall to handle Tax-Free Bucket depletion
             const processShortfall = (liqStart, shortfall, taxRate, pathNum, taxFreeBucket = 0) => {
                 let gross = 0, tax = 0, newTaxFreeBucket = taxFreeBucket;
                 
                 if(shortfall > 0) {
                     if (taxFreeBucket >= shortfall) {
-                        // Entire shortfall is covered by the tax-free bucket
                         gross = shortfall;
                         tax = 0;
                         newTaxFreeBucket -= shortfall;
                     } else {
-                        // Bucket covers a portion, the rest is taxed normally
                         let taxableShortfall = shortfall - taxFreeBucket;
                         let taxableGross = taxableShortfall / (1 - taxRate);
                         tax = taxableGross - taxableShortfall;
@@ -665,7 +671,20 @@
                 // Path 2 (Passes in the tracking tax-free bucket)
                 let p2TaxR = Math.min(annualTaxRate + caStateTax, 0.99);
                 let p2NetInc = infInc * (1 - p2TaxR);
-                let p2Exp = infBaseLife + caMortgage + infCaStatic + infWaCarry - infWaRent;
+                
+                // Add active tax leaks during Phase 1 (Tax-Free basis phase)
+                let p2RentTax = infWaRent * p2TaxR; // Fed + CA tax on rental income
+                
+                // Calculate base expenses (subtracting net rent offsets expenses)
+                let p2ExpBase = infBaseLife + caMortgage + infCaStatic + infWaCarry - infWaRent;
+                
+                // Calculate stock growth tax (Assuming 15% Long Term Capital Gains + CA State Tax on the growth portion of the withdrawal)
+                let p2ShortfallBase = Math.max(0, p2ExpBase + p2RentTax - p2NetInc);
+                let p2StockGrowthTax = p2ShortfallBase * (r / (1 + r)) * (0.15 + caStateTax); 
+
+                // Total expenses includes the base + the tax drag from rent and stock growth
+                let p2Exp = p2ExpBase + p2RentTax + p2StockGrowthTax;
+                
                 let p2Res = processShortfall(p2Liq, p2Exp - p2NetInc, p2TaxR, 2, p2TaxFreeBasis);
                 p2Liq = p2Res.liq; p2CumTax += p2Res.tax; p2TaxFreeBasis = p2Res.newTaxFreeBucket;
                 p2Hist.push({ year: curYr, netNeed: p2Res.shortfall, tax: p2Res.tax, gross: p2Res.gross, liq: p2Liq });
@@ -702,13 +721,13 @@
                 // Path 6
                 let p6TaxR = Math.min(annualTaxRate, 0.99);
                 let p6NetInc = infInc * (1 - p6TaxR);
-                let p6Exp = 0;
+                let p6ExpYear1 = 0;
                 if (i < delayedFlYears) {
-                    p6Exp = infBaseLife + flMortgageP6 + infFlStaticP6 + infWaCarry - infFlRentP6;
+                    p6ExpYear1 = infBaseLife + flMortgageP6 + infFlStaticP6 + infWaCarry - infFlRentP6;
                 } else {
-                    p6Exp = infBaseLife + flMortgageP6 + infFlStaticP6 + infWaCarry - infWaRent;
+                    p6ExpYear1 = infBaseLife + flMortgageP6 + infFlStaticP6 + infWaCarry - infWaRent;
                 }
-                let p6Res = processShortfall(p6Liq, p6Exp - p6NetInc, p6TaxR, 6);
+                let p6Res = processShortfall(p6Liq, p6ExpYear1 - p6NetInc, p6TaxR, 6);
                 p6Liq = p6Res.liq; p6CumTax += p6Res.tax;
                 p6Hist.push({ year: curYr, netNeed: p6Res.shortfall, tax: p6Res.tax, gross: p6Res.gross, liq: p6Liq });
 
@@ -751,10 +770,15 @@
             // Path 2 details variables
             let p2TaxR = Math.min(tax1 + caStateTax, 0.99);
             let p2NetInc = y1Inc * (1 - p2TaxR);
-            let p2Exp = y1Spend + caMortgage + caStaticBase + waCarry - netRentWA_Base;
-            let p2Short = p2Exp - p2NetInc;
             
-            // Detail display calculation for Path 2 Tax Free handling in Y1
+            let y1P2RentTax = netRentWA_Base * p2TaxR; 
+            let p2ExpBase = y1Spend + caMortgage + caStaticBase + waCarry - netRentWA_Base;
+            let p2ShortfallBase = Math.max(0, p2ExpBase + y1P2RentTax - p2NetInc);
+            let p2StockGrowthTax = p2ShortfallBase * (r / (1 + r)) * (0.15 + caStateTax); 
+
+            let p2ExpTotal = p2ExpBase + y1P2RentTax + p2StockGrowthTax;
+            let p2Short = p2ExpTotal - p2NetInc;
+
             let initialTaxFreeBucket = Math.max(0, caResetAmt - caEntryTax - caDpAmt);
             let p2GrossW = 0;
             if (initialTaxFreeBucket >= p2Short) {
@@ -821,27 +845,32 @@
                 `
             });
 
-            // --- UPDATED PATH 2 (IMMEDIATE CA) DETAILS ---
             results.push({ 
                 name: "P2: Immediate CA", liq: p2Liq, re: p2Re, tax: 0, net: p2Liq + p2Re, 
                 details: `
                     <div class="details-overview"><strong>Overview:</strong> Relocate permanently to California early in retirement. We perform a "Partial Basis Reset" by liquidating a set amount of assets while still in WA. This locks in the WA capital gains rate and creates a tax-free runway for our early years in CA.</div>
-                    <div><h4>Liquid Capital & Compounding Mechanics</h4><p>Liquidating a portion of assets (${formatCurrency(caResetAmt)}) to fund the move subjects us to a <strong>${formatCurrency(caEntryTax)} Capital Gains Tax (${formatPct(liquidationTaxRate)})</strong>. This creates a High-Basis/Tax-Free Bucket of <strong>${formatCurrency(initialTaxFreeBucket)}</strong> (after paying the tax and CA Down Payment). We withdraw from this bucket tax-free until it runs dry, at which point CA taxes apply.</p>
+                    <div><h4>Liquid Capital & Compounding Mechanics</h4>
+                        <p>Liquidating a portion of assets to fund the move subjects us to a <strong>${formatCurrency(caEntryTax)} Liquidation Tax</strong>. (Calculation: <em>${formatCurrency(caResetCapGains)} Capital Gains × ${formatPct(liquidationTaxRate)} Tax Rate</em>). This creates a High-Basis/Tax-Free Bucket of <strong>${formatCurrency(initialTaxFreeBucket)}</strong> (after paying the tax and CA Down Payment). We withdraw from this bucket tax-free until it runs dry.</p>
+                        
                         <h5>Phase 1: Tax-Free Runway (Initial Years)</h5>
-                        <div class="math-box">Starting Portfolio: ${formatCurrency(startLiq - caEntryTax - caDpAmt)} <span class="math-subtext">(${formatCurrency(startLiq)} initial - ${formatCurrency(caEntryTax)} Capital Gains Tax - ${formatCurrency(caDpAmt)} CA Down Payment)</span><br>
-                            + Base Spend: ${formatCurrency(y1Spend)} <br>+ CA Mortgage P&I: ${formatCurrency(caMortgage)} <br>+ CA Taxes/HOA: ${formatCurrency(caStaticBase)} <br>+ WA Carry: ${formatCurrency(waCarry)} <br>- WA LTR Income: -${formatCurrency(netRentWA_Base)}
-                            <br>---------------------------------------------------------<br>= <strong>Total Expenses: ${formatCurrency(p2Exp)}</strong><br><br>
-                            - Net Income: -${formatCurrency(p2NetInc)} <span class="math-subtext">(minus ${formatPct(Math.min(tax1 + caStateTax, 0.99))} Fed+CA Tax)</span><br>
+                        <div class="math-box">Starting Portfolio: ${formatCurrency(startLiq - caEntryTax - caDpAmt)} <span class="math-subtext">(${formatCurrency(startLiq)} initial - ${formatCurrency(caEntryTax)} Tax - ${formatCurrency(caDpAmt)} CA Down Payment)</span><br>
+                            + Base Spend: ${formatCurrency(y1Spend)} <br>+ CA Mortgage P&I: ${formatCurrency(caMortgage)} <br>+ CA Taxes/HOA: ${formatCurrency(caStaticBase)} <br>+ WA Carry: ${formatCurrency(waCarry)} <br>
+                            - WA LTR Income (Gross): -${formatCurrency(netRentWA_Base)}<br>
+                            <span style="color: #f87171;">+ Tax on WA Rental Income: ${formatCurrency(y1P2RentTax)}</span> <span class="math-subtext">(Fed + CA Tax applied to Rent)</span><br>
+                            <span style="color: #f87171;">+ Tax on Stock Growth: ${formatCurrency(p2StockGrowthTax)}</span> <span class="math-subtext">(Fed CG + CA Tax on the newly grown portion of shares sold)</span>
+                            <br>---------------------------------------------------------<br>= <strong>Total Expenses: ${formatCurrency(p2ExpTotal)}</strong><br><br>
+                            - Net Income: -${formatCurrency(p2NetInc)} <span class="math-subtext">(minus ${formatPct(p2TaxR)} Fed+CA Tax)</span><br>
                             ---------------------------------------------------------<br>= <strong>Net Portfolio Shortfall: ${formatCurrency(p2Short)}</strong><br><br>
-                            Withdrawal Source: ${initialTaxFreeBucket >= p2Short ? '100% Tax-Free Bucket (No CA Tax Applied)' : 'Tax-Free Bucket Empty. Normal CA tax rates applied.'}<br>= <strong>Gross Withdrawal: ${formatCurrency(p2GrossW)}</strong>
+                            Withdrawal Source: ${initialTaxFreeBucket >= p2Short ? '100% Tax-Free Bucket (No CA "Gross Up" required for principal)' : 'Tax-Free Bucket Empty. Normal CA tax rates applied.'}<br>= <strong>Gross Withdrawal: ${formatCurrency(p2GrossW)}</strong>
                         </div>
+                        
                         <h5>Phase 2: Depleted Basis (Standard CA Taxation)</h5>
-                        <p>Once the ${formatCurrency(initialTaxFreeBucket)} high-basis bucket is exhausted, every dollar withdrawn to cover the shortfall must be "grossed up" for both Federal and CA State taxes.</p>
+                        <p>Once the ${formatCurrency(initialTaxFreeBucket)} high-basis bucket is completely exhausted, every dollar withdrawn to cover the portfolio shortfall must be "grossed up" for both Federal and CA State taxes.</p>
                         <div class="math-box">
                             Required Cash: Net Portfolio Shortfall<br>
                             ÷ (1 - (${formatPct(tax1)} Fed + ${formatPct(caStateTax)} CA State Tax))<br>
                             = <strong>Gross Portfolio Withdrawal</strong>
-                            <span class="math-subtext">Note: This phase increases the "burn rate" of the portfolio significantly compared to Phase 1.</span>
+                            <span class="math-subtext">Note: This "cliff" increases the burn rate of the portfolio significantly compared to Phase 1.</span>
                         </div>
                     </div>
                     <div><h4>Real Estate & Estate Shielding</h4><ul><li><strong>WA Home Growth (${years} years):</strong> ${formatCurrency(fvWa)}</li><li><strong>CA Home Growth (${endYear - caPurchaseYrPath2} years):</strong> ${formatCurrency(fvCaPath2)}.</li><li><strong>Total Tax Forfeited at Death:</strong> $0.</li></ul></div>
@@ -867,8 +896,6 @@
                 `
             });
 
-
-            // --- UPDATED PATH 4 (DELAYED CA) DETAILS ---
             results.push({ 
                 name: "P4: Delayed CA", liq: p4Liq, re: p4Re, tax: 0, net: p4Liq + p4Re, 
                 details: `
@@ -948,7 +975,7 @@
                             = <strong>Total Expenses: ${formatCurrency(p6ExpYear1)}</strong><br><br>
 
                             - Net Income: -${formatCurrency(p6NetInc)}
-                            <span class="math-subtext">(Pre-tax $${numToCommas(y1Inc/12)}/mo × 12 months, minus ${formatPct(p6TaxR)} Fed Tax)</span><br>
+                            <span class="math-subtext">(Pre-tax $${numToCommas(y1Inc/12)}/mo × 12 months, minus ${formatPct(p6TaxR)} Fed Tax Only)</span><br>
 
                             ---------------------------------------------------------<br>
                             = <strong>Net Portfolio Shortfall: ${formatCurrency(p6Short)}</strong><br><br>
