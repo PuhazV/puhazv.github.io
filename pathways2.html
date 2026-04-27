@@ -600,10 +600,12 @@
 
             const waCarry = 42000; 
             const waWinterRentLoss = caWinterRentCost * waWinterMonths;
-            const federalEstateExempt = 15000000; 
-            const waEstateExempt = 3000000; 
-            const federalEstateTaxRate = 0.40; 
-            const waEstateTaxRate = 0.20; 
+            
+            // Married Couple 2026 estate tax exemptions (Federal doubled by portability, WA doubled by Credit Shelter Trust)
+            const federalEstateExempt = 30000000; // 2026 federal exemption for couple
+            const waEstateExempt = 6000000; // 2026 WA state exemption for couple 
+            const federalEstateTaxRate = 0.40; // Federal rate
+            const waEstateTaxRate = 0.20; // WA state rate
 
             const calcAnnualMortgage = (principal, rate) => {
                 if (rate <= 0) return principal / 30; 
@@ -887,7 +889,7 @@
                 let p6NetInc = infInc * (1 - p6OrdTax);
                 
                 let p6FlMortgageDeduction = hasFlP6 ? getMortgageInterestDeduction(flMortgageP6 * inf, flHomeP6 * (1 - flDpPctP6), p6OrdTax) : 0;
-                let p6FlCosts = hasFlP6 ? (flMortgageP6 + infFlStaticP6 - p6FlMortgageDeduction) : 0;
+                let p6FlCosts = hasFlP6 ? (flMortgageP6 + flStaticBaseP6 - p6FlMortgageDeduction) : 0;
                 
                 let p6RentIncome = 0;
                 let p6ExpBase = 0;
@@ -933,9 +935,7 @@
             let y1Spend = getSpend(0);
             let y1Inc = getInc(0);
 
-            // Year 1 Drilldown Logic Variables (All dynamically tied to startYear)
-            
-            // Path 1
+            // Path 1 details variables
             let y1P1OrdTax = tax1;
             let y1P1WithdrawalTax = y1P1OrdTax * taxableGainPct;
             let y1P1NetInc = y1Inc * (1 - y1P1OrdTax);
@@ -949,7 +949,7 @@
             let p1Tax = p1FederalEstateTax + p1WaEstateTax;
             p1CumTax += p1Tax;
 
-            // Path 2
+            // Path 2 details variables
             let y1HasCaP2 = startYear >= caPurchaseYrPath2;
             let y1P2DpExp = (startYear === caPurchaseYrPath2) ? caDpAmt : 0;
             let y1P2OrdTax = Math.min(tax1 + caStateTax, 0.99);
@@ -1072,8 +1072,8 @@
             let y1P6RentTax = y1P6RentIncome * y1P6OrdTax;
             
             let y1P6ExpBase = y1P6IsWa 
-                ? (y1Spend + waCarry + y1P6FlCosts - y1P6RentIncome + y1P6DpExp) 
-                : ((y1Spend * colFl) + waCarry + y1P6FlCosts - y1P6RentIncome + y1P6DpExp); 
+                ? (y1Spend + waCarry + y1P6FlCosts - y1P6RentIncome + y1P6DpExp) // Wa Col
+                : ((y1Spend * colFl) + waCarry + y1P6FlCosts - y1P6RentIncome + y1P6DpExp); // Fl col
                 
             let y1P6ExpTotal = y1P6ExpBase + y1P6RentTax;
             let y1P6Short = y1P6ExpTotal - y1P6NetInc;
