@@ -58,8 +58,7 @@
         .chart-container { background: #1f2937; padding: 24px; border-radius: 10px; border: 1px solid #374151; height: 420px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
         
         .results-container { background: #1f2937; padding: 24px; border-radius: 10px; border: 1px solid #374151; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
-        .results-container p { font-size: 13px; color: #9ca3af; margin-top: 0; margin-bottom: 15px; }
-
+        
         .dashboard-bottom-row { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-top: 5px; align-items: stretch; }
         .dashboard-bottom-row .chart-container { height: auto; min-height: 420px; box-sizing: border-box; }
         .risk-panel { background: #1f2937; padding: 24px; border-radius: 10px; border: 1px solid #374151; box-shadow: 0 4px 6px rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 16px; height: 100%; box-sizing: border-box; }
@@ -104,6 +103,7 @@
         .history-table th { background-color: #111827; color: #9ca3af; position: sticky; top: 0; z-index: 5; border-bottom: 1px solid #374151; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;}
         .history-table td { border-bottom: 1px solid #1f2937; color: #d1d5db;}
         .history-table tr:hover td { background-color: #374151; }
+        .pp-label { display: block; font-size: 11px; color: #94a3b8; font-weight: 500; margin-top: 4px; font-family: 'SF Mono', Consolas, monospace; letter-spacing: 0; }
     </style>
 </head>
 <body>
@@ -352,14 +352,27 @@
             </div>
             
             <div class="results-container">
-                <p><em>Click any row to view calculation breakdown and year-by-year bucket & rent amortization.</em></p>
+                <div class="results-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;">
+                    <p style="font-size: 13px; color: #9ca3af; margin: 0;"><em>Click any row to view calculation breakdown and year-by-year bucket & rent amortization.</em></p>
+                    <div style="background: #111827; padding: 6px 12px; border-radius: 6px; border: 1px solid #374151; display: flex; gap: 16px; align-items: center; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <div style="width: 12px; height: 4px; background: #cbd5e1; border-radius: 2px;"></div>
+                            <span style="font-size: 10px; color: #cbd5e1; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;">Nominal $</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <div style="width: 12px; height: 4px; background: #475569; border-radius: 2px;"></div>
+                            <span style="font-size: 10px; color: #94a3b8; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;">Today's PP</span>
+                        </div>
+                    </div>
+                </div>
+                
                 <table id="resultsTable">
                     <thead>
                         <tr>
                             <th>Pathway Strategy</th>
                             <th class="currency">Final Liquid</th>
                             <th class="currency">Final Real Estate</th>
-                            <th class="currency">Final Estate Tax (Death)</th>
+                            <th class="currency">Final Estate Tax</th>
                             <th class="currency">Net Legacy</th>
                         </tr>
                     </thead>
@@ -1091,7 +1104,6 @@
                 port.roth *= (1 + r);
  
                 let valWa = waHome * Math.pow(1 + waApprec, i + 1);
-                // Use i+1 (end-of-year) to match WA home valuation timing
                 let endCaVal = p2_homeVal * Math.pow(1 + p2_apprec, i + 1);
                 let endFlVal = p3_homeVal * Math.pow(1 + p3_apprec, i + 1);
                 let valCaChart = (path.id === 2 && curYr >= p2_purchYr) ? endCaVal : ((path.id===4 && curYr >= p4_caPurchYr) ? endCaVal : 0);
@@ -1182,7 +1194,8 @@
                 re: finalEstateRE, tax: cumTax + totalEstTax, net: finalEstate - totalEstTax, 
                 hist: hist, milestones: milestones, 
                 optPerf: { amt: scenResetAmt, isFullReset: isFullReset, convYrs: (path.id === 1 ? p1_convYrs : (path.id === 3 ? p3_convYrs : 0)), unharvested: moveYrSnap ? moveYrSnap.unharvestedGains : 0 },
-                estMath: { wa: finalWa, ca: finalCa, fl: finalFl, fedTax: fedEstTax, waTax: waEstTax, totTax: totalEstTax, totEst: finalEstate, fedExemptObj: fvFedEstateExempt }
+                estMath: { wa: finalWa, ca: finalCa, fl: finalFl, fedTax: fedEstTax, waTax: waEstTax, totTax: totalEstTax, totEst: finalEstate, fedExemptObj: fvFedEstateExempt },
+                startYr: startYear, endYr: endYear, moves: path.moves
             });
         });
 
@@ -1195,13 +1208,38 @@
             totalTaxData.push(-row.tax); 
             netData.push(row.net);
             
+            const deflator = Math.pow(1 + inflation, years);
+            const pp = (val) => `<div style="font-size: 11.5px; color: #64748b; margin-top: 5px; font-weight: 400; font-family: 'SF Mono', monospace;">${formatCurrency(val / deflator)}</div>`;
+
+            let metaHtml = `<div style="font-size: 11px; color: #64748b; margin-top: 6px; font-weight: 400; line-height: 1.4; padding-left: 16px;">
+                <div>Timeline: ${row.startYr} – ${row.endYr}</div>
+                <div>Moves: ${row.moves.length > 0 ? row.moves.map(m => `To ${m.state} (${m.yr})`).join(', ') : 'Remains in WA'}</div>
+            </div>`;
+
             let tr = document.createElement('tr');
             tr.id = `main-row-${index}`; tr.className = 'clickable-row'; tr.onclick = () => toggleRow(index);
-            tr.innerHTML = `<td><span class="toggle-icon" style="color:#64748b; font-size:10px;">▼</span> ${row.name}</td>
-                <td class="currency" style="color:${row.liq<0?'#f87171':'#f8fafc'}">${formatCurrency(row.liq)}</td>
-                <td class="currency">${formatCurrency(row.re)}</td>
-                <td class="currency" style="color:#f87171">${formatCurrency(row.estMath.totTax)}</td>
-                <td class="currency" style="color:#34d399; font-weight:bold;">${formatCurrency(row.net)}</td>`;
+            tr.innerHTML = `
+                <td style="vertical-align: top; padding-top: 20px; font-weight: 500; font-size: 13.5px;">
+                    <div style="display: flex; align-items: center;"><span class="toggle-icon" style="color:#64748b; font-size:10px; margin-right: 6px;">▼</span> ${row.name}</div>
+                    ${metaHtml}
+                </td>
+                <td class="currency" style="vertical-align: top; padding-top: 20px;">
+                    <div style="font-size: 14.5px; font-weight: 600; color: ${row.liq<0?'#f87171':'#f8fafc'}">${formatCurrency(row.liq)}</div>
+                    ${pp(row.liq)}
+                </td>
+                <td class="currency" style="vertical-align: top; padding-top: 20px;">
+                    <div style="font-size: 14.5px; font-weight: 600; color: #f8fafc">${formatCurrency(row.re)}</div>
+                    ${pp(row.re)}
+                </td>
+                <td class="currency" style="vertical-align: top; padding-top: 20px;">
+                    <div style="font-size: 14.5px; font-weight: 600; color: #f87171">${formatCurrency(row.estMath.totTax)}</div>
+                    ${pp(row.estMath.totTax)}
+                </td>
+                <td class="currency" style="vertical-align: top; padding-top: 20px;">
+                    <div style="font-size: 15px; font-weight: 700; color: #34d399">${formatCurrency(row.net)}</div>
+                    ${pp(row.net)}
+                </td>
+            `;
             tbody.appendChild(tr);
 
             let estMsg = row.estMath.waTax > 0 ? `<p>Because you remained domiciled in WA, your estate is subject to the state's progressive death tax on top of any Federal liability.</p>` : `<p>By shifting legal domicile outside of Washington, you avoid the state estate tax entirely.</p>`;
