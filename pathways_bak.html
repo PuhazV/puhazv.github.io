@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retirement Pathways Calculator (Consolidated & Detailed)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #0b1121; color: #f8fafc; padding: 20px; }
+        .container { max-width: 98%; margin: auto; background: #0f172a; padding: 30px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid #1e293b; }
+        h1 { text-align: center; color: #f8fafc; margin-bottom: 30px; font-weight: 300; letter-spacing: 1px; }
+        
+        .dashboard-grid { display: grid; grid-template-columns: 360px 1fr; gap: 30px; align-items: start; }
+        .inputs-section { background: #0f172a; padding: 0; }
+        .input-grid { display: grid; grid-template-columns: 1fr; gap: 20px; padding-right: 10px; align-items: start; }
+        
+        .input-group-box { background: #1e293b; padding: 18px; border-radius: 8px; border: 1px solid #334155; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: all 0.3s ease; }
+        .input-group-box h3 { margin-top: 0; color: #38bdf8; font-size: 13px; border-bottom: 1px solid #334155; padding-bottom: 8px; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; cursor: pointer; user-select: none; position: relative; display: flex; align-items: center; justify-content: space-between; }
+        .input-group-box h3::after { content: '▼'; font-size: 10px; transition: transform 0.2s; color: #64748b; }
+        .input-group-box.collapsed h3 { margin-bottom: 0; border-bottom: none; }
+        .input-group-box.collapsed h3::after { transform: rotate(-90deg); }
+        .input-group-box.collapsed > *:not(h3) { display: none !important; }
+
+        .input-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; align-items: end; }
+        .input-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px; align-items: end; }
+
+        .input-group { margin-bottom: 10px; display: flex; flex-direction: column; }
+        .input-group label { display: block; font-weight: 500; margin-bottom: 4px; font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.2; }
+        .input-group label[title] { cursor: help; border-bottom: 1px dotted #64748b; }
+        .input-group label[title]:hover { color: #38bdf8; border-bottom-color: #38bdf8; }
+        .input-group input { width: 100%; padding: 8px; border: 1px solid #334155; border-radius: 4px; box-sizing: border-box; font-family: 'SF Mono', Consolas, monospace; font-size: 12px; background: #0b1121; color: #f8fafc; transition: all 0.2s ease; height: 36px; }
+        .input-group input:focus { outline: none; border-color: #38bdf8; box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2); }
+        
+        .input-wrapper { position: relative; width: 100%; display: flex; align-items: center; height: 36px; }
+        .input-wrapper input { width: 100%; height: 36px; }
+        .symbol-right { position: absolute; right: 8px; color: #64748b; font-weight: bold; pointer-events: none; font-size: 11px; }
+        .input-wrapper input.has-right { padding-right: 24px; }
+        .section-label { font-size: 10px; color: #cbd5e1; border-bottom: 1px solid #334155; padding-bottom: 4px; margin-bottom: 8px; margin-top: 12px; font-weight: 600; text-transform: uppercase; }
+        .section-label.rent-header { color: #8b5cf6; margin-top: 18px; border-bottom-color: #8b5cf6; }
+
+        .input-group-container { background: #1a2332; border: 1px solid #334155; border-radius: 10px; padding: 20px; margin-bottom: 30px; box-shadow: 0 4px 12px rgba(51, 65, 85, 0.1); position: relative; }
+        .input-group-container-title { color: #38bdf8; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid rgba(56, 189, 248, 0.3); text-align: center; }
+        .input-group-container .input-group-box { margin-bottom: 15px; }
+        .input-group-container .input-group-box:last-child { margin-bottom: 0; }
+
+        .outputs-section { display: flex; flex-direction: column; gap: 20px; }
+        .chart-container { background: #1e293b; padding: 20px; border-radius: 8px; border: 1px solid #334155; height: 400px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        
+        .results-container { background: #1e293b; padding: 20px; border-radius: 8px; border: 1px solid #334155; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .results-container p { font-size: 13px; color: #94a3b8; margin-top: 0; margin-bottom: 15px; }
+
+        .dashboard-bottom-row { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-top: 5px; align-items: stretch; }
+        .dashboard-bottom-row .chart-container { height: auto; min-height: 400px; box-sizing: border-box; }
+        .risk-panel { background: #1e293b; padding: 20px; border-radius: 8px; border: 1px solid #334155; box-shadow: 0 4px 6px rgba(0,0,0,0.3); display: flex; flex-direction: column; gap: 15px; height: 100%; box-sizing: border-box; }
+        
+        .risk-card { background: #0b1121; padding: 15px; border-radius: 6px; border-left: 3px solid; }
+        .risk-card.tax { border-color: #f87171; }
+        .risk-card.swr { border-color: #eab308; }
+        .risk-title { color: #94a3b8; font-size: 11px; text-transform: uppercase; font-weight: 600; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .risk-subtext { color: #64748b; font-size: 11px; margin-top: 10px; font-style: italic; }
+        
+        table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        th, td { padding: 14px 12px; text-align: left; border-bottom: 1px solid #334155; font-size: 14px; }
+        th { background-color: #0b1121; color: #94a3b8; font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; border-top: 1px solid #334155; position: sticky; top: 0; z-index: 10; }
+        th:first-child { border-top-left-radius: 6px; border-left: 1px solid #334155; }
+        th:last-child { border-top-right-radius: 6px; border-right: 1px solid #334155; }
+        td:first-child { border-left: 1px solid #334155; }
+        td:last-child { border-right: 1px solid #334155; }
+        
+        .currency { text-align: right; font-family: 'SF Mono', Consolas, monospace; font-size: 14px; }
+        .positive { color: #34d399; font-weight: 600; }
+        .negative { color: #f87171; }
+        
+        .clickable-row { cursor: pointer; transition: background-color 0.2s ease; background: #1e293b; }
+        .clickable-row:hover { background-color: #0f172a; } 
+        .clickable-row td:first-child { font-weight: 600; color: #38bdf8; }
+        
+        .details-row { display: none; background-color: #0b1121; }
+        .details-row.open { display: table-row; }
+        .details-row td { padding: 0; border: none; }
+        
+        .details-content { padding: 25px; font-size: 13px; color: #cbd5e1; display: grid; grid-template-columns: 1fr 1fr; gap: 25px 40px; border-bottom: 2px solid #38bdf8; border-left: 1px solid #334155; border-right: 1px solid #334155; }
+        .details-overview { grid-column: 1 / -1; background: #1e293b; padding: 15px 20px; border-radius: 6px; border-left: 4px solid #8b5cf6; font-size: 14px; color: #e2e8f0; margin-bottom: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .details-overview strong { color: #c4b5fd; font-weight: 600; }
+        
+        .details-content h4 { margin: 0 0 15px 0; color: #f8fafc; font-size: 15px; border-bottom: 1px solid #334155; padding-bottom: 8px; font-weight: 500; letter-spacing: 0.5px; }
+        .details-content h5 { margin: 15px 0 10px 0; color: #38bdf8; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .details-content ul { margin: 0; padding-left: 20px; line-height: 1.7; }
+        .details-content li { margin-bottom: 10px; }
+        
+        .math-box { background: #0f172a; padding: 15px; border-radius: 6px; border-left: 3px solid #38bdf8; font-family: 'SF Mono', Consolas, monospace; font-size: 12.5px; margin-top: 10px; color: #cbd5e1; line-height: 1.6; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
+        .math-box strong { color: #34d399; font-weight: bold; }
+        .math-subtext { color: #64748b; font-size: 11.5px; display: inline-block; margin-left: 8px; font-style: italic; margin-bottom: 4px; }
+        
+        .toggle-icon { display: inline-block; width: 15px; transition: transform 0.2s; font-size: 12px; color: #94a3b8; }
+        .open .toggle-icon { transform: rotate(90deg); color: #38bdf8; }
+
+        .history-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; font-family: 'SF Mono', Consolas, monospace; text-align: right; }
+        .history-table th { background-color: #0b1121; color: #94a3b8; font-weight: 600; font-size: 11px; padding: 10px; border-top: 1px solid #334155; border-bottom: 1px solid #334155; letter-spacing: 0.5px; position: sticky; top: 0; z-index: 5; }
+        .history-table td { padding: 8px 10px; font-size: 12.5px; border-bottom: 1px solid #1e293b; color: #cbd5e1; border-left: none; border-right: none; }
+        .history-table tr:nth-child(even) td { background-color: #0b1121; }
+        .history-table tr:nth-child(odd) td { background-color: #0f172a; }
+        .history-table tr:hover td { background-color: #1e293b; }
+        .history-table td:nth-child(1) { color: #94a3b8; font-weight: bold; text-align: center; }
+        .history-table td:nth-child(2) { color: #eab308; } 
+        .history-table td:nth-child(3) { color: #f87171; } 
+        .history-table td:nth-child(4) { color: #fb7185; } 
+        .history-table td:nth-child(5) { color: #38bdf8; font-weight: 600; } 
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Advanced Retirement Pathways Projection (Consolidated & Detailed)</h1>
+    
+    <div class="dashboard-grid">
+        <div class="inputs-section">
+            <div class="input-grid">
+                
+                <div class="input-group-container">
+                    <div class="input-group-container-title">Foundation Settings</div>
+                    
+                    <div class="input-group-box">
+                        <h3>Portfolio Settings</h3>
+                        <div class="input-row-2">
+                            <div class="input-group"><label>Start Year</label><input type="number" id="startYear" value="2026" oninput="calculate()"></div>
+                            <div class="input-group"><label>End Year</label><input type="number" id="endYear" value="2055" oninput="calculate()"></div>
+                        </div>
+                        <div class="input-row-2">
+                            <div class="input-group"><label>Start Liquid ($)</label><input type="text" id="startLiquid" value="10,000,000" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>Market Rtn (%)</label><input type="number" id="marketReturn" value="7" step="0.1" oninput="calculate()"></div>
+                        </div>
+                        <div class="input-row-2">
+                            <div class="input-group"><label>Inflation (%)</label><input type="number" id="inflation" value="3" step="0.1" oninput="calculate()"></div>
+                            <div class="input-group"><label>Mgmt Fee (%)</label><input type="number" id="mgmtFee" value="7" step="0.1" oninput="calculate()"></div>
+                        </div>
+                        
+                        <div class="section-label">Asset Allocation & Basis</div>
+                        <div class="input-row-2">
+                            <div class="input-group"><label title="Percentage of Portfolio in Tax-Free Roth">Roth Balance (%)</label><div class="input-wrapper"><input type="number" id="rothPct" value="20" step="1" class="has-right" oninput="calculate()"><span class="symbol-right">%</span></div></div>
+                            <div class="input-group"><label title="Cost Basis of the Taxable Brokerage portion">Stock Cost Basis (%)</label><div class="input-wrapper"><input type="number" id="costBasisPct" value="20" step="1" class="has-right" oninput="calculate()"><span class="symbol-right">%</span></div></div>
+                        </div>
+
+                        <div class="section-label">Marginal Federal Tax Rates</div>
+                        <div class="input-row-2">
+                            <div class="input-group"><label>Fed Yrs 1-10</label><div class="input-wrapper"><input type="number" id="tax1" value="20" step="0.1" class="has-right" oninput="calculate()"><span class="symbol-right">%</span></div></div>
+                            <div class="input-group"><label>Fed Yrs 11-20</label><div class="input-wrapper"><input type="number" id="tax2" value="20" step="0.1" class="has-right" oninput="calculate()"><span class="symbol-right">%</span></div></div>
+                        </div>
+                        <div class="input-row-2">
+                            <div class="input-group"><label>Fed Yrs 21-30+</label><div class="input-wrapper"><input type="number" id="tax3" value="20" step="0.1" class="has-right" oninput="calculate()"><span class="symbol-right">%</span></div></div>
+                            <div class="input-group"><label>Mortgage Rate (%)</label><input type="number" id="interestRate" value="6.5" step="0.1" oninput="calculate()"></div>
+                        </div>
+                        
+                        <div class="section-label">Cost of Living Adjustments (Bellevue WA = 100%)</div>
+                        <div class="input-row-2">
+                            <div class="input-group"><label title="California Cost of Living adjustment as percentage of baseline">CA COL (%)</label><div class="input-wrapper"><input type="number" id="colCA" value="105" step="1" class="has-right" oninput="calculate()"><span class="symbol-right">%</span></div></div>
+                            <div class="input-group"><label title="Florida Cost of Living adjustment as percentage of baseline">FL COL (%)</label><div class="input-wrapper"><input type="number" id="colFL" value="85" step="1" class="has-right" oninput="calculate()"><span class="symbol-right">%</span></div></div>
+                        </div>
+                    </div>
+
+                    <div class="input-group-box">
+                        <h3>Income & Spending</h3>
+                        <div class="section-label">Monthly Base Spend ($/mo) - WA Baseline</div>
+                        <div class="input-row-2">
+                            <div class="input-group"><label>Yr 1-5</label><input type="text" id="w1_5" value="25,000" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>Yr 6-10</label><input type="text" id="w6_10" value="25,000" oninput="formatCurrencyInput(this)"></div>
+                        </div>
+                        <div class="input-row-2">
+                            <div class="input-group"><label>Yr 11-15</label><input type="text" id="w11_15" value="20,000" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>Yr 16-20</label><input type="text" id="w16_20" value="20,000" oninput="formatCurrencyInput(this)"></div>
+                        </div>
+                        <div class="input-row-2">
+                            <div class="input-group"><label>Yr 21-25</label><input type="text" id="w21_25" value="20,000" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>Yr 26-30</label><input type="text" id="w26_30" value="20,000" oninput="formatCurrencyInput(this)"></div>
+                        </div>
+                    </div>
+
+                    <div class="input-group-box">
+                        <h3>Income Timeline</h3>
+                        <div class="section-label">Pre-Tax Monthly Income ($/mo)</div>
+                        <div class="input-row-2">
+                            <div class="input-group"><label>Yr 1-5</label><input type="text" id="i1_5" value="0" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>Yr 6-10</label><input type="text" id="i6_10" value="0" oninput="formatCurrencyInput(this)"></div>
+                        </div>
+                        <div class="input-row-2">
+                            <div class="input-group"><label>Yr 11-15</label><input type="text" id="i11_15" value="0" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>Yr 16-20</label><input type="text" id="i16_20" value="0" oninput="formatCurrencyInput(this)"></div>
+                        </div>
+                        <div class="input-row-2">
+                            <div class="input-group"><label>Yr 21-25</label><input type="text" id="i21_25" value="0" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>Yr 26-30</label><input type="text" id="i26_30" value="0" oninput="formatCurrencyInput(this)"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-group-container">
+                    <div class="input-group-container-title">Pathway Parameters & Rentals</div>
+                    
+                    <div class="input-group-box">
+                        <h3>WA Baseline Parameters</h3>
+                        <div class="input-row-2">
+                            <div class="input-group"><label>WA Home Val ($)</label><input type="text" id="waHome" value="3,000,000" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>WA Apprec (%)</label><input type="number" id="waApprec" value="6" step="0.1" oninput="calculate()"></div>
+                        </div>
+                        <p style="font-size:11px; color:#64748b; margin-top:5px; margin-bottom:0;"><em>Note: WA Baseline assumes permanent residency, so no WA rental stream is applicable.</em></p>
+                    </div>
+
+                    <div class="input-group-box">
+                        <h3>WA ➔ CA Parameters</h3>
+                        <p style="font-size:12px; color:#94a3b8; margin-top:-5px; margin-bottom:15px; font-style:italic;">Make Move Yr = Purch Yr for an Immediate move. Events trigger on Jan 1st.</p>
+                        <div class="input-row-2">
+                            <div class="input-group"><label>CA Purchase Yr</label><input type="number" id="caPurchaseYr" value="2028" oninput="calculate()"></div>
+                            <div class="input-group"><label>CA Move Yr</label><input type="number" id="caMoveYr" value="2038" oninput="calculate()"></div>
+                        </div>
+                        <div class="input-row-2">
+                            <div class="input-group"><label>CA Home Val ($)</label><input type="text" id="caHome" value="1,600,000" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label title="CA Down Payment Percentage">CA Down (%)</label><input type="number" id="caDownPaymentPct" value="20" step="1" oninput="calculate()"></div>
+                            <div class="input-group"><label>CA Apprec (%)</label><input type="number" id="caApprec" value="6" step="0.1" oninput="calculate()"></div>
+                        </div>
+                        
+                        <div class="section-label">Proactive Pre-Move Basis Reset (Done in WA)</div>
+                        <p style="font-size:11px; color:#64748b; margin-top:-5px; margin-bottom:10px; line-height:1.3;">Execute a portfolio reset and Roth conversion BEFORE moving to avoid CA tax. Taxed at Federal Rate only.</p>
+                        <div class="input-row-2">
+                            <div class="input-group"><label title="Year to execute the proactive basis reset">Pre-Move Reset Yr</label><input type="number" id="p2_preResetYr" value="2034" oninput="calculate()"></div>
+                            <div class="input-group"><label title="Amount of portfolio to reset/convert">Pre-Move Reset Amt ($)</label><input type="text" id="p2_preResetAmt" value="3,000,000" oninput="formatCurrencyInput(this)"></div>
+                        </div>
+
+                        <div class="section-label">Pending CA State Tax Reset (Triggered on Move Yr)</div>
+                        <p style="font-size:11px; color:#64748b; margin-top:-5px; margin-bottom:10px; line-height:1.3;">If additional reset is needed upon entering CA, it will be taxed at full Fed + CA State rates.</p>
+                        <div class="input-row-2">
+                            <div class="input-group"><label title="CA State Tax Premium">CA State Tax (%)</label><div class="input-wrapper"><input type="number" id="caStateTax" value="9.3" step="0.1" class="has-right" oninput="calculate()"><span class="symbol-right">%</span></div></div>
+                            <div class="input-group"><label title="Total Portfolio Liquidation Tax Rate (Fed + State)">Total Liq Tax (%)</label><div class="input-wrapper"><input type="number" id="liquidationTaxRate" value="24" step="0.1" class="has-right" oninput="calculate()"><span class="symbol-right">%</span></div></div>
+                        </div>
+                        <div class="input-row-2">
+                            <div class="input-group"><label title="CA Reset Target Amount">Pending CA Reset Amt ($)</label><input type="text" id="caResetAmt" value="0" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label title="Reset Lots Cost Basis Percentage">Reset Lots Basis (%)</label><div class="input-wrapper"><input type="number" id="caResetCostBasisPct" value="15" step="1" class="has-right" oninput="calculate()"><span class="symbol-right">%</span></div></div>
+                        </div>
+                        
+                        <div class="section-label">CA Rent Metrics</div>
+                        <div class="input-row-2">
+                            <div class="input-group"><label title="CA Winter Rental Cost per Month">CA Winter Rent ($)</label><input type="text" id="caWinterRentCost" value="0" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label title="WA Winter Months">WA Winter Months</label><input type="number" id="waWinterMonths" value="0" oninput="calculate()"></div>
+                        </div>
+                        
+                        <div class="section-label rent-header">WA Rent Stream ($/mo) - Starts after CA Move</div>
+                        <div class="input-row-3">
+                            <div class="input-group"><label>Yr 1-5</label><input type="text" id="p2_waR1_5" value="0" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>Yr 6-10</label><input type="text" id="p2_waR6_10" value="0" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>Yr 11-15</label><input type="text" id="p2_waR11_15" value="6,500" oninput="formatCurrencyInput(this)"></div>
+                        </div>
+                        <div class="input-row-3">
+                            <div class="input-group"><label>Yr 16-20</label><input type="text" id="p2_waR16_20" value="6,500" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>Yr 21-25</label><input type="text" id="p2_waR21_25" value="6,500" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>Yr 26-30+</label><input type="text" id="p2_waR26_30" value="6,500" oninput="formatCurrencyInput(this)"></div>
+                        </div>
+                        <div class="section-label rent-header">CA Rent Stream ($/mo) - Active Pre-Move</div>
+                        <div class="input-row-3">
+                            <div class="input-group"><label>Yr 1-5</label><input type="text" id="p2_caR1_5" value="0" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>Yr 6-10</label><input type="text" id="p2_caR6_10" value="0" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>Yr 11-15</label><input type="text" id="p2_caR11_15" value="6,500" oninput="formatCurrencyInput(this)"></div>
+                        </div>
+                        <div class="input-row-3">
+                            <div class="input-group"><label>Yr 16-20</label><input type="text" id="p2_caR16_20" value="6,500" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>Yr 21-25</label><input type="text" id="p2_caR21_25" value="6,500" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>Yr 26-30+</label><input type="text" id="p2_caR26_30" value="6,500" oninput="formatCurrencyInput(this)"></div>
+                        </div>
+                    </div>
+
+                    <div class="input-group-box">
+                        <h3>WA ➔ FL Parameters</h3>
+                        <p style="font-size:11px; color:#94a3b8; margin-top:-5px; margin-bottom:15px; font-style:italic;">Make Move Yr = Purch Yr for an Immediate move. Events trigger on Jan 1st.</p>
+                        <div class="input-row-2">
+                            <div class="input-group"><label>FL Purchase Yr</label><input type="number" id="flPurchaseYr" value="2027" oninput="calculate()"></div>
+                            <div class="input-group"><label>FL Move Yr</label><input type="number" id="flMoveYr" value="2028" oninput="calculate()"></div>
+                        </div>
+                        <div class="input-row-2">
+                            <div class="input-group"><label>FL Home Val ($)</label><input type="text" id="flHome" value="900,000" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label title="FL Down Payment Percentage">FL Down (%)</label><input type="number" id="flDownPaymentPct" value="20" step="1" oninput="calculate()"></div>
+                            <div class="input-group"><label>FL Apprec (%)</label><input type="number" id="flApprec" value="5" step="0.1" oninput="calculate()"></div>
+                        </div>
+                        
+                        <div class="section-label rent-header">WA Rent Stream ($/mo) - Starts after FL Move</div>
+                        <div class="input-row-3">
+                            <div class="input-group"><label>Yr 1-5</label><input type="text" id="p3_waR1_5" value="6,500" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>Yr 6-10</label><input type="text" id="p3_waR6_10" value="6,500" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>Yr 11-15</label><input type="text" id="p3_waR11_15" value="6,500" oninput="formatCurrencyInput(this)"></div>
+                        </div>
+                        <div class="input-row-3">
+                            <div class="input-group"><label>Yr 16-20</label><input type="text" id="p3_waR16_20" value="6,500" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>Yr 21-25</label><input type="text" id="p3_waR21_25" value="6,500" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>Yr 26-30+</label><input type="text" id="p3_waR26_30" value="6,500" oninput="formatCurrencyInput(this)"></div>
+                        </div>
+                        <div class="section-label rent-header">FL Rent Stream ($/mo) - Active Pre-Move</div>
+                        <div class="input-row-3">
+                            <div class="input-group"><label>Yr 1-5</label><input type="text" id="p3_flR1_5" value="5,000" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>Yr 6-10</label><input type="text" id="p3_flR6_10" value="5,000" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>Yr 11-15</label><input type="text" id="p3_flR11_15" value="5,000" oninput="formatCurrencyInput(this)"></div>
+                        </div>
+                        <div class="input-row-3">
+                            <div class="input-group"><label>Yr 16-20</label><input type="text" id="p3_flR16_20" value="5,000" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>Yr 21-25</label><input type="text" id="p3_flR21_25" value="5,000" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>Yr 26-30+</label><input type="text" id="p3_flR26_30" value="5,000" oninput="formatCurrencyInput(this)"></div>
+                        </div>
+                    </div>
+
+                    <div class="input-group-box">
+                        <h3>WA→FL→CA Parameters</h3>
+                        <p style="font-size:11px; color:#94a3b8; margin-top:-5px; margin-bottom:15px; font-style:italic;">Uses Home Values, DPs, and COL established in the CA and FL boxes above. Events trigger Jan 1st.</p>
+                        <div class="input-row-2">
+                            <div class="input-group"><label>FL Purchase Yr</label><input type="number" id="seqFlPurch" value="2027" oninput="calculate()"></div>
+                            <div class="input-group"><label>FL Move (Dom 1)</label><input type="number" id="seqFlMove" value="2028" oninput="calculate()"></div>
+                        </div>
+                        <div class="input-row-2">
+                            <div class="input-group"><label>CA Purchase Yr</label><input type="number" id="seqCaPurch" value="2032" oninput="calculate()"></div>
+                            <div class="input-group"><label>CA Move (Dom 2)</label><input type="number" id="seqCaMove" value="2032" oninput="calculate()"></div>
+                        </div>
+                        
+                        <div class="section-label">Proactive Pre-Move Basis Reset (Done in FL/WA)</div>
+                        <p style="font-size:11px; color:#64748b; margin-top:-5px; margin-bottom:10px; line-height:1.3;">Execute a portfolio reset and Roth conversion BEFORE moving to CA to avoid state tax. Taxed at Federal Rate only.</p>
+                        <div class="input-row-2">
+                            <div class="input-group"><label title="Year to execute the proactive basis reset">Pre-Move Reset Yr</label><input type="number" id="p4_preResetYr" value="2031" oninput="calculate()"></div>
+                            <div class="input-group"><label title="Amount of portfolio to reset/convert">Pre-Move Reset Amt ($)</label><input type="text" id="p4_preResetAmt" value="3,000,000" oninput="formatCurrencyInput(this)"></div>
+                        </div>
+
+                        <div class="section-label rent-header">WA Rent Stream ($/mo) - Starts after FL Move</div>
+                        <div class="input-row-3">
+                            <div class="input-group"><label>Yr 1-5</label><input type="text" id="p4_waR1_5" value="6,500" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>Yr 6-10</label><input type="text" id="p4_waR6_10" value="6,500" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>Yr 11-15</label><input type="text" id="p4_waR11_15" value="6,500" oninput="formatCurrencyInput(this)"></div>
+                        </div>
+                        <div class="input-row-3">
+                            <div class="input-group"><label>Yr 16-20</label><input type="text" id="p4_waR16_20" value="6,500" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>Yr 21-25</label><input type="text" id="p4_waR21_25" value="6,500" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>Yr 26-30+</label><input type="text" id="p4_waR26_30" value="6,500" oninput="formatCurrencyInput(this)"></div>
+                        </div>
+                        
+                        <div class="section-label rent-header">FL Rent Stream ($/mo) - Active Pre-Move & Post-CA-Move</div>
+                        <div class="input-row-3">
+                            <div class="input-group"><label>Yr 1-5</label><input type="text" id="p4_flR1_5" value="5,000" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>Yr 6-10</label><input type="text" id="p4_flR6_10" value="5,000" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>Yr 11-15</label><input type="text" id="p4_flR11_15" value="5,000" oninput="formatCurrencyInput(this)"></div>
+                        </div>
+                        <div class="input-row-3">
+                            <div class="input-group"><label>Yr 16-20</label><input type="text" id="p4_flR16_20" value="5,000" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>Yr 21-25</label><input type="text" id="p4_flR21_25" value="5,000" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>Yr 26-30+</label><input type="text" id="p4_flR26_30" value="5,000" oninput="formatCurrencyInput(this)"></div>
+                        </div>
+
+                        <div class="section-label rent-header">CA Rent Stream ($/mo) - Active Pre-Move</div>
+                        <div class="input-row-3">
+                            <div class="input-group"><label>Yr 1-5</label><input type="text" id="p4_caR1_5" value="6,500" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>Yr 6-10</label><input type="text" id="p4_caR6_10" value="6,500" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>Yr 11-15</label><input type="text" id="p4_caR11_15" value="6,500" oninput="formatCurrencyInput(this)"></div>
+                        </div>
+                        <div class="input-row-3">
+                            <div class="input-group"><label>Yr 16-20</label><input type="text" id="p4_caR16_20" value="6,500" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>Yr 21-25</label><input type="text" id="p4_caR21_25" value="6,500" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>Yr 26-30+</label><input type="text" id="p4_caR26_30" value="6,500" oninput="formatCurrencyInput(this)"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="outputs-section">
+            <div class="chart-container" id="chartWrapper">
+                <canvas id="legacyChart"></canvas>
+            </div>
+            
+            <div class="results-container">
+                <p><em>Click any row to view calculation breakdown and year-by-year amortization.</em></p>
+                <table id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th>Pathway Strategy</th>
+                            <th class="currency">Final Liquid</th>
+                            <th class="currency">Final Real Estate</th>
+                            <th class="currency">Total Estate Taxes</th>
+                            <th class="currency">Net Legacy</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div class="dashboard-bottom-row">
+                <div class="chart-container">
+                    <canvas id="timeSeriesChart"></canvas>
+                </div>
+                <div class="risk-panel" id="riskPanel"></div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll('.input-group-box').forEach((box, index) => {
+        box.classList.add('collapsed');
+        const header = box.querySelector('h3');
+        if(header) {
+            header.addEventListener('click', () => {
+                box.classList.toggle('collapsed');
+            });
+        }
+    });
+
+    let legacyChartInstance = null; 
+    let timeSeriesChartInstance = null;
+    let resizeHandlersSetup = false;
+    
+    function setupChartResizeHandlers() {
+        if (resizeHandlersSetup) return;
+        
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                if (legacyChartInstance) {
+                    try { legacyChartInstance.resize(); legacyChartInstance.update('none'); } catch (e) { console.log(e); }
+                }
+                if (timeSeriesChartInstance) {
+                    try { timeSeriesChartInstance.resize(); timeSeriesChartInstance.update('none'); } catch (e) { console.log(e); }
+                }
+            }, 150); 
+        });
+        
+        if (window.ResizeObserver) {
+            let observerTimeout;
+            const chartObserver = new ResizeObserver(entries => {
+                clearTimeout(observerTimeout);
+                observerTimeout = setTimeout(() => {
+                    for (let entry of entries) {
+                        if (entry.target.id === 'chartWrapper' && legacyChartInstance) {
+                            try { legacyChartInstance.resize(); legacyChartInstance.update('none'); } catch (e) { console.log(e); }
+                        } else if (entry.target.closest('.dashboard-bottom-row') && timeSeriesChartInstance) {
+                            try { timeSeriesChartInstance.resize(); timeSeriesChartInstance.update('none'); } catch (e) { console.log(e); }
+                        }
+                    }
+                }, 100);
+            });
+            
+            const chartWrapper = document.getElementById('chartWrapper');
+            const bottomRow = document.querySelector('.dashboard-bottom-row');
+            if (chartWrapper) chartObserver.observe(chartWrapper);
+            if (bottomRow) chartObserver.observe(bottomRow);
+        }
+        
+        resizeHandlersSetup = true;
+    }
+    
+    const formatCurrency = (num) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(num);
+    const formatPct = (decimalVal) => Number((decimalVal * 100).toFixed(2)) + '%';
+    const numToCommas = (num) => Number(num).toLocaleString('en-US');
+
+    function formatCurrencyInput(inputElem) {
+        let rawValue = inputElem.value.replace(/,/g, '').replace(/[^\d.]/g, '');
+        if (rawValue !== '') {
+            let parts = rawValue.split('.');
+            parts[0] = Number(parts[0]).toLocaleString('en-US');
+            inputElem.value = parts.join('.');
+        } else {
+            inputElem.value = '';
+        }
+        calculate();
+    }
+
+    const getNum = (id) => {
+        let elem = document.getElementById(id);
+        if(!elem) return 0;
+        return Number(elem.value.replace(/,/g, ''));
+    };
+
+    function toggleRow(index) {
+        const row = document.getElementById(`main-row-${index}`);
+        const detailRow = document.getElementById(`detail-row-${index}`);
+        
+        if (detailRow.classList.contains('open')) {
+            detailRow.classList.remove('open');
+            row.classList.remove('open');
+        } else {
+            document.querySelectorAll('.details-row').forEach(r => r.classList.remove('open'));
+            document.querySelectorAll('.clickable-row').forEach(r => r.classList.remove('open'));
+            detailRow.classList.add('open');
+            row.classList.add('open');
+        }
+    }
+
+    function buildHistoryTable(historyData) {
+        let html = `
+        <div style="grid-column: 1 / -1; margin-top: 15px; overflow-x: auto;">
+            <h4 style="margin-bottom: 10px; color: #f8fafc; border-bottom: 1px solid #334155; padding-bottom: 8px;">Year-by-Year Amortization Loop</h4>
+            <div style="max-height: 400px; overflow-y: auto; border: 1px solid #334155; border-radius: 6px; background: #0f172a;">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Year</th>
+                            <th>Net Shortfall</th>
+                            <th>Taxes Paid</th>
+                            <th>Gross Withdrawal</th>
+                            <th>End Liquid Bal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        historyData.forEach(row => {
+            html += `
+                        <tr>
+                            <td>${row.year}</td>
+                            <td>${formatCurrency(row.netNeed)}</td>
+                            <td>${formatCurrency(row.tax)}</td>
+                            <td>${row.gross > 0 ? '-' : ''}${formatCurrency(row.gross)}</td>
+                            <td style="color: ${row.liq < 0 ? '#f87171' : '#cbd5e1'}">${formatCurrency(row.liq)}</td>
+                        </tr>
+            `;
+        });
+        html += `
+                    </tbody>
+                </table>
+            </div>
+        </div>`;
+        return html;
+    }
+
+    function buildMathBox(snapshot, taxableGainPct, rothPct) {
+        if (!snapshot) return '';
+        let html = `<div class="math-box">
+            <strong>Year: ${snapshot.yr} (${snapshot.col} Domicile)</strong><br>`;
+        
+        if (snapshot.preMoveTax > 0) {
+            html += `<span style="color:#a78bfa;">Proactive Reset/Conversion Tax (Fed Only): ${formatCurrency(snapshot.preMoveTax)}</span> <span class="math-subtext">(Triggered to boost tax-free basis pre-move)</span><br>`;
+        }
+        if (snapshot.caMoveTax > 0) {
+            html += `<span style="color:#fbbf24;">Pending CA Reset Tax (Fed + CA): ${formatCurrency(snapshot.caMoveTax)}</span> <span class="math-subtext">(Triggered upon CA entry)</span><br>`;
+        }
+        if (snapshot.dp > 0) {
+            html += `<span style="color:#fbbf24;">Point-in-Time Down Payment: ${formatCurrency(snapshot.dp)}</span><br>`;
+        }
+        
+        html += `+ Base Spend: ${formatCurrency(snapshot.spend)} <span class="math-subtext">(Adjusted for ${snapshot.col} COL)</span><br>`;
+        
+        if (snapshot.carry > 0 || snapshot.costs > 0) {
+            html += `+ Carrying Costs (Taxes, Ins, HOA): ${formatCurrency(snapshot.carry + snapshot.costs)}<br>`;
+        }
+        if (snapshot.mortgage > 0) {
+            html += `+ Mortgage Payments: ${formatCurrency(snapshot.mortgage)} <span class="math-subtext">(${formatCurrency(snapshot.mortgageDeduct)} deducted from income)</span><br>`;
+        }
+        if (snapshot.rentInc > 0) {
+            html += `- Active Rent Income (Net): -${formatCurrency(snapshot.rentInc)}<br>`;
+            html += `<span style="color: #f87171;">+ Tax on Rental Income: ${formatCurrency(snapshot.rentTax)}</span><br>`;
+        }
+        
+        html += `---------------------------------------------------------<br>`;
+        html += `= <strong>Total Expenses: ${formatCurrency(snapshot.expTotal)}</strong><br><br>`;
+        html += `- Net Pre-Tax Income: -${formatCurrency(snapshot.netInc)} <span class="math-subtext">(minus ${formatPct(snapshot.ordTax)} Effective Tax)</span><br>`;
+        html += `---------------------------------------------------------<br>`;
+        html += `= <strong>Net Portfolio Shortfall: ${formatCurrency(snapshot.shortfall)}</strong><br><br>`;
+        
+        html += `÷ (1 - (${formatPct(snapshot.ordTax)} Marginal Tax × ${formatPct(taxableGainPct)} Gain Portion × ${formatPct(1 - rothPct)} Taxable Allocation))<br>`;
+        html += `= <strong>Gross Portfolio Withdrawal: ${formatCurrency(snapshot.gross)}</strong>`;
+        
+        html += `</div>`;
+        return html;
+    }
+
+    const calcWAEstateTax = (estate) => {
+        const exemption = 6000000;
+        if (estate <= exemption) return 0;
+        let taxable = estate - exemption;
+        let tax = 0;
+        if (taxable > 7000000) { tax += (taxable - 7000000) * 0.20; taxable = 7000000; }
+        if (taxable > 6000000) { tax += (taxable - 6000000) * 0.19; taxable = 6000000; }
+        if (taxable > 4000000) { tax += (taxable - 4000000) * 0.18; taxable = 4000000; }
+        if (taxable > 3000000) { tax += (taxable - 3000000) * 0.16; taxable = 3000000; }
+        if (taxable > 2000000) { tax += (taxable - 2000000) * 0.15; taxable = 2000000; }
+        if (taxable > 1000000) { tax += (taxable - 1000000) * 0.14; taxable = 1000000; }
+        if (taxable > 0)       { tax += taxable * 0.10; }
+        return tax;
+    };
+
+    const calcFedEstateTax = (estate, fvExempt) => {
+        return estate > fvExempt ? (estate - fvExempt) * 0.40 : 0;
+    };
+
+    function calculate() {
+        try {
+            const startYear = getNum('startYear');
+            const endYear = getNum('endYear');
+            const years = endYear - startYear;
+            if(years <= 0) return;
+
+            const startLiq = getNum('startLiquid');
+            const r = getNum('marketReturn') / 100;
+            const g = getNum('inflation') / 100;
+            
+            const intRate = getNum('interestRate') / 100;
+            const mgmtFee = getNum('mgmtFee') / 100;
+
+            const waHome = getNum('waHome');
+            const waApprec = getNum('waApprec') / 100;
+            const caHome = getNum('caHome');
+            const caApprec = getNum('caApprec') / 100;
+            const caDpPct = getNum('caDownPaymentPct') / 100;
+            const flHome = getNum('flHome');
+            const flApprec = getNum('flApprec') / 100;
+            const flDpPct = getNum('flDownPaymentPct') / 100;
+
+            const caWinterRentCost = getNum('caWinterRentCost');
+            const waWinterMonths = getNum('waWinterMonths');
+            
+            const getRentBase = (prefix, i) => {
+                if(i < 5) return getNum(`${prefix}R1_5`); if(i < 10) return getNum(`${prefix}R6_10`); if(i < 15) return getNum(`${prefix}R11_15`);
+                if(i < 20) return getNum(`${prefix}R16_20`); if(i < 25) return getNum(`${prefix}R21_25`); return getNum(`${prefix}R26_30`);
+            };
+
+            const colWa = 1.0; 
+            const colCa = getNum('colCA') / 100;
+            const colFl = getNum('colFL') / 100;
+
+            const getSpend = (i) => {
+                if(i < 5) return getNum('w1_5') * 12; if(i < 10) return getNum('w6_10') * 12; if(i < 15) return getNum('w11_15') * 12;
+                if(i < 20) return getNum('w16_20') * 12; if(i < 25) return getNum('w21_25') * 12; return getNum('w26_30') * 12;
+            };
+            const getInc = (i) => {
+                if(i < 5) return getNum('i1_5') * 12; if(i < 10) return getNum('i6_10') * 12; if(i < 15) return getNum('i11_15') * 12;
+                if(i < 20) return getNum('i16_20') * 12; if(i < 25) return getNum('i21_25') * 12; return getNum('i26_30') * 12;
+            };
+
+            const rothPct = getNum('rothPct') / 100;
+            const costBasisPct = getNum('costBasisPct') / 100;
+            const taxableGainPct = Math.max(0, 1 - costBasisPct); 
+            
+            const tax1 = getNum('tax1') / 100;
+            const tax2 = getNum('tax2') / 100;
+            const tax3 = getNum('tax3') / 100;
+            
+            const caStateTax = getNum('caStateTax') / 100;
+            const liquidationTaxRate = getNum('liquidationTaxRate') / 100;
+            const fedLiqRate = Math.max(0, liquidationTaxRate - caStateTax); 
+            
+            const caResetAmtInput = getNum('caResetAmt');
+            const caResetCostBasisPct = getNum('caResetCostBasisPct') / 100;
+            
+            const p2_preResetYr = getNum('p2_preResetYr');
+            const p2_preResetAmt = getNum('p2_preResetAmt');
+            
+            const p4_preResetYr = getNum('p4_preResetYr');
+            const p4_preResetAmt = getNum('p4_preResetAmt');
+
+            const caPurchaseYr = getNum('caPurchaseYr');
+            let caMoveYr = Math.max(getNum('caMoveYr'), caPurchaseYr, startYear);
+            
+            const flPurchaseYr = getNum('flPurchaseYr');
+            let flMoveYr = Math.max(getNum('flMoveYr'), flPurchaseYr, startYear);
+
+            const seqFlPurch = getNum('seqFlPurch');
+            let seqFlMove = Math.max(getNum('seqFlMove'), seqFlPurch, startYear);
+            const seqCaPurch = getNum('seqCaPurch');
+            let seqCaMove = Math.max(getNum('seqCaMove'), seqCaPurch, seqFlMove);
+
+            const waCarry = 42000; 
+            const waWinterRentLoss = caWinterRentCost * waWinterMonths;
+
+            const calcAnnualMortgage = (principal, rate) => {
+                if (rate <= 0) return principal / 30; 
+                const rMo = rate / 12; const n = 360; 
+                const moPmt = principal * (rMo * Math.pow(1 + rMo, n)) / (Math.pow(1 + rMo, n) - 1);
+                return moPmt * 12;
+            };
+
+            const getMortgageInterestDeduction = (annualPayment, principal, ordinaryTaxRate) => {
+                const deductibleRatio = principal > 750000 ? 750000 / principal : 1;
+                const interestPortion = annualPayment * 0.85; 
+                return interestPortion * deductibleRatio * ordinaryTaxRate; 
+            };
+
+            const caMortgage = calcAnnualMortgage(caHome * (1 - caDpPct), intRate);
+            const caStaticBase = caHome * 0.0175; 
+            const flMortgage = calcAnnualMortgage(flHome * (1 - flDpPct), intRate);
+            const flStaticBase = flHome * 0.0225; 
+
+            const calcFVRealEstate = (val, apprec, n) => n <= 0 ? val : val * Math.pow(1 + apprec, n);
+            const getPropVal = (homeVal, apprec, currentYr, purchaseYr) => {
+                if (currentYr < purchaseYr) return 0;
+                return calcFVRealEstate(homeVal, apprec, currentYr - purchaseYr);
+            };
+
+            const fvWa = calcFVRealEstate(waHome, waApprec, years); 
+            const fvCaP2 = calcFVRealEstate(caHome, caApprec, endYear - caPurchaseYr);
+            const fvFlP3 = calcFVRealEstate(flHome, flApprec, endYear - flPurchaseYr);
+            const fvFlP4 = calcFVRealEstate(flHome, flApprec, endYear - seqFlPurch);
+            const fvCaP4 = calcFVRealEstate(caHome, caApprec, endYear - seqCaPurch);
+
+            let caDpAmt = caHome * caDpPct;
+            let flDpAmt = flHome * flDpPct;
+
+            let p1Liq = startLiq;
+            let p2Liq = startLiq;
+            let p3Liq = startLiq;
+            let p4Liq = startLiq;
+
+            let p2RemainingBasis = 0; let p2ResetBucketValue = 0;
+            let p4RemainingBasis = 0; let p4ResetBucketValue = 0;
+
+            let p1Hist = [], p2Hist = [], p3Hist = [], p4Hist = [];
+            let tsLabels = [], tsP1 = [], tsP2 = [], tsP3 = [], tsP4 = [];
+            let p1CumTax = 0, p2CumTax = 0, p3CumTax = 0, p4CumTax = 0;
+            let p1PeakSWR = 0, p2PeakSWR = 0, p3PeakSWR = 0, p4PeakSWR = 0;
+
+            let snapshots = { p1: {}, p2: {}, p3: {}, p4: {} };
+
+            // Core Withdrawal Engine incorporating Roth Allocation blending
+            const processShortfall = (liqStart, shortfall, effectiveTaxRate, pathNum, resetBasisRemaining = 0, resetBucketValue = 0, fullTaxRate = 0) => {
+                let gross = 0, tax = 0, newResetBasisRemaining = resetBasisRemaining, newResetBucketValue = resetBucketValue;
+                
+                if (liqStart <= 0) {
+                    gross = 0; tax = 0;
+                    let liq = (liqStart - shortfall) * (1 + r); // Debt accrues
+                    return { liq, gross, tax, shortfall, newResetBasisRemaining, newResetBucketValue };
+                }
+
+                if(shortfall > 0) {
+                    if ((pathNum === 2 || pathNum === 4) && resetBasisRemaining > 0 && resetBucketValue > 0) {
+                        let basisToUse = Math.min(resetBasisRemaining, shortfall);
+                        let bucketWithdrawal = Math.min(resetBucketValue, shortfall);
+                        
+                        if (bucketWithdrawal <= basisToUse) {
+                            gross = bucketWithdrawal; tax = 0;
+                            newResetBasisRemaining -= bucketWithdrawal;
+                            newResetBucketValue -= bucketWithdrawal;
+                            shortfall -= bucketWithdrawal;
+                        } else {
+                            let growthPortion = bucketWithdrawal - basisToUse;
+                            let growthTax = growthPortion * fullTaxRate; 
+                            gross = basisToUse + (growthPortion / (1 - fullTaxRate));
+                            tax = growthTax;
+                            newResetBasisRemaining = 0;
+                            newResetBucketValue -= bucketWithdrawal;
+                            shortfall -= bucketWithdrawal;
+                        }
+                        if (shortfall > 0) {
+                            let additionalGross = shortfall / (1 - effectiveTaxRate);
+                            let additionalTax = additionalGross - shortfall;
+                            gross += additionalGross; tax += additionalTax;
+                        }
+                    } else {
+                        let taxableGross = shortfall / (1 - effectiveTaxRate);
+                        tax = taxableGross - shortfall;
+                        gross = taxableGross;
+                    }
+                } else {
+                    gross = shortfall; tax = 0;
+                }
+                
+                if(liqStart > 0 && gross > 0) {
+                    let swr = gross / liqStart;
+                    if(pathNum === 1 && swr > p1PeakSWR) p1PeakSWR = swr;
+                    if(pathNum === 2 && swr > p2PeakSWR) p2PeakSWR = swr;
+                    if(pathNum === 3 && swr > p3PeakSWR) p3PeakSWR = swr;
+                    if(pathNum === 4 && swr > p4PeakSWR) p4PeakSWR = swr;
+                }
+
+                let liq;
+                if (gross > liqStart) {
+                    let actualGross = liqStart;
+                    let actualTax = tax * (actualGross / gross);
+                    let actualNetDelivered = actualGross - actualTax;
+                    let unmetShortfall = shortfall - actualNetDelivered;
+                    liq = -unmetShortfall * (1 + r); 
+                    gross = actualGross;
+                    tax = actualTax;
+                } else {
+                    liq = (liqStart - gross) * (1 + r);
+                }
+                
+                if ((pathNum === 2 || pathNum === 4) && newResetBucketValue > 0) {
+                    newResetBucketValue *= (1 + r);
+                }
+                
+                return { liq, gross, tax, shortfall, newResetBasisRemaining, newResetBucketValue };
+            };
+
+            for(let i=0; i<years; i++) {
+                let curYr = startYear + i;
+                tsLabels.push(curYr);
+
+                let annualBaseNet = getSpend(i);
+                let annualPreTaxInc = getInc(i);
+                
+                let annualFedRate = 0;
+                if(i < 10) annualFedRate = tax1; else if(i < 20) annualFedRate = tax2; else annualFedRate = tax3;
+
+                let inf = Math.pow(1 + g, i);
+                let infInc = annualPreTaxInc * inf;
+                let infWaCarry = waCarry * inf;
+                let infCaStatic = caStaticBase * inf;
+                let infFlStatic = flStaticBase * inf;
+                
+                let infP2WaRent = getRentBase('p2_wa', i) * 12 * (1 - mgmtFee) * inf;
+                let infP2CaRent = getRentBase('p2_ca', i) * 12 * (1 - mgmtFee) * inf;
+                let infP3WaRent = getRentBase('p3_wa', i) * 12 * (1 - mgmtFee) * inf;
+                let infP3FlRent = getRentBase('p3_fl', i) * 12 * (1 - mgmtFee) * inf;
+                let infP4WaRent = getRentBase('p4_wa', i) * 12 * (1 - mgmtFee) * inf;
+                let infP4FlRent = getRentBase('p4_fl', i) * 12 * (1 - mgmtFee) * inf;
+                let infP4CaRent = getRentBase('p4_ca', i) * 12 * (1 - mgmtFee) * inf;
+
+                let infWaWinter = waWinterRentLoss * inf;
+
+                // Path 1 (WA Baseline)
+                let p1OrdTax = Math.min(annualFedRate, 0.99); 
+                let p1WithdrawalTax = p1OrdTax * taxableGainPct * (1 - rothPct); 
+                let p1NetInc = infInc * (1 - p1OrdTax);
+                let p1Exp = (annualBaseNet * inf * colWa) + infWaCarry;
+                let p1Res = processShortfall(p1Liq, p1Exp - p1NetInc, p1WithdrawalTax, 1);
+                
+                if (i === 0) snapshots.p1.y1 = {
+                    yr: curYr, col: 'WA', moveTax: 0, dp: 0, spend: annualBaseNet * inf * colWa,
+                    carry: infWaCarry, costs: 0, mortgage: 0, mortgageDeduct: 0, rentInc: 0, rentTax: 0,
+                    expTotal: p1Exp, netInc: p1NetInc, ordTax: p1OrdTax, shortfall: p1Res.shortfall, gross: p1Res.gross
+                };
+
+                p1Liq = p1Res.liq; p1CumTax += p1Res.tax;
+                p1Hist.push({ year: curYr, netNeed: p1Res.shortfall, tax: p1Res.tax, gross: p1Res.gross, liq: p1Liq });
+
+                // Path 2 (WA -> CA)
+                let hasCaP2 = curYr >= caPurchaseYr;
+                let isWaP2 = curYr < caMoveYr;
+                let p2DpExp = (curYr === caPurchaseYr) ? caDpAmt : 0;
+                
+                let p2PreMoveTax = 0; let p2CaMoveTax = 0;
+                
+                // Pre-Move Proactive Reset (Federal Tax Only)
+                if (curYr === p2_preResetYr && p2Liq > 0 && p2_preResetAmt > 0) {
+                    let effectiveAmt = Math.min(p2_preResetAmt, p2Liq);
+                    let taxableAmt = effectiveAmt * (1 - rothPct); // Apply Roth Allocation
+                    let capGains = taxableAmt * (1 - caResetCostBasisPct);
+                    p2PreMoveTax = capGains * fedLiqRate;
+                    p2Liq -= p2PreMoveTax;
+                    p2CumTax += p2PreMoveTax;
+                    p2RemainingBasis += (effectiveAmt - p2PreMoveTax);
+                    p2ResetBucketValue += (effectiveAmt - p2PreMoveTax);
+                }
+
+                // CA Move Pending Reset (Full Fed + CA Tax)
+                if (curYr === caMoveYr && p2Liq > 0 && caResetAmtInput > 0) {
+                    let caResetAmt = Math.min(caResetAmtInput, p2Liq);
+                    let taxableAmt = caResetAmt * (1 - rothPct); // Apply Roth Allocation
+                    let caResetCapGains = taxableAmt * (1 - caResetCostBasisPct);
+                    p2CaMoveTax = caResetCapGains * liquidationTaxRate;
+                    p2Liq -= p2CaMoveTax;
+                    p2CumTax += p2CaMoveTax;
+                    p2RemainingBasis += (caResetAmt - p2CaMoveTax);
+                    p2ResetBucketValue += (caResetAmt - p2CaMoveTax);
+                }
+                
+                let p2OrdTax = Math.min(isWaP2 ? annualFedRate : annualFedRate + caStateTax, 0.99);
+                let p2WithdrawalTax = p2OrdTax * taxableGainPct * (1 - rothPct);
+                let p2NetInc = infInc * (1 - p2OrdTax);
+                let p2MortgageDeduction = hasCaP2 ? getMortgageInterestDeduction(caMortgage * inf, caHome * (1 - caDpPct), p2OrdTax) : 0;
+                let p2CaCosts = hasCaP2 ? (caMortgage + infCaStatic - p2MortgageDeduction) : 0;
+                let p2RentIncome = isWaP2 ? (hasCaP2 ? infP2CaRent : 0) : infP2WaRent;
+                let p2RentTax = p2RentIncome * p2OrdTax;
+                let p2WinterLoss = (isWaP2 && hasCaP2) ? infWaWinter : 0;
+                let p2ExpBase = isWaP2
+                    ? ((annualBaseNet * inf * colWa) + p2CaCosts + infWaCarry + p2WinterLoss - p2RentIncome + p2DpExp)
+                    : ((annualBaseNet * inf * colCa) + p2CaCosts + infWaCarry - p2RentIncome + p2DpExp);
+                let p2Exp = p2ExpBase + p2RentTax;
+                
+                let p2Res = processShortfall(p2Liq, p2Exp - p2NetInc, p2WithdrawalTax, 2, p2RemainingBasis, p2ResetBucketValue, p2OrdTax);
+                
+                let p2Snap = {
+                    yr: curYr, col: isWaP2 ? 'WA' : 'CA', preMoveTax: p2PreMoveTax, caMoveTax: p2CaMoveTax, dp: p2DpExp,
+                    spend: annualBaseNet * inf * (isWaP2 ? colWa : colCa),
+                    carry: infWaCarry + p2WinterLoss, costs: hasCaP2 ? infCaStatic : 0,
+                    mortgage: hasCaP2 ? caMortgage * inf : 0, mortgageDeduct: p2MortgageDeduction,
+                    rentInc: p2RentIncome, rentTax: p2RentTax, expTotal: p2Exp, netInc: p2NetInc,
+                    ordTax: p2OrdTax, shortfall: p2Res.shortfall, gross: p2Res.gross + p2PreMoveTax + p2CaMoveTax
+                };
+                if (i === 0) snapshots.p2.y1 = p2Snap;
+                if (curYr === p2_preResetYr) snapshots.p2.preResetYr = p2Snap;
+                if (curYr === caMoveYr) snapshots.p2.moveYr = p2Snap;
+
+                p2Res.tax += (p2PreMoveTax + p2CaMoveTax); 
+                p2Liq = p2Res.liq; p2CumTax += p2Res.tax - (p2PreMoveTax + p2CaMoveTax); 
+                p2RemainingBasis = p2Res.newResetBasisRemaining; p2ResetBucketValue = p2Res.newResetBucketValue;
+                p2Hist.push({ year: curYr, netNeed: p2Res.shortfall, tax: p2Res.tax, gross: p2Res.gross + p2PreMoveTax + p2CaMoveTax, liq: p2Liq });
+
+                // Path 3 (WA -> FL)
+                let hasFlP3 = curYr >= flPurchaseYr;
+                let isWaP3 = curYr < flMoveYr;
+                let p3DpExp = (curYr === flPurchaseYr) ? flDpAmt : 0;
+                let p3OrdTax = Math.min(annualFedRate, 0.99);
+                let p3WithdrawalTax = p3OrdTax * taxableGainPct * (1 - rothPct);
+                let p3NetInc = infInc * (1 - p3OrdTax);
+                let p3MortgageDeduction = hasFlP3 ? getMortgageInterestDeduction(flMortgage * inf, flHome * (1 - flDpPct), p3OrdTax) : 0;
+                let p3FlCosts = hasFlP3 ? (flMortgage + infFlStatic - p3MortgageDeduction) : 0;
+                let p3RentIncome = isWaP3 ? (hasFlP3 ? infP3FlRent : 0) : infP3WaRent;
+                let p3RentTax = p3RentIncome * p3OrdTax;
+                let p3ExpBase = isWaP3
+                    ? ((annualBaseNet * inf * colWa) + p3FlCosts + infWaCarry - p3RentIncome + p3DpExp)
+                    : ((annualBaseNet * inf * colFl) + p3FlCosts + infWaCarry - p3RentIncome + p3DpExp);
+                let p3Exp = p3ExpBase + p3RentTax;
+                
+                let p3Res = processShortfall(p3Liq, p3Exp - p3NetInc, p3WithdrawalTax, 3);
+                
+                let p3Snap = {
+                    yr: curYr, col: isWaP3 ? 'WA' : 'FL', preMoveTax: 0, caMoveTax: 0, dp: p3DpExp,
+                    spend: annualBaseNet * inf * (isWaP3 ? colWa : colFl), carry: infWaCarry,
+                    costs: hasFlP3 ? infFlStatic : 0, mortgage: hasFlP3 ? flMortgage * inf : 0,
+                    mortgageDeduct: p3MortgageDeduction, rentInc: p3RentIncome, rentTax: p3RentTax,
+                    expTotal: p3Exp, netInc: p3NetInc, ordTax: p3OrdTax,
+                    shortfall: p3Res.shortfall, gross: p3Res.gross
+                };
+                if (i === 0) snapshots.p3.y1 = p3Snap;
+                if (curYr === flMoveYr) snapshots.p3.moveYr = p3Snap;
+
+                p3Liq = p3Res.liq; p3CumTax += p3Res.tax;
+                p3Hist.push({ year: curYr, netNeed: p3Res.shortfall, tax: p3Res.tax, gross: p3Res.gross, liq: p3Liq });
+
+                // Path 4 (WA -> FL -> CA Sequential)
+                let hasFlP4 = curYr >= seqFlPurch; let hasCaP4 = curYr >= seqCaPurch;
+                let isWaP4 = curYr < seqFlMove; let isFlP4 = curYr >= seqFlMove && curYr < seqCaMove; let isCaP4 = curYr >= seqCaMove;
+                let p4DpExp = ((curYr === seqFlPurch) ? flDpAmt : 0) + ((curYr === seqCaPurch) ? caDpAmt : 0);
+                
+                let p4PreMoveTax = 0; let p4CaMoveTax = 0;
+                
+                // Pre-CA Proactive Reset (Federal Tax Only, executed while in WA or FL)
+                if (curYr === p4_preResetYr && p4Liq > 0 && p4_preResetAmt > 0) {
+                    let effectiveAmt = Math.min(p4_preResetAmt, p4Liq);
+                    let taxableAmt = effectiveAmt * (1 - rothPct); // Apply Roth Allocation
+                    let capGains = taxableAmt * (1 - caResetCostBasisPct);
+                    p4PreMoveTax = capGains * fedLiqRate;
+                    p4Liq -= p4PreMoveTax;
+                    p4CumTax += p4PreMoveTax;
+                    p4RemainingBasis += (effectiveAmt - p4PreMoveTax);
+                    p4ResetBucketValue += (effectiveAmt - p4PreMoveTax);
+                }
+
+                // CA Move Pending Reset (Full Fed + CA Tax)
+                if (curYr === seqCaMove && p4Liq > 0 && caResetAmtInput > 0) {
+                    let caResetAmt = Math.min(caResetAmtInput, p4Liq);
+                    let taxableAmt = caResetAmt * (1 - rothPct); // Apply Roth Allocation
+                    let caResetCapGains = taxableAmt * (1 - caResetCostBasisPct);
+                    p4CaMoveTax = caResetCapGains * liquidationTaxRate;
+                    p4Liq -= p4CaMoveTax;
+                    p4CumTax += p4CaMoveTax;
+                    p4RemainingBasis += (caResetAmt - p4CaMoveTax);
+                    p4ResetBucketValue += (caResetAmt - p4CaMoveTax);
+                }
+
+                let p4OrdTax = Math.min(isCaP4 ? annualFedRate + caStateTax : annualFedRate, 0.99); 
+                let p4WithdrawalTax = p4OrdTax * taxableGainPct * (1 - rothPct);
+                let p4NetInc = infInc * (1 - p4OrdTax);
+                
+                let p4FlMortgageDeduction = hasFlP4 ? getMortgageInterestDeduction(flMortgage * inf, flHome * (1 - flDpPct), p4OrdTax) : 0;
+                let p4CaMortgageDeduction = hasCaP4 ? getMortgageInterestDeduction(caMortgage * inf, caHome * (1 - caDpPct), p4OrdTax) : 0;
+                let p4FlCosts = hasFlP4 ? (flMortgage + infFlStatic - p4FlMortgageDeduction) : 0;
+                let p4CaCosts = hasCaP4 ? (caMortgage + infCaStatic - p4CaMortgageDeduction) : 0;
+                
+                let p4RentIncome = 0; let p4ColMult = 1; let p4ColLabel = 'WA';
+                if (isWaP4) {
+                    p4RentIncome = (hasFlP4 ? infP4FlRent : 0) + (hasCaP4 ? infP4CaRent : 0);
+                    p4ColMult = colWa; p4ColLabel = 'WA';
+                } else if (isFlP4) {
+                    p4RentIncome = infP4WaRent + (hasCaP4 ? infP4CaRent : 0);
+                    p4ColMult = colFl; p4ColLabel = 'FL';
+                } else {
+                    p4RentIncome = infP4WaRent + (hasFlP4 ? infP4FlRent : 0);
+                    p4ColMult = colCa; p4ColLabel = 'CA';
+                }
+                
+                let p4RentTax = p4RentIncome * p4OrdTax;
+                let p4ExpBase = (annualBaseNet * inf * p4ColMult) + infWaCarry + p4FlCosts + p4CaCosts - p4RentIncome + p4DpExp;
+                let p4Exp = p4ExpBase + p4RentTax;
+                
+                let p4Res = processShortfall(p4Liq, p4Exp - p4NetInc, p4WithdrawalTax, 4, p4RemainingBasis, p4ResetBucketValue, p4OrdTax);
+
+                let p4Snap = {
+                    yr: curYr, col: p4ColLabel, preMoveTax: p4PreMoveTax, caMoveTax: p4CaMoveTax, dp: p4DpExp,
+                    spend: annualBaseNet * inf * p4ColMult, carry: infWaCarry,
+                    costs: (hasFlP4 ? infFlStatic : 0) + (hasCaP4 ? infCaStatic : 0),
+                    mortgage: (hasFlP4 ? flMortgage * inf : 0) + (hasCaP4 ? caMortgage * inf : 0),
+                    mortgageDeduct: p4FlMortgageDeduction + p4CaMortgageDeduction,
+                    rentInc: p4RentIncome, rentTax: p4RentTax,
+                    expTotal: p4Exp, netInc: p4NetInc, ordTax: p4OrdTax,
+                    shortfall: p4Res.shortfall, gross: p4Res.gross + p4PreMoveTax + p4CaMoveTax
+                };
+                if (i === 0) snapshots.p4.y1 = p4Snap;
+                if (curYr === p4_preResetYr) snapshots.p4.preResetYr = p4Snap;
+                if (curYr === seqFlMove) snapshots.p4.flMoveYr = p4Snap;
+                if (curYr === seqCaMove) snapshots.p4.caMoveYr = p4Snap;
+
+                p4Res.tax += (p4PreMoveTax + p4CaMoveTax);
+                p4Liq = p4Res.liq; p4CumTax += p4Res.tax - (p4PreMoveTax + p4CaMoveTax);
+                p4RemainingBasis = p4Res.newResetBasisRemaining; p4ResetBucketValue = p4Res.newResetBucketValue;
+                p4Hist.push({ year: curYr, netNeed: p4Res.shortfall, tax: p4Res.tax, gross: p4Res.gross + p4PreMoveTax + p4CaMoveTax, liq: p4Liq });
+
+                let valWa = calcFVRealEstate(waHome, waApprec, i);
+                let valCaP2 = getPropVal(caHome, caApprec, curYr, caPurchaseYr);
+                let valFlP3 = getPropVal(flHome, flApprec, curYr, flPurchaseYr);
+                let valFlP4 = getPropVal(flHome, flApprec, curYr, seqFlPurch);
+                let valCaP4 = getPropVal(caHome, caApprec, curYr, seqCaPurch);
+
+                tsP1.push(valWa + p1Liq);
+                tsP2.push(valWa + valCaP2 + p2Liq);
+                tsP3.push(valWa + valFlP3 + p3Liq);
+                tsP4.push(valWa + valFlP4 + valCaP4 + p4Liq);
+            }
+
+            const results = [];
+            const labels = [];
+            const liquidData = [];
+            const realEstateData = [];
+            const taxData = [];
+            const netLegacyData = [];
+            
+            const federalEstateExemptCoupled = 30000000;
+            const fvFederalEstateExempt = federalEstateExemptCoupled * Math.pow(1 + g, years);
+            const waEstateExemptCoupled = 6000000;
+
+            let p1Estate = fvWa + p1Liq;
+            let p1FedTax = calcFedEstateTax(p1Estate, fvFederalEstateExempt);
+            let p1WaTax = calcWAEstateTax(p1Estate);
+            let p1TotalEstateTax = p1FedTax + p1WaTax;
+            p1CumTax += p1TotalEstateTax;
+
+            let p2Re = fvWa + fvCaP2;
+            let p2Estate = p2Liq + p2Re;
+            let p2FedTax = calcFedEstateTax(p2Estate, fvFederalEstateExempt);
+            let p2TotalEstateTax = p2FedTax; 
+            p2CumTax += p2TotalEstateTax;
+            
+            let p3Re = fvWa + fvFlP3;
+            let p3Estate = p3Liq + p3Re;
+            let p3FedTax = calcFedEstateTax(p3Estate, fvFederalEstateExempt);
+            let p3TotalEstateTax = p3FedTax; 
+            p3CumTax += p3TotalEstateTax;
+            
+            let p4Re = fvWa + fvFlP4 + fvCaP4;
+            let p4Estate = p4Liq + p4Re;
+            let p4FedTax = calcFedEstateTax(p4Estate, fvFederalEstateExempt);
+            let p4TotalEstateTax = p4FedTax; 
+            p4CumTax += p4TotalEstateTax;
+
+            results.push({ 
+                name: "1: WA Baseline", liq: p1Liq, re: fvWa, tax: -p1TotalEstateTax, net: p1Estate - p1TotalEstateTax, 
+                details: `
+                    <div class="details-overview"><strong>Overview:</strong> Remain in our current WA primary residence for the duration of retirement. This path exposes our final legacy to the WA state progressive estate tax penalty.</div>
+                    <div>
+                        <h4>Financial Checkpoints</h4>
+                        <h5>Phase 1: WA Baseline (Year ${startYear})</h5>
+                        ${buildMathBox(snapshots.p1.y1, taxableGainPct, rothPct)}
+                    </div>
+                    <div>
+                        <h4>Real Estate & Legacy Shielding</h4>
+                        <p>Because we remain domiciled in WA, our entire net worth is subject to the state's progressive estate tax.</p>
+                        <ul>
+                            <li><strong>WA Home Growth (${years} years):</strong> <code>${formatCurrency(waHome)} * (1 + ${waApprec})^${years}</code> = <strong>${formatCurrency(fvWa)}</strong></li>
+                            <li><strong>Total Gross Estate in ${endYear}:</strong> ${formatCurrency(p1Estate)} (Final Liquid + Real Estate)</li>
+                        </ul>
+                        <h5>Estate Tax Calculation:</h5>
+                        <div class="math-box">
+                            Gross Estate: ${formatCurrency(p1Estate)}<br><br>
+                            Federal Tax (Exempt ${formatCurrency(fvFederalEstateExempt)} @ 40%): <strong style="color:#f87171;">${p1FedTax > 0 ? formatCurrency(p1FedTax) : '$0'}</strong><br>
+                            WA State Tax (Progressive over ${formatCurrency(waEstateExemptCoupled)}): <strong style="color:#f87171;">${p1WaTax > 0 ? formatCurrency(p1WaTax) : '$0'}</strong><br>
+                            ---------------------------------------------------------<br>
+                            <strong>Total Tax Forfeited at Death: <span style="color:#f87171;">${formatCurrency(p1TotalEstateTax)}</span></strong>
+                        </div>
+                    </div>
+                    ${buildHistoryTable(p1Hist)}
+                `
+            });
+
+            results.push({ 
+                name: "2: WA ➔ CA", liq: p2Liq, re: p2Re, tax: -p2TotalEstateTax, net: p2Estate - p2TotalEstateTax, 
+                details: `
+                    <div class="details-overview"><strong>Overview:</strong> Purchase CA Property in ${caPurchaseYr} and move permanently in ${caMoveYr}.<br><br>We assume an Asset Allocation of ${formatPct(rothPct)} Roth / ${formatPct(1-rothPct)} Taxable. Withdrawals blend these tax treatments dynamically. We optionally trigger a "Proactive Reset" while still in WA (paying only Fed tax) to artificially raise our cost basis before CA. Any remaining pending reset amount triggers in Year ${caMoveYr} at the high CA rates.</div>
+                    <div>
+                        <h4>Financial Checkpoints</h4>
+                        <h5>Phase 1: Pre-Move (Year ${startYear})</h5>
+                        ${buildMathBox(snapshots.p2.y1, taxableGainPct, rothPct)}
+                        ${p2_preResetYr > startYear && p2_preResetAmt > 0 && snapshots.p2.preResetYr ? `<h5>Phase 1b: Proactive Pre-Move Basis Reset (Year ${p2_preResetYr})</h5>${buildMathBox(snapshots.p2.preResetYr, taxableGainPct, rothPct)}` : ''}
+                        ${caMoveYr > startYear && snapshots.p2.moveYr ? `<h5>Phase 2: CA Transition & Pending Reset (Year ${caMoveYr})</h5>${buildMathBox(snapshots.p2.moveYr, taxableGainPct, rothPct)}` : ''}
+                    </div>
+                    <div>
+                        <h4>Real Estate & Legacy Shielding</h4>
+                        <p>By shifting our legal domicile to California, we avoid the Washington state estate tax entirely.</p>
+                        <ul>
+                            <li><strong>WA Home Growth (${years} years):</strong> = <strong>${formatCurrency(fvWa)}</strong></li>
+                            <li><strong>CA Home Growth (${endYear - caPurchaseYr} years):</strong> = <strong>${formatCurrency(fvCaP2)}</strong></li>
+                            <li><strong>Total Gross Estate in ${endYear}:</strong> ${formatCurrency(p2Estate)}</li>
+                        </ul>
+                        <h5>Estate Tax Calculation:</h5>
+                        <div class="math-box">
+                            Gross Estate: ${formatCurrency(p2Estate)}<br><br>
+                            Federal Tax (Exempt ${formatCurrency(fvFederalEstateExempt)} @ 40%): <strong style="color:#f87171;">${p2FedTax > 0 ? formatCurrency(p2FedTax) : '$0'}</strong><br>
+                            State Tax: <strong style="color:#34d399;">$0</strong> <span class="math-subtext">(California does not levy a state estate tax)</span><br>
+                            ---------------------------------------------------------<br>
+                            <strong>Total Tax Forfeited at Death: <span style="color:${p2TotalEstateTax > 0 ? '#f87171' : '#34d399'};">${formatCurrency(p2TotalEstateTax)}</span></strong>
+                        </div>
+                    </div>
+                    ${buildHistoryTable(p2Hist)}
+                `
+            });
+
+            results.push({ 
+                name: "3: WA ➔ FL", liq: p3Liq, re: p3Re, tax: -p3TotalEstateTax, net: p3Estate - p3TotalEstateTax, 
+                details: `
+                    <div class="details-overview"><strong>Overview:</strong> Purchase FL Property in ${flPurchaseYr} and move permanently in ${flMoveYr}.<br><br>Highly efficient path establishing domicile in a state with 0% income tax. Withdrawals blend the tax treatments of the ${formatPct(rothPct)} Roth / ${formatPct(1-rothPct)} Taxable allocation.</div>
+                    <div>
+                        <h4>Financial Checkpoints</h4>
+                        <h5>Phase 1: Pre-Move (Year ${startYear})</h5>
+                        ${buildMathBox(snapshots.p3.y1, taxableGainPct, rothPct)}
+                        ${flMoveYr > startYear && snapshots.p3.moveYr ? `<h5>Phase 2: FL Transition (Year ${flMoveYr})</h5>${buildMathBox(snapshots.p3.moveYr, taxableGainPct, rothPct)}` : ''}
+                    </div>
+                    <div>
+                        <h4>Real Estate & Legacy Shielding</h4>
+                        <p>By shifting our legal domicile to Florida, we avoid the Washington state estate tax entirely.</p>
+                        <ul>
+                            <li><strong>WA Home Growth (${years} years):</strong> = <strong>${formatCurrency(fvWa)}</strong></li>
+                            <li><strong>FL Home Growth (${endYear - flPurchaseYr} years):</strong> = <strong>${formatCurrency(fvFlP3)}</strong></li>
+                            <li><strong>Total Gross Estate in ${endYear}:</strong> ${formatCurrency(p3Estate)}</li>
+                        </ul>
+                        <h5>Estate Tax Calculation:</h5>
+                        <div class="math-box">
+                            Gross Estate: ${formatCurrency(p3Estate)}<br><br>
+                            Federal Tax (Exempt ${formatCurrency(fvFederalEstateExempt)} @ 40%): <strong style="color:#f87171;">${p3FedTax > 0 ? formatCurrency(p3FedTax) : '$0'}</strong><br>
+                            State Tax: <strong style="color:#34d399;">$0</strong> <span class="math-subtext">(Florida does not levy a state estate tax)</span><br>
+                            ---------------------------------------------------------<br>
+                            <strong>Total Tax Forfeited at Death: <span style="color:${p3TotalEstateTax > 0 ? '#f87171' : '#34d399'};">${formatCurrency(p3TotalEstateTax)}</span></strong>
+                        </div>
+                    </div>
+                    ${buildHistoryTable(p3Hist)}
+                `
+            });
+
+            results.push({ 
+                name: "4: WA ➔ FL ➔ CA", liq: p4Liq, re: p4Re, tax: -p4TotalEstateTax, net: p4Estate - p4TotalEstateTax, 
+                details: `
+                    <div class="details-overview"><strong>Overview:</strong> Establish tax domicile in FL initially (in ${seqFlMove}), then relocate permanently to CA in ${seqCaMove}. We optionally trigger a "Proactive Reset" while domiciled in a low-tax state (paying only Fed tax) to artificially raise our cost basis before CA. Any remaining pending reset amount triggers in Year ${seqCaMove} at high CA rates.</div>
+                    <div>
+                        <h4>Financial Checkpoints</h4>
+                        <h5>Phase 1: Pre-Move (Year ${startYear})</h5>
+                        ${buildMathBox(snapshots.p4.y1, taxableGainPct, rothPct)}
+                        ${seqFlMove > startYear && snapshots.p4.flMoveYr ? `<h5>Phase 2: FL Transition (Year ${seqFlMove})</h5>${buildMathBox(snapshots.p4.flMoveYr, taxableGainPct, rothPct)}` : ''}
+                        ${p4_preResetYr > startYear && p4_preResetAmt > 0 && snapshots.p4.preResetYr ? `<h5>Phase 2b: Proactive Pre-CA Basis Reset (Year ${p4_preResetYr})</h5>${buildMathBox(snapshots.p4.preResetYr, taxableGainPct, rothPct)}` : ''}
+                        ${seqCaMove > startYear && seqCaMove > seqFlMove && snapshots.p4.caMoveYr ? `<h5>Phase 3: CA Transition & Pending Reset (Year ${seqCaMove})</h5>${buildMathBox(snapshots.p4.caMoveYr, taxableGainPct, rothPct)}` : ''}
+                    </div>
+                    <div>
+                        <h4>Real Estate & Legacy Shielding</h4>
+                        <p>By establishing legal domicile outside of Washington, we avoid the state estate tax entirely.</p>
+                        <ul>
+                            <li><strong>WA Home Growth (${years} years):</strong> = <strong>${formatCurrency(fvWa)}</strong></li>
+                            <li><strong>FL Home Growth (${endYear - seqFlPurch} years):</strong> = <strong>${formatCurrency(fvFlP4)}</strong></li>
+                            <li><strong>CA Home Growth (${endYear - seqCaPurch} years):</strong> = <strong>${formatCurrency(fvCaP4)}</strong></li>
+                            <li><strong>Total Gross Estate in ${endYear}:</strong> ${formatCurrency(p4Estate)}</li>
+                        </ul>
+                        <h5>Estate Tax Calculation:</h5>
+                        <div class="math-box">
+                            Gross Estate: ${formatCurrency(p4Estate)}<br><br>
+                            Federal Tax (Exempt ${formatCurrency(fvFederalEstateExempt)} @ 40%): <strong style="color:#f87171;">${p4FedTax > 0 ? formatCurrency(p4FedTax) : '$0'}</strong><br>
+                            State Tax: <strong style="color:#34d399;">$0</strong> <span class="math-subtext">(California does not levy a state estate tax)</span><br>
+                            ---------------------------------------------------------<br>
+                            <strong>Total Tax Forfeited at Death: <span style="color:${p4TotalEstateTax > 0 ? '#f87171' : '#34d399'};">${formatCurrency(p4TotalEstateTax)}</span></strong>
+                        </div>
+                    </div>
+                    ${buildHistoryTable(p4Hist)}
+                `
+            });
+
+            const tbody = document.querySelector('#resultsTable tbody');
+            tbody.innerHTML = '';
+            
+            results.forEach((row, index) => {
+                labels.push(row.name.replace(/^\d: /, ''));
+                liquidData.push(row.liq);
+                realEstateData.push(row.re);
+                taxData.push(row.tax); 
+                netLegacyData.push(row.net); 
+
+                let tr = document.createElement('tr');
+                tr.id = `main-row-${index}`;
+                tr.className = 'clickable-row';
+                tr.onclick = () => toggleRow(index);
+                tr.innerHTML = `
+                    <td><span class="toggle-icon">►</span> ${row.name}</td>
+                    <td class="currency" style="color:${row.liq < 0 ? '#f87171' : '#f8fafc'}">${formatCurrency(row.liq)}</td>
+                    <td class="currency">${formatCurrency(row.re)}</td>
+                    <td class="currency negative">${row.tax === 0 ? '$0' : formatCurrency(row.tax)}</td>
+                    <td class="currency positive">${formatCurrency(row.net)}</td>
+                `;
+                tbody.appendChild(tr);
+
+                let detailTr = document.createElement('tr');
+                detailTr.id = `detail-row-${index}`;
+                detailTr.className = 'details-row';
+                detailTr.innerHTML = `<td colspan="5"><div class="details-content">${row.details}</div></td>`;
+                tbody.appendChild(detailTr);
+            });
+
+            updateChart(labels, liquidData, realEstateData, taxData, netLegacyData);
+
+            let taxRanks = [
+                { name: "WA Baseline", val: p1CumTax },
+                { name: "WA → CA", val: p2CumTax },
+                { name: "WA → FL", val: p3CumTax },
+                { name: "WA → FL → CA", val: p4CumTax }
+            ].sort((a, b) => a.val - b.val);
+
+            let swrRanks = [
+                { name: "WA Baseline", val: p1PeakSWR },
+                { name: "WA → CA", val: p2PeakSWR },
+                { name: "WA → FL", val: p3PeakSWR },
+                { name: "WA → FL → CA", val: p4PeakSWR }
+            ].sort((a, b) => a.val - b.val);
+
+            const getRankColor = (index) => {
+                const colors = ['#34d399', '#facc15', '#fb923c', '#f87171']; 
+                return colors[index];
+            };
+
+            let taxHtml = taxRanks.map((item, i) => `
+                <div style="display:flex; justify-content: space-between; align-items: center; margin-top:${i===0?'10px':'8px'};">
+                    <span style="color:#94a3b8; font-size: 13px;">${i+1}. ${item.name}</span> 
+                    <strong style="color:${getRankColor(i)}; font-family: 'SF Mono', Consolas, monospace; font-size: 14.5px;">${formatCurrency(item.val)}</strong>
+                </div>
+            `).join('');
+
+            let swrHtml = swrRanks.map((item, i) => `
+                <div style="display:flex; justify-content: space-between; align-items: center; margin-top:${i===0?'10px':'8px'};">
+                    <span style="color:#94a3b8; font-size: 13px;">${i+1}. ${item.name}</span> 
+                    <strong style="color:${item.val > 0.05 && i >= 2 ? '#f87171' : getRankColor(i)}; font-family: 'SF Mono', Consolas, monospace; font-size: 14.5px;">${formatPct(item.val)}</strong>
+                </div>
+            `).join('');
+
+            const panel = document.getElementById('riskPanel');
+            panel.innerHTML = `
+                <h3 style="margin-top: 0; color: #38bdf8; font-size: 13px; border-bottom: 1px solid #334155; padding-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Tax & Risk Analytics</h3>
+                <div class="risk-card tax">
+                    <div class="risk-title">Cumulative Tax Leakage</div>
+                    ${taxHtml}
+                    <div class="risk-subtext" style="margin-top: 14px;">Calculates total lifetime state & federal income taxes drawn from the portfolio, plus the final death tax penalty.</div>
+                </div>
+                <div class="risk-card swr" style="margin-top: 15px;">
+                    <div class="risk-title">Peak Withdrawal Rate</div>
+                    ${swrHtml}
+                    <div class="risk-subtext" style="margin-top: 14px;">The maximum percentage of liquid capital required to fund lifestyle in a single year.</div>
+                </div>
+            `;
+
+            const tsCtx = document.getElementById('timeSeriesChart').getContext('2d');
+            if (timeSeriesChartInstance) timeSeriesChartInstance.destroy();
+            timeSeriesChartInstance = new Chart(tsCtx, {
+                type: 'line',
+                data: {
+                    labels: tsLabels,
+                    datasets: [
+                        { label: 'WA Baseline', data: tsP1, borderColor: '#94a3b8', backgroundColor: '#94a3b8', tension: 0.3, fill: false, borderWidth: 2, pointRadius: 0 },
+                        { label: 'WA ➔ CA', data: tsP2, borderColor: '#fb923c', backgroundColor: '#fb923c', tension: 0.3, fill: false, borderWidth: 2, pointRadius: 0 },
+                        { label: 'WA ➔ FL', data: tsP3, borderColor: '#34d399', backgroundColor: '#34d399', tension: 0.3, fill: false, borderWidth: 2, pointRadius: 0 },
+                        { label: 'WA → FL → CA', data: tsP4, borderColor: '#38bdf8', backgroundColor: '#38bdf8', tension: 0.3, fill: false, borderWidth: 3, pointRadius: 0 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    color: '#94a3b8',
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        title: { display: true, text: 'Wealth Trajectory (Total Gross Assets Year-by-Year)', font: { size: 14, weight: '500' }, color: '#f8fafc', padding: {bottom: 15} },
+                        legend: { labels: { color: '#cbd5e1', boxWidth: 12, padding: 15 }, position: 'bottom' },
+                        tooltip: { callbacks: { label: function(context) { return context.dataset.label + ': ' + formatCurrency(context.parsed.y); } } }
+                    },
+                    scales: { 
+                        x: { grid: { color: '#334155', drawBorder: false }, ticks: { color: '#94a3b8', maxTicksLimit: 10 } }, 
+                        y: { grid: { color: '#334155', drawBorder: false }, ticks: { color: '#94a3b8', callback: function(value) { return '$' + (value / 1000000).toFixed(1) + 'M'; } } } 
+                    }
+                }
+            });
+            
+            setupChartResizeHandlers();
+
+        } catch (error) {
+            console.error("Calculation failed:", error);
+            console.error("Error details:", error.message, error.stack);
+            const tbody = document.querySelector('#resultsTable tbody');
+            if (tbody) {
+                tbody.innerHTML = '<tr><td colspan="5" style="color: #f87171; text-align: center; padding: 20px;">Calculation Error: ' + error.message + '</td></tr>';
+            }
+        }
+    }
+
+    function updateChart(labels, liquid, realEstate, tax, netLegacy) {
+        if (typeof Chart === 'undefined') return;
+
+        const ctx = document.getElementById('legacyChart').getContext('2d');
+        if (legacyChartInstance) { legacyChartInstance.destroy(); }
+
+        legacyChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    { type: 'line', label: 'FINAL NET LEGACY', data: netLegacy, borderColor: '#fcd34d', backgroundColor: '#fcd34d', borderWidth: 3, pointRadius: 6, tension: 0.1, fill: false },
+                    { type: 'bar', label: 'Liquid Portfolio ($)', data: liquid, backgroundColor: '#38bdf8', stack: 'Stack 0', maxBarThickness: 80 },
+                    { type: 'bar', label: 'Real Estate Portfolio ($)', data: realEstate, backgroundColor: '#34d399', stack: 'Stack 0', maxBarThickness: 80 },
+                    { type: 'bar', label: 'Total Estate Taxes ($)', data: tax, backgroundColor: '#f87171', stack: 'Stack 0', maxBarThickness: 80 }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, color: '#94a3b8',
+                plugins: {
+                    title: { display: true, text: 'Total Net Legacy Breakdown (Gross Assets vs. Final Net)', font: { size: 16, weight: '500' }, color: '#f8fafc' },
+                    legend: { labels: { color: '#cbd5e1' } }
+                },
+                scales: { 
+                    x: { stacked: true, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }, 
+                    y: { stacked: true, grid: { color: '#334155' }, ticks: { color: '#94a3b8', callback: function(value) { return '$' + (value / 1000000).toFixed(1) + 'M'; } } } 
+                }
+            }
+        });
+        
+        setupChartResizeHandlers();
+    }
+
+    window.onload = calculate;
+</script>
+</body>
+</html>

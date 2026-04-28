@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Retirement Pathways Calculator (Tax Lot Optimization)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script type="importmap">
+      {
+        "imports": {
+          "@google/generative-ai": "https://esm.run/@google/generative-ai"
+        }
+      }
+    </script>
+
     <style>
         body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #0b1120; color: #f3f4f6; padding: 20px; margin: 0; }
         .container { max-width: 98%; margin: auto; background: #111827; padding: 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); border: 1px solid #1f2937; }
@@ -104,6 +113,27 @@
         .history-table th { background-color: #111827; color: #9ca3af; position: sticky; top: 0; z-index: 5; border-bottom: 1px solid #374151; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;}
         .history-table td { border-bottom: 1px solid #1f2937; color: #d1d5db;}
         .history-table tr:hover td { background-color: #374151; }
+
+        /* Gemini Widget CSS */
+        #gemini-chat-launcher { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background: #6366f1; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 1000; transition: transform 0.2s; }
+        #gemini-chat-launcher:hover { transform: scale(1.05); }
+        #gemini-chat-window { display: none; position: fixed; bottom: 90px; right: 20px; width: 400px; height: 500px; background: #111827; border: 1px solid #374151; border-radius: 12px; flex-direction: column; z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.5); overflow: hidden; font-family: 'Inter', sans-serif; }
+        #chat-messages { flex: 1; overflow-y: auto; padding: 15px; font-size: 13px; line-height: 1.5; color: #d1d5db; display: flex; flex-direction: column; gap: 10px; scrollbar-width: thin; scrollbar-color: #374151 #111827; }
+        #chat-messages::-webkit-scrollbar { width: 6px; }
+        #chat-messages::-webkit-scrollbar-track { background: #111827; }
+        #chat-messages::-webkit-scrollbar-thumb { background-color: #374151; border-radius: 4px; }
+        .chat-bubble { padding: 10px 14px; border-radius: 8px; max-width: 85%; word-wrap: break-word; }
+        .chat-bubble.bot { background: #1f2937; border-bottom-left-radius: 0; align-self: flex-start; border: 1px solid #374151; }
+        .chat-bubble.user { background: #6366f1; color: #fff; border-bottom-right-radius: 0; align-self: flex-end; }
+        #api-key-area { padding: 10px; background: #0b1120; border-top: 1px solid #374151; display: flex; gap: 8px; align-items: center; }
+        #api-key-input { flex: 1; padding: 8px; background: #1f2937; border: 1px solid #4b5563; color: white; border-radius: 4px; font-size: 11px; }
+        .btn-small { background: #4b5563; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+        .btn-small:hover { background: #6b7280; }
+        .chat-input-row { padding: 15px; display: flex; gap: 8px; background: #1f2937; border-top: 1px solid #374151; }
+        #chat-input { flex: 1; padding: 10px; background: #111827; border: 1px solid #374151; color: white; border-radius: 6px; font-size: 13px; outline: none; }
+        #chat-input:focus { border-color: #6366f1; }
+        .btn-send { background: #6366f1; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; }
+        .btn-send:hover { background: #4f46e5; }
     </style>
 </head>
 <body>
@@ -378,6 +408,34 @@
     </div>
 </div>
 
+<div id="gemini-chat-launcher" onclick="toggleChat()">
+    <span style="font-size: 28px;">🤖</span>
+</div>
+
+<div id="gemini-chat-window">
+    <div style="background: #1f2937; padding: 15px; border-bottom: 1px solid #374151; display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-weight: 600; font-size: 14px; color: #f3f4f6;">Gemini Strategy AI</span>
+        <button onclick="toggleChat()" style="background:none; border:none; color:#9ca3af; cursor:pointer; font-size:16px;">✕</button>
+    </div>
+    
+    <div id="chat-messages">
+        <div class="chat-bubble bot">
+            Hello! I can analyze your specific retirement pathways using the current numbers on your screen.<br><br>
+            If you haven't yet, <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #60a5fa; text-decoration: underline;">get your free API key here</a> and paste it below.
+        </div>
+    </div>
+
+    <div id="api-key-area">
+        <input type="password" id="api-key-input" placeholder="Paste your Gemini API Key...">
+        <button onclick="saveKey()" class="btn-small">Save Key</button>
+    </div>
+
+    <div class="chat-input-row">
+        <input type="text" id="chat-input" placeholder="Ask about your tax or strategy..." onkeypress="if(event.key === 'Enter') document.getElementById('btn-send').click();">
+        <button id="btn-send" class="btn-send">Send</button>
+    </div>
+</div>
+
 <script>
     document.querySelectorAll('.input-group-box').forEach((box) => {
         box.classList.add('collapsed');
@@ -386,8 +444,30 @@
     });
 
     let legacyChartInstance = null; let timeSeriesChartInstance = null;
-    let results = []; 
+    let results = []; // Global scope so the Gemini module can read it
     
+    // --- UI Control Functions for Gemini Widget ---
+    function toggleChat() {
+        const win = document.getElementById('gemini-chat-window');
+        win.style.display = win.style.display === 'none' ? 'flex' : 'none';
+        
+        // Auto-load saved key into input if it exists
+        if(win.style.display === 'flex' && localStorage.getItem('gemini_api_key')) {
+            document.getElementById('api-key-input').value = localStorage.getItem('gemini_api_key');
+        }
+    }
+
+    function saveKey() {
+        const key = document.getElementById('api-key-input').value.trim();
+        if(key) {
+            localStorage.setItem('gemini_api_key', key);
+            alert('API Key saved to your browser storage.');
+        } else {
+            alert('Please enter a valid key.');
+        }
+    }
+    // ---------------------------------------------
+
     function toggleResetInput(prefix) {
         const checkbox = document.getElementById(prefix + '_resetFull');
         const input = document.getElementById(prefix + '_resetAmt');
@@ -618,7 +698,6 @@
         const fedNIIT = 0.038; 
         const caStateTax = 0.093; const waCgTax = 0.07;
 
-        // 2026 MFJ federal brackets, inflation-adjusted each year
         const calcFedOrdTax = (ordIncome, yr) => {
             const inf = Math.pow(1 + inflation, yr - startYear);
             const brackets = [
@@ -642,7 +721,6 @@
             return tax;
         };
 
-        // Corrected MFJ long-term CG brackets stacking logic
         const calcFedCgTax = (cgIncome, totalOrd, yr) => {
             const inf = Math.pow(1 + inflation, yr - startYear);
             const cgBrackets = [
@@ -657,11 +735,7 @@
             let prev = 0;
             for (const [cap, rate] of cgBrackets) {
                 let bracketSize = cap - prev;
-                
-                // How much of the ordinary income falls into this specific bracket?
                 let ordInThisBracket = Math.max(0, Math.min(bracketSize, stackedBase - prev));
-                
-                // The remaining room in this bracket can be filled by CG
                 let cgRoomInBracket = Math.max(0, bracketSize - ordInThisBracket);
                 
                 if (cgRoomInBracket > 0 && remaining > 0) {
@@ -848,7 +922,6 @@
                 let isStepUpTriggered = false; let isConvTriggered = false;
                 let executedConv = 0; let executedCG = 0;
 
-                // Optimization & Resets Engine
                 let isPreMoveRunway = false;
                 let targetMoveYrLocal = startYear;
                 let annualReset = 0;
@@ -875,19 +948,15 @@
 
                 if (isPreMoveRunway) {
                     if (isFullReset && remainingRunway > 0) {
-                        // Dynamically pull 1/N of remaining bucket each year to fully drain by move
                         if (port.pretax > 0) {
                             let convertAmt = port.pretax / remainingRunway;
                             let gainRatio = 1 - (port.pretaxBasisDol / port.pretax);
                             if (isNaN(gainRatio) || gainRatio < 0) gainRatio = 0;
-                            
                             let taxableConv = convertAmt * gainRatio;
                             let convTax = applyIncomeDelta(taxableConv, 0); 
-                            
                             port.pretax -= convertAmt; port.roth += convertAmt;
                             let basisDrawn = convertAmt * (1 - gainRatio);
                             port.pretaxBasisDol -= basisDrawn;
-                            
                             optTax += convTax;
                             isConvTriggered = true;
                             executedConv = convertAmt;
@@ -901,10 +970,8 @@
                             if (gainRatio > 0) {
                                 let basisSold = sellAmt * (1 - gainRatio);
                                 let gain = sellAmt * gainRatio;
-                                
                                 let harvestTax = applyIncomeDelta(0, gain);
                                 optTax += harvestTax;
-                                
                                 port.stocksLow -= sellAmt;
                                 port.stocksLowBasis -= basisSold;
                                 port.stocksHigh += sellAmt;
@@ -920,21 +987,17 @@
                             }
                         }
                     } else if (annualReset > 0) {
-                        // Custom Reset Amount
                         let remainingReset = annualReset;
 
                         if (remainingReset > 0 && port.pretax > 0) {
                             let convertAmt = Math.min(remainingReset, port.pretax);
                             let gainRatio = 1 - (port.pretaxBasisDol / port.pretax);
                             if (isNaN(gainRatio) || gainRatio < 0) gainRatio = 0;
-                            
                             let taxableConv = convertAmt * gainRatio;
                             let convTax = applyIncomeDelta(taxableConv, 0); 
-                            
                             port.pretax -= convertAmt; port.roth += convertAmt;
                             let basisDrawn = convertAmt * (1 - gainRatio);
                             port.pretaxBasisDol -= basisDrawn;
-                            
                             optTax += convTax;
                             isConvTriggered = true;
                             remainingReset -= convertAmt;
@@ -944,15 +1007,12 @@
                         if (remainingReset > 0 && port.stocksLow > 0 && (currentState === 'WA' || currentState === 'FL')) {
                             let gainRatio = 1 - (port.stocksLowBasis / port.stocksLow);
                             if (isNaN(gainRatio) || gainRatio < 0) gainRatio = 0;
-                            
                             if (gainRatio > 0) {
                                 let sellAmt = Math.min(remainingReset, port.stocksLow);
                                 let basisSold = sellAmt * (1 - gainRatio);
                                 let gain = sellAmt * gainRatio;
-                                
                                 let harvestTax = applyIncomeDelta(0, gain);
                                 optTax += harvestTax;
-                                
                                 port.stocksLow -= sellAmt;
                                 port.stocksLowBasis -= basisSold;
                                 port.stocksHigh += sellAmt;
@@ -971,14 +1031,11 @@
                         let convertAmt = port.pretax / remainingConvYrs;
                         let gainRatio = 1 - (port.pretaxBasisDol / port.pretax);
                         if (isNaN(gainRatio) || gainRatio < 0) gainRatio = 0;
-                        
                         let taxableConv = convertAmt * gainRatio;
                         let convTax = applyIncomeDelta(taxableConv, 0);
-                        
                         port.pretax -= convertAmt; port.roth += convertAmt;
                         let basisDrawn = convertAmt * (1 - gainRatio);
                         port.pretaxBasisDol -= basisDrawn;
-                        
                         optTax += convTax;
                         isConvTriggered = true;
                         executedConv = convertAmt;
@@ -987,7 +1044,6 @@
 
                 shortfall += optTax; 
 
-                // Portfolio Withdrawal Engine
                 if (shortfall > 0) {
                     let need = shortfall;
 
@@ -1021,16 +1077,9 @@
                             let midGain = mid * gainRatio; 
                             let midOrd = isPretax ? midGain : 0;
                             let midCg = isStock ? midGain : 0;
-                            
                             let testTax = calcTotalTaxDetails(accOrd + midOrd, accCg + midCg).total - currentTaxObj.total;
                             let testNet = mid - testTax;
-                            
-                            if (testNet >= netNeed) {
-                                targetGross = mid;
-                                high = mid;
-                            } else {
-                                low = mid;
-                            }
+                            if (testNet >= netNeed) { targetGross = mid; high = mid; } else { low = mid; }
                         }
                         
                         let targetGain = targetGross * gainRatio;
@@ -1054,23 +1103,16 @@
                         for (let iter=0; iter<4 && need > 0.01; iter++) {
                             let totalLiq = port.stocksLow + port.stocksHigh + port.pretax + port.roth;
                             if (totalLiq <= 0) break;
-                            
                             let stkPct = (port.stocksLow + port.stocksHigh)/totalLiq; 
                             let prePct = port.pretax/totalLiq; 
                             let rthPct = port.roth/totalLiq;
-                            
-                            let stockNeed = need * stkPct;
-                            let preNeed = need * prePct;
-                            let rothNeed = need * rthPct;
+                            let stockNeed = need * stkPct; let preNeed = need * prePct; let rothNeed = need * rthPct;
                             
                             if(rothNeed > 0) { let drawR = Math.min(rothNeed, port.roth); drawRoth += drawR; port.roth -= drawR; need -= drawR; }
                             if(stockNeed > 0) {
                                 let res1 = drawExact(stockNeed, 'stocksHigh', false, true);
                                 drawStocks += res1.gross; taxStocks += res1.tax; stockNeed -= res1.net; need -= res1.net;
-                                if (stockNeed > 0) {
-                                    let res2 = drawExact(stockNeed, 'stocksLow', false, true);
-                                    drawStocks += res2.gross; taxStocks += res2.tax; need -= res2.net;
-                                }
+                                if (stockNeed > 0) { let res2 = drawExact(stockNeed, 'stocksLow', false, true); drawStocks += res2.gross; taxStocks += res2.tax; need -= res2.net; }
                             }
                             if(preNeed > 0) { let res = drawExact(preNeed, 'pretax', true, false); draw401k += res.gross; tax401k += res.tax; need -= res.net; }
                         }
@@ -1080,10 +1122,7 @@
                     port.stocksHighBasis += Math.abs(shortfall); 
                 }
 
-                port.stocksLow *= (1 + r); 
-                port.stocksHigh *= (1 + r); 
-                port.pretax *= (1 + r); 
-                port.roth *= (1 + r);
+                port.stocksLow *= (1 + r); port.stocksHigh *= (1 + r); port.pretax *= (1 + r); port.roth *= (1 + r);
  
                 let valWa = waHome * Math.pow(1 + waApprec, i + 1);
                 let valCaChart = (path.id === 2 && curYr >= p2_purchYr) ? currentCaVal : ((path.id===4 && curYr >= p4_caPurchYr) ? currentCaVal : 0);
@@ -1111,7 +1150,6 @@
                 if (path.moves.length > 0 && curYr === path.moves[path.moves.length-1].yr) moveYrSnap = snap;
 
                 let triggers = []; let expText = "";
-                
                 if (i === 0) { triggers.push("Baseline Year"); expText += "Initial retirement year establishing baseline spending and asset drawdowns. "; }
                 if (curYr > startYear && currentState !== prevState) {
                     triggers.push(`Moved to ${currentState}`);
@@ -1139,9 +1177,7 @@
                     expText += `Medicare premiums begin for one or both spouses, slightly increasing baseline carrying expenses. `;
                 }
 
-                if (triggers.length > 0) {
-                    milestones.push({ title: `Year ${curYr} (${currentState}) - ${triggers.join(", ")}`, explanation: expText, data: snap });
-                }
+                if (triggers.length > 0) { milestones.push({ title: `Year ${curYr} (${currentState}) - ${triggers.join(", ")}`, explanation: expText, data: snap }); }
 
                 if (pIdx===0) timeSeries.p1.push(endTotalLiq + finalReChart);
                 if (pIdx===1) timeSeries.p2.push(endTotalLiq + finalReChart);
@@ -1183,9 +1219,7 @@
         labels = [];
 
         results.forEach((row, index) => {
-            labels.push(row.name); liqData.push(row.liq); reData.push(row.re); 
-            totalTaxData.push(-row.tax); 
-            netData.push(row.net);
+            labels.push(row.name); liqData.push(row.liq); reData.push(row.re); totalTaxData.push(-row.tax); netData.push(row.net);
             
             let tr = document.createElement('tr');
             tr.id = `main-row-${index}`; tr.className = 'clickable-row'; tr.onclick = () => toggleRow(index);
@@ -1240,7 +1274,6 @@
             let detailTr = document.createElement('tr'); detailTr.id = `detail-row-${index}`; detailTr.className = 'details-row';
             detailTr.innerHTML = `<td colspan="5"><div class="details-content">
                 <div class="details-overview"><strong>Strategy Logic:</strong> Explores the ${row.name} trajectory considering dynamic explicit rental streams, multi-state domicile tax shifts, and sequential bucket withdrawals.</div>
-                
                 <div class="masonry-grid">
                     ${optBlock}
                     <div class="masonry-item">
@@ -1263,7 +1296,6 @@
                     </div>
                     ${milestoneHtml}
                 </div>
-
                 ${buildHistoryTable(row.hist)}
             </div></td>`;
             tbody.appendChild(detailTr);
@@ -1283,14 +1315,7 @@
                 plugins: { 
                     title: { display: true, text: 'Total Net Legacy Breakdown (Gross Assets vs. Final Net)', font: { size: 14, weight: '500' }, color: '#f3f4f6', padding: {bottom: 15} },
                     legend: { labels: { color: '#cbd5e1' } },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                let val = context.raw;
-                                return context.dataset.label + ': ' + formatCurrency(Math.abs(val));
-                            }
-                        }
-                    }
+                    tooltip: { callbacks: { label: function(context) { return context.dataset.label + ': ' + formatCurrency(Math.abs(context.raw)); } } }
                 }, 
                 scales: { 
                     x: { stacked: true, grid: { color: '#374151' } }, 
@@ -1315,20 +1340,12 @@
                     title: { display: true, text: 'Wealth Trajectory (Total Assets Year By Year)', font: { size: 14, weight: '500' }, color: '#f3f4f6', padding: {bottom: 15} },
                     tooltip: {
                         callbacks: {
-                            label: function(context) {
-                                return context.dataset.label + ': ' + formatCurrency(context.parsed.y);
-                            },
+                            label: function(context) { return context.dataset.label + ': ' + formatCurrency(context.parsed.y); },
                             afterLabel: function(context) {
-                                let pIdx = context.datasetIndex;
-                                let yrIdx = context.dataIndex;
+                                let pIdx = context.datasetIndex; let yrIdx = context.dataIndex;
                                 if(typeof results !== 'undefined' && results[pIdx] && results[pIdx].hist[yrIdx]) {
                                     let snap = results[pIdx].hist[yrIdx];
-                                    return [
-                                        '  ├ RE: ' + formatCurrency(snap.reValue),
-                                        '  ├ Stocks: ' + formatCurrency(snap.stocks),
-                                        '  ├ 401k: ' + formatCurrency(snap.pretax),
-                                        '  └ Roth: ' + formatCurrency(snap.roth)
-                                    ];
+                                    return ['  ├ RE: ' + formatCurrency(snap.reValue), '  ├ Stocks: ' + formatCurrency(snap.stocks), '  ├ 401k: ' + formatCurrency(snap.pretax), '  └ Roth: ' + formatCurrency(snap.roth)];
                                 }
                                 return '';
                             }
@@ -1342,17 +1359,11 @@
             }
         });
 
-        // Risk Panel
         const getRankColor = (i) => ['#34d399', '#a3e635', '#facc15', '#fb923c'][i] || '#f87171';
-
         let taxRanks = results.map(row => ({ name: row.name, val: row.tax })).sort((a, b) => a.val - b.val);
-
         let swrRanks = results.map(row => {
             let peak = 0;
-            row.hist.forEach(s => {
-                const liq = s.stocks + s.pretax + s.roth;
-                if (liq > 0) { const swr = (s.shortfall > 0 ? s.shortfall : 0) / liq; if (swr > peak) peak = swr; }
-            });
+            row.hist.forEach(s => { const liq = s.stocks + s.pretax + s.roth; if (liq > 0) { const swr = (s.shortfall > 0 ? s.shortfall : 0) / liq; if (swr > peak) peak = swr; } });
             return { name: row.name, val: peak };
         }).sort((a, b) => a.val - b.val);
 
@@ -1370,16 +1381,8 @@
 
         document.getElementById('riskPanel').innerHTML = `
             <h3 style="margin-top:0; color:#cbd5e1; font-size:13px; border-bottom:1px solid #374151; padding-bottom:10px; text-transform:uppercase; letter-spacing:1px; font-weight:600;">Tax & Risk Analytics</h3>
-            <div class="risk-card tax">
-                <div class="risk-title">Cumulative Tax Leakage</div>
-                ${taxHtml}
-                <div class="risk-subtext">Total lifetime state & federal income taxes drawn from the portfolio, plus the final estate tax penalty at death.</div>
-            </div>
-            <div class="risk-card swr">
-                <div class="risk-title">Peak Withdrawal Rate</div>
-                ${swrHtml}
-                <div class="risk-subtext">The maximum percentage of liquid capital required to fund lifestyle in a single year. Rates over 5% carry higher sequence-of-returns risk.</div>
-            </div>
+            <div class="risk-card tax"><div class="risk-title">Cumulative Tax Leakage</div>${taxHtml}<div class="risk-subtext">Total lifetime state & federal income taxes drawn from the portfolio, plus the final estate tax penalty at death.</div></div>
+            <div class="risk-card swr"><div class="risk-title">Peak Withdrawal Rate</div>${swrHtml}<div class="risk-subtext">The maximum percentage of liquid capital required to fund lifestyle in a single year. Rates over 5% carry higher sequence-of-returns risk.</div></div>
         `;
     }
 
@@ -1390,5 +1393,86 @@
         calculate();
     };
 </script>
+
+<script type="module">
+    import { GoogleGenerativeAI } from "@google/generative-ai";
+
+    // Bind this function to the window so the HTML button can trigger it
+    window.document.getElementById('btn-send').addEventListener('click', async function() {
+        const inputField = document.getElementById('chat-input');
+        const messageContainer = document.getElementById('chat-messages');
+        const userText = inputField.value.trim();
+        const apiKey = localStorage.getItem('gemini_api_key');
+
+        if (!userText) return;
+        if (!apiKey) { alert("Please set your Gemini API Key first."); return; }
+
+        // Append User Message to UI
+        const uDiv = document.createElement('div');
+        uDiv.className = "chat-bubble user";
+        uDiv.innerText = userText;
+        messageContainer.appendChild(uDiv);
+        inputField.value = '';
+        messageContainer.scrollTop = messageContainer.scrollHeight;
+
+        try {
+            const genAI = new GoogleGenerativeAI(apiKey);
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+            
+            // 1. Gather the current Inputs (The "Why")
+            const currentInputs = {
+                startLiquid: document.getElementById('startLiquid').value,
+                caHomeCost: document.getElementById('p2_homeVal').value,
+                flHomeCost: document.getElementById('p3_homeVal').value,
+                caCostOfLiving: document.getElementById('colCA').value + "%",
+                flCostOfLiving: document.getElementById('colFL').value + "%",
+                taxRules: "CA State Tax is 9.3%. WA State Capital Gains Tax is 7% over $250k. FL has 0% state income/capital gains tax. WA has a state estate tax, FL and CA do not."
+            };
+
+            // 2. Gather the Results (The "What")
+            const formatCurrencyLocal = (num) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(num);
+            const currentResults = window.results.map(r => ({
+                strategy: r.name,
+                netLegacyAtEnd: formatCurrencyLocal(r.net),
+                finalLiquid: formatCurrencyLocal(r.liq),
+                totalTaxPaidOverLife: formatCurrencyLocal(r.tax)
+            }));
+
+            // 3. Combine them into the System Prompt
+            const systemPrompt = `You are an expert financial planning assistant inside a retirement calculator app. 
+            The user is viewing a simulation with different property moving scenarios. 
+
+            Here are their current CORE INPUTS: ${JSON.stringify(currentInputs)}.
+            Here are their current OUTPUT RESULTS: ${JSON.stringify(currentResults)}.
+
+            Please answer their question based exactly on this data. If they ask "why" one is better than another, look at the inputs (like home costs, cost of living, and the tax rules) to explain the difference in the final numbers. Keep responses concise, clear, and focused on the data.`;
+                        // Call Gemini
+            const result = await model.generateContent([systemPrompt, userText]);
+            const response = await result.response;
+            const text = response.text();
+
+            // Append Bot Message to UI
+            const botDiv = document.createElement('div');
+            botDiv.className = "chat-bubble bot";
+            
+            // Basic markdown handling for bold text
+            botDiv.innerHTML = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+            
+            messageContainer.appendChild(botDiv);
+            messageContainer.scrollTop = messageContainer.scrollHeight;
+
+        } catch (err) {
+            console.error(err);
+            const errDiv = document.createElement('div');
+            errDiv.className = "chat-bubble bot";
+            errDiv.style.color = "#f87171";
+            errDiv.innerText = "Error calling Gemini: " + err.message + ". Check your API key limits or format.";
+            messageContainer.appendChild(errDiv);
+            messageContainer.scrollTop = messageContainer.scrollHeight;
+        }
+    });
+</script>
+
 </body>
 </html>
