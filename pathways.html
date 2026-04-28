@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Retirement Pathways Calculator</title>
+    <title>Retirement Pathways Calculator (Tax Lot Optimization)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #0b1120; color: #f3f4f6; padding: 20px; margin: 0; }
@@ -16,7 +16,7 @@
         /* Sticky Scrollable Input Section */
         .inputs-section { 
             background: #111827; 
-            padding: 0 15px 0 0; 
+            padding: 0 15px 0 0; /* Padding for scrollbar breathing room */
             position: sticky; 
             top: 20px; 
             height: calc(100vh - 40px); 
@@ -24,6 +24,7 @@
             scrollbar-width: thin;
             scrollbar-color: #374151 #111827;
         }
+        /* Webkit scrollbar styling */
         .inputs-section::-webkit-scrollbar { width: 6px; }
         .inputs-section::-webkit-scrollbar-track { background: #111827; border-radius: 4px;}
         .inputs-section::-webkit-scrollbar-thumb { background-color: #374151; border-radius: 4px; }
@@ -157,7 +158,7 @@
                         <div class="section-label">Cost Basis & Withdrawal</div>
                         <div class="input-row-2">
                             <div class="input-group"><label>Stocks Cost Basis (%)</label><input type="number" id="basisStocks" value="20" step="1" oninput="calculate()"></div>
-                            <div class="input-group"><label>401k Cost Basis (%)</label><input type="number" id="basis401k" value="30" step="1" oninput="calculate()"></div>
+                            <div class="input-group"><label>401k Cost Basis (%)</label><input type="number" id="basis401k" value="0" step="1" oninput="calculate()"></div>
                         </div>
                         <div class="input-group">
                             <label>Withdrawal Sequence Strategy</label>
@@ -248,17 +249,18 @@
                             <div class="input-group"></div>
                         </div>
                         
-                        <div class="section-label">Pre-CA Portfolio Reset</div>
+                        <div class="section-label">Custom Portfolio Reset Window</div>
                         <div class="input-group" style="margin-bottom: 8px;">
                             <label style="display: flex; align-items: center; gap: 8px; color: #f3f4f6; cursor: pointer;">
                                 <input type="checkbox" id="p2_resetFull" onchange="toggleResetInput('p2')" style="margin:0;" checked>
                                 Reset Entire Portfolio (Auto-calculate)
                             </label>
                         </div>
-                        <p style="font-size:10px; color:#6b7280; margin-top:0px; margin-bottom:10px; line-height: 1.3;">Engine automatically divides the reset amount by the years leading up to the move. Uses a waterfall approach: prioritizes 401k conversions first, then spills to stock basis harvesting.</p>
-                        <div class="input-row-2">
-                            <div class="input-group"><label>Custom Reset Amount ($)</label><input type="text" id="p2_resetAmt" value="5,000,000" oninput="formatCurrencyInput(this)"></div>
-                            <div class="input-group"></div>
+                        <p style="font-size:10px; color:#6b7280; margin-top:0px; margin-bottom:10px; line-height: 1.3;">Select a start year and runway duration. Engine automatically divides the amount across this window. Uses waterfall approach: prioritizes 401k conversions, then stock basis harvesting. (Tax logic automatically adapts if domicile changes during this window).</p>
+                        <div class="input-row-3">
+                            <div class="input-group"><label>Amount ($)</label><input type="text" id="p2_resetAmt" value="5,000,000" oninput="formatCurrencyInput(this)" disabled></div>
+                            <div class="input-group"><label>Start Year</label><input type="number" id="p2_resetStartYr" value="2026" oninput="calculate()" disabled></div>
+                            <div class="input-group"><label>Runway (Yrs)</label><input type="number" id="p2_resetRunway" value="12" oninput="calculate()" disabled></div>
                         </div>
 
                         <div class="section-label">Scenario Rent Streams (Current Base Value)</div>
@@ -318,17 +320,18 @@
                             <div class="input-group"><label>CA Move Yr (Dom 2)</label><input type="number" id="p4_caMoveYr" value="2038" oninput="calculate()"></div>
                         </div>
                         
-                        <div class="section-label">Pre-CA Portfolio Reset</div>
+                        <div class="section-label">Custom Portfolio Reset Window</div>
                         <div class="input-group" style="margin-bottom: 8px;">
                             <label style="display: flex; align-items: center; gap: 8px; color: #f3f4f6; cursor: pointer;">
                                 <input type="checkbox" id="p4_resetFull" onchange="toggleResetInput('p4')" style="margin:0;" checked>
                                 Reset Entire Portfolio (Auto-calculate)
                             </label>
                         </div>
-                        <p style="font-size:10px; color:#6b7280; margin-top:0px; margin-bottom:10px; line-height: 1.3;">Engine automatically divides the reset amount by the years leading up to the move. Uses a waterfall approach: prioritizes 401k conversions first, then spills to stock basis harvesting.</p>
-                        <div class="input-row-2">
-                            <div class="input-group"><label>Custom Reset Amount ($)</label><input type="text" id="p4_resetAmt" value="5,000,000" oninput="formatCurrencyInput(this)"></div>
-                            <div class="input-group"></div>
+                        <p style="font-size:10px; color:#6b7280; margin-top:0px; margin-bottom:10px; line-height: 1.3;">Select a start year and runway duration. Engine automatically divides the amount across this window. Uses waterfall approach: prioritizes 401k conversions, then stock basis harvesting. (Tax logic automatically adapts if domicile changes during this window).</p>
+                        <div class="input-row-3">
+                            <div class="input-group"><label>Amount ($)</label><input type="text" id="p4_resetAmt" value="5,000,000" oninput="formatCurrencyInput(this)" disabled></div>
+                            <div class="input-group"><label>Start Year</label><input type="number" id="p4_resetStartYr" value="2026" oninput="calculate()" disabled></div>
+                            <div class="input-group"><label>Runway (Yrs)</label><input type="number" id="p4_resetRunway" value="12" oninput="calculate()" disabled></div>
                         </div>
 
                         <div class="section-label">Scenario Rent Streams (Current Base Value)</div>
@@ -403,8 +406,14 @@
     
     function toggleResetInput(prefix) {
         const checkbox = document.getElementById(prefix + '_resetFull');
-        const input = document.getElementById(prefix + '_resetAmt');
-        input.disabled = checkbox.checked;
+        const inputAmt = document.getElementById(prefix + '_resetAmt');
+        const inputStart = document.getElementById(prefix + '_resetStartYr');
+        const inputRunway = document.getElementById(prefix + '_resetRunway');
+        
+        if (inputAmt) inputAmt.disabled = checkbox.checked;
+        if (inputStart) inputStart.disabled = checkbox.checked;
+        if (inputRunway) inputRunway.disabled = checkbox.checked;
+        
         calculate();
     }
 
@@ -574,6 +583,8 @@
         const p2_apprec = getNum('p2_apprec') / 100;
         const p2_carryRate = getNum('p2_carryRate') / 100;
         const p2_resetFull = document.getElementById('p2_resetFull').checked;
+        const p2_resetStartYr = getNum('p2_resetStartYr');
+        const p2_resetRunway = getNum('p2_resetRunway');
 
         let p3_homeVal = getNum('p3_homeVal'); 
         let p3_purchYr = getNum('p3_purchYr'); 
@@ -585,6 +596,8 @@
         let p4_flPurchYr = getNum('p4_flPurchYr'); let p4_flMoveYr = getNum('p4_flMoveYr');
         let p4_caPurchYr = getNum('p4_caPurchYr'); let p4_caMoveYr = getNum('p4_caMoveYr');
         const p4_resetFull = document.getElementById('p4_resetFull').checked;
+        const p4_resetStartYr = getNum('p4_resetStartYr');
+        const p4_resetRunway = getNum('p4_resetRunway');
 
         if (p2_homeVal <= 0) { p2_purchYr = endYear + 10; p2_moveYr = endYear + 10; p4_caPurchYr = endYear + 10; p4_caMoveYr = endYear + 10; }
         if (p3_homeVal <= 0) { p3_purchYr = endYear + 10; p3_moveYr = endYear + 10; p4_flPurchYr = endYear + 10; p4_flMoveYr = endYear + 10; }
@@ -867,117 +880,122 @@
                 let executedConv = 0; let executedCG = 0;
 
                 // Optimization & Resets Engine
-                let isPreMoveRunway = false;
-                let targetMoveYrLocal = startYear;
+                let isFullResetActive = false;
+                let isCustomResetActive = false;
                 let annualReset = 0;
                 let remainingRunway = 0;
-                
-                if (path.id === 2) { 
-                    targetMoveYrLocal = p2_moveYr; 
-                    if (curYr < targetMoveYrLocal) {
-                        isPreMoveRunway = true; 
-                        remainingRunway = targetMoveYrLocal - curYr;
-                        let totalRunway = targetMoveYrLocal - startYear;
-                        annualReset = totalRunway > 0 ? scenResetAmt / totalRunway : 0;
+
+                if (path.id === 2) {
+                    if (isFullReset) {
+                        let targetMoveYrLocal = p2_moveYr;
+                        if (curYr >= startYear && curYr < targetMoveYrLocal) {
+                            isFullResetActive = true;
+                            remainingRunway = targetMoveYrLocal - curYr;
+                        }
+                    } else {
+                        if (curYr >= p2_resetStartYr && curYr < p2_resetStartYr + p2_resetRunway) {
+                            isCustomResetActive = true;
+                            annualReset = p2_resetRunway > 0 ? scenResetAmt / p2_resetRunway : 0;
+                        }
+                    }
+                } else if (path.id === 4) {
+                    if (isFullReset) {
+                        let targetMoveYrLocal = p4_caMoveYr;
+                        if (curYr >= startYear && curYr < targetMoveYrLocal) {
+                            isFullResetActive = true;
+                            remainingRunway = targetMoveYrLocal - curYr;
+                        }
+                    } else {
+                        if (curYr >= p4_resetStartYr && curYr < p4_resetStartYr + p4_resetRunway) {
+                            isCustomResetActive = true;
+                            annualReset = p4_resetRunway > 0 ? scenResetAmt / p4_resetRunway : 0;
+                        }
                     }
                 }
-                if (path.id === 4) { 
-                    targetMoveYrLocal = p4_caMoveYr; 
-                    if (curYr < targetMoveYrLocal) {
-                        isPreMoveRunway = true; 
-                        remainingRunway = targetMoveYrLocal - curYr;
-                        let totalRunway = targetMoveYrLocal - startYear;
-                        annualReset = totalRunway > 0 ? scenResetAmt / totalRunway : 0;
+
+                if (isFullResetActive && remainingRunway > 0) {
+                    if (port.pretax > 0) {
+                        let convertAmt = port.pretax / remainingRunway;
+                        let gainRatio = 1 - (port.pretaxBasisDol / port.pretax);
+                        if (isNaN(gainRatio) || gainRatio < 0) gainRatio = 0;
+                        
+                        let taxableConv = convertAmt * gainRatio;
+                        let convTax = applyIncomeDelta(taxableConv, 0); 
+                        
+                        port.pretax -= convertAmt; port.roth += convertAmt;
+                        let basisDrawn = convertAmt * (1 - gainRatio);
+                        port.pretaxBasisDol -= basisDrawn;
+                        
+                        optTax += convTax;
+                        isConvTriggered = true;
+                        executedConv = convertAmt;
                     }
-                }
 
-                if (isPreMoveRunway) {
-                    if (isFullReset && remainingRunway > 0) {
-                        // Dynamically pull 1/N of remaining bucket each year to fully drain by move
-                        if (port.pretax > 0) {
-                            let convertAmt = port.pretax / remainingRunway;
-                            let gainRatio = 1 - (port.pretaxBasisDol / port.pretax);
-                            if (isNaN(gainRatio) || gainRatio < 0) gainRatio = 0;
+                    if (port.stocksLow > 0) {
+                        let sellAmt = port.stocksLow / remainingRunway;
+                        let gainRatio = 1 - (port.stocksLowBasis / port.stocksLow);
+                        if (isNaN(gainRatio) || gainRatio < 0) gainRatio = 0;
+                        
+                        if (gainRatio > 0) {
+                            let basisSold = sellAmt * (1 - gainRatio);
+                            let gain = sellAmt * gainRatio;
                             
-                            let taxableConv = convertAmt * gainRatio;
-                            let convTax = applyIncomeDelta(taxableConv, 0); 
+                            let harvestTax = applyIncomeDelta(0, gain);
+                            optTax += harvestTax;
                             
-                            port.pretax -= convertAmt; port.roth += convertAmt;
-                            let basisDrawn = convertAmt * (1 - gainRatio);
-                            port.pretaxBasisDol -= basisDrawn;
-                            
-                            optTax += convTax;
-                            isConvTriggered = true;
-                            executedConv = convertAmt;
+                            port.stocksLow -= sellAmt;
+                            port.stocksLowBasis -= basisSold;
+                            port.stocksHigh += sellAmt;
+                            port.stocksHighBasis += sellAmt;
+                            isStepUpTriggered = true;
+                            executedCG = sellAmt;
+                        } else {
+                            port.stocksLow -= sellAmt;
+                            port.stocksLowBasis -= sellAmt;
+                            port.stocksHigh += sellAmt;
+                            port.stocksHighBasis += sellAmt;
+                            executedCG = sellAmt;
                         }
+                    }
+                } else if (isCustomResetActive && annualReset > 0) {
+                    let remainingReset = annualReset;
 
-                        if (port.stocksLow > 0 && (currentState === 'WA' || currentState === 'FL')) {
-                            let sellAmt = port.stocksLow / remainingRunway;
-                            let gainRatio = 1 - (port.stocksLowBasis / port.stocksLow);
-                            if (isNaN(gainRatio) || gainRatio < 0) gainRatio = 0;
-                            
-                            if (gainRatio > 0) {
-                                let basisSold = sellAmt * (1 - gainRatio);
-                                let gain = sellAmt * gainRatio;
-                                
-                                let harvestTax = applyIncomeDelta(0, gain);
-                                optTax += harvestTax;
-                                
-                                port.stocksLow -= sellAmt;
-                                port.stocksLowBasis -= basisSold;
-                                port.stocksHigh += sellAmt;
-                                port.stocksHighBasis += sellAmt;
-                                isStepUpTriggered = true;
-                                executedCG = sellAmt;
-                            } else {
-                                port.stocksLow -= sellAmt;
-                                port.stocksLowBasis -= sellAmt;
-                                port.stocksHigh += sellAmt;
-                                port.stocksHighBasis += sellAmt;
-                                executedCG = sellAmt;
-                            }
-                        }
-                    } else if (annualReset > 0) {
-                        // Custom Reset Amount
-                        let remainingReset = annualReset;
+                    if (remainingReset > 0 && port.pretax > 0) {
+                        let convertAmt = Math.min(remainingReset, port.pretax);
+                        let gainRatio = 1 - (port.pretaxBasisDol / port.pretax);
+                        if (isNaN(gainRatio) || gainRatio < 0) gainRatio = 0;
+                        
+                        let taxableConv = convertAmt * gainRatio;
+                        let convTax = applyIncomeDelta(taxableConv, 0); 
+                        
+                        port.pretax -= convertAmt; port.roth += convertAmt;
+                        let basisDrawn = convertAmt * (1 - gainRatio);
+                        port.pretaxBasisDol -= basisDrawn;
+                        
+                        optTax += convTax;
+                        isConvTriggered = true;
+                        remainingReset -= convertAmt;
+                        executedConv = convertAmt;
+                    }
 
-                        if (remainingReset > 0 && port.pretax > 0) {
-                            let convertAmt = Math.min(remainingReset, port.pretax);
-                            let gainRatio = 1 - (port.pretaxBasisDol / port.pretax);
-                            if (isNaN(gainRatio) || gainRatio < 0) gainRatio = 0;
+                    if (remainingReset > 0 && port.stocksLow > 0) {
+                        let gainRatio = 1 - (port.stocksLowBasis / port.stocksLow);
+                        if (isNaN(gainRatio) || gainRatio < 0) gainRatio = 0;
+                        
+                        if (gainRatio > 0) {
+                            let sellAmt = Math.min(remainingReset, port.stocksLow);
+                            let basisSold = sellAmt * (1 - gainRatio);
+                            let gain = sellAmt * gainRatio;
                             
-                            let taxableConv = convertAmt * gainRatio;
-                            let convTax = applyIncomeDelta(taxableConv, 0); 
+                            let harvestTax = applyIncomeDelta(0, gain);
+                            optTax += harvestTax;
                             
-                            port.pretax -= convertAmt; port.roth += convertAmt;
-                            let basisDrawn = convertAmt * (1 - gainRatio);
-                            port.pretaxBasisDol -= basisDrawn;
-                            
-                            optTax += convTax;
-                            isConvTriggered = true;
-                            remainingReset -= convertAmt;
-                            executedConv = convertAmt;
-                        }
-
-                        if (remainingReset > 0 && port.stocksLow > 0 && (currentState === 'WA' || currentState === 'FL')) {
-                            let gainRatio = 1 - (port.stocksLowBasis / port.stocksLow);
-                            if (isNaN(gainRatio) || gainRatio < 0) gainRatio = 0;
-                            
-                            if (gainRatio > 0) {
-                                let sellAmt = Math.min(remainingReset, port.stocksLow);
-                                let basisSold = sellAmt * (1 - gainRatio);
-                                let gain = sellAmt * gainRatio;
-                                
-                                let harvestTax = applyIncomeDelta(0, gain);
-                                optTax += harvestTax;
-                                
-                                port.stocksLow -= sellAmt;
-                                port.stocksLowBasis -= basisSold;
-                                port.stocksHigh += sellAmt;
-                                port.stocksHighBasis += sellAmt;
-                                isStepUpTriggered = true;
-                                executedCG = sellAmt;
-                            }
+                            port.stocksLow -= sellAmt;
+                            port.stocksLowBasis -= basisSold;
+                            port.stocksHigh += sellAmt;
+                            port.stocksHighBasis += sellAmt;
+                            isStepUpTriggered = true;
+                            executedCG = sellAmt;
                         }
                     }
                 } else if (path.id === 1 || path.id === 3) {
@@ -1193,7 +1211,14 @@
                 name: path.name, liq: port.stocksLow + port.stocksHigh + port.pretax + port.roth, 
                 re: finalEstateRE, tax: cumTax + totalEstTax, net: finalEstate - totalEstTax, 
                 hist: hist, milestones: milestones, 
-                optPerf: { amt: scenResetAmt, isFullReset: isFullReset, convYrs: (path.id === 1 ? p1_convYrs : (path.id === 3 ? p3_convYrs : 0)), unharvested: moveYrSnap ? moveYrSnap.unharvestedGains : 0 },
+                optPerf: { 
+                    amt: scenResetAmt, 
+                    isFullReset: isFullReset, 
+                    convYrs: (path.id === 1 ? p1_convYrs : (path.id === 3 ? p3_convYrs : 0)), 
+                    unharvested: moveYrSnap ? moveYrSnap.unharvestedGains : 0,
+                    startYr: path.id === 2 ? (isFullReset ? startYear : p2_resetStartYr) : (path.id === 4 ? (isFullReset ? startYear : p4_resetStartYr) : null),
+                    runway: path.id === 2 ? (isFullReset ? p2_moveYr - startYear : p2_resetRunway) : (path.id === 4 ? (isFullReset ? p4_caMoveYr - startYear : p4_resetRunway) : null)
+                },
                 estMath: { wa: finalWa, ca: finalCa, fl: finalFl, fedTax: fedEstTax, waTax: waEstTax, totTax: totalEstTax, totEst: finalEstate, fedExemptObj: fvFedEstateExempt },
                 startYr: startYear, endYr: endYear, moves: path.moves
             });
@@ -1257,7 +1282,7 @@
             if (row.name !== "WA Baseline" && row.name !== "WA ➔ FL") {
                 let strategyText = row.optPerf.isFullReset 
                     ? `The engine systematically reset your <strong>Entire Available Portfolio</strong> across the years leading up to the move.` 
-                    : `The engine automatically divided your Custom Reset Amount of <strong>${formatCurrency(row.optPerf.amt)}</strong> across the years leading up to the move.`;
+                    : `The engine automatically divided your Custom Reset Amount of <strong>${formatCurrency(row.optPerf.amt)}</strong> over a ${row.optPerf.runway}-year window starting in ${row.optPerf.startYr}.`;
                 
                 optBlock = `
                     <div class="masonry-item">
