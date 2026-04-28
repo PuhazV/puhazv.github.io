@@ -810,6 +810,11 @@
                     } else if (currentState === 'WA') {
                         let taxableWaCg = Math.max(0, cg - waCgExempt);
                         wa = taxableWaCg * waCgTax;
+                        // CA taxes non-resident CA-source rental income regardless of domicile
+                        ca = caRentNet * caStateTax;
+                    } else if (currentState === 'FL') {
+                        // FL has no income/CG tax; still apply CA non-resident tax on CA-source rent if any
+                        ca = caRentNet * caStateTax;
                     }
                     
                     return { fed: fedTotal, wa: wa, ca: ca, fl: fl, total: fedTotal + wa + ca + fl };
@@ -1086,8 +1091,11 @@
                 port.roth *= (1 + r);
  
                 let valWa = waHome * Math.pow(1 + waApprec, i + 1);
-                let valCaChart = (path.id === 2 && curYr >= p2_purchYr) ? currentCaVal : ((path.id===4 && curYr >= p4_caPurchYr) ? currentCaVal : 0);
-                let valFlChart = (path.id === 3 && curYr >= p3_purchYr) ? currentFlVal : ((path.id===4 && curYr >= p4_flPurchYr) ? currentFlVal : 0);
+                // Use i+1 (end-of-year) to match WA home valuation timing
+                let endCaVal = p2_homeVal * Math.pow(1 + p2_apprec, i + 1);
+                let endFlVal = p3_homeVal * Math.pow(1 + p3_apprec, i + 1);
+                let valCaChart = (path.id === 2 && curYr >= p2_purchYr) ? endCaVal : ((path.id===4 && curYr >= p4_caPurchYr) ? endCaVal : 0);
+                let valFlChart = (path.id === 3 && curYr >= p3_purchYr) ? endFlVal : ((path.id===4 && curYr >= p4_flPurchYr) ? endFlVal : 0);
                 
                 let finalReChart = valWa + valCaChart + valFlChart;
                 cumTax += currentTotalTax;
