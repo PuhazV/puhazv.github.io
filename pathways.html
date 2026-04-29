@@ -8,7 +8,7 @@
     <style>
         body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #0b1120; color: #f3f4f6; padding: 20px; margin: 0; }
         .container { max-width: 98%; margin: auto; background: #111827; padding: 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); border: 1px solid #1f2937; }
-        h1 { text-align: center; color: #f9fafb; margin-bottom: 35px; font-weight: 400; letter-spacing: 0.5px; font-size: 24px; }
+        h1 { text-align: center; color: #f9fafb; margin-bottom: 35px; font-weight: 400; letter-spacing: 0.5px; font-size: 24px; text-transform: uppercase; }
         
         /* Layout Grid */
         .dashboard-grid { display: grid; grid-template-columns: 420px 1fr; gap: 30px; align-items: start; }
@@ -72,6 +72,7 @@
         table { width: 100%; border-collapse: separate; border-spacing: 0; }
         th, td { padding: 16px 14px; text-align: left; border-bottom: 1px solid #374151; font-size: 14px; }
         th { background-color: #111827; color: #9ca3af; font-weight: 600; text-transform: uppercase; font-size: 11px; position: sticky; top: 0; z-index: 10; letter-spacing: 0.5px; white-space: nowrap; }
+        #resultsTable thead th { background-color: #1e293b; color: #e2e8f0; font-size: 12.5px; letter-spacing: 1px; font-weight: 700; border-bottom: 2px solid #3b82f6; padding: 18px 14px; }
         .currency { text-align: right; font-family: 'SF Mono', Consolas, monospace; }
         
         .clickable-row { cursor: pointer; transition: background-color 0.2s ease; background: #1f2937; }
@@ -360,7 +361,8 @@
 
         <div class="outputs-section">
             <div class="chart-container" id="chartWrapper">
-                <canvas id="legacyChart"></canvas>
+                <h3 style="margin-top:0; color:#e2e8f0; font-size:13px; border-bottom:1px solid #374151; padding-bottom:10px; text-transform:uppercase; letter-spacing:1.5px; font-weight:700; text-align:center;">Total Net Legacy Breakdown</h3>
+                <div style="position:relative; height:360px;"><canvas id="legacyChart"></canvas></div>
             </div>
             
             <div class="results-container">
@@ -397,7 +399,8 @@
 
             <div class="dashboard-bottom-row">
                 <div class="chart-container">
-                    <canvas id="timeSeriesChart"></canvas>
+                    <h3 style="margin-top:0; color:#e2e8f0; font-size:13px; border-bottom:1px solid #374151; padding-bottom:10px; text-transform:uppercase; letter-spacing:1.5px; font-weight:700; text-align:center;">Wealth Trajectory</h3>
+                    <div style="position:relative; height:360px;"><canvas id="timeSeriesChart"></canvas></div>
                 </div>
                 <div class="risk-panel" id="riskPanel"></div>
             </div>
@@ -1532,7 +1535,7 @@
             options: { 
                 responsive: true, maintainAspectRatio: false, color: '#9ca3af', 
                 plugins: { 
-                    title: { display: true, text: 'Total Net Legacy Breakdown (Gross Assets vs. Final Net)', font: { size: 14, weight: '500' }, color: '#f3f4f6', padding: {bottom: 15} },
+                    title: { display: false },
                     legend: { labels: { color: '#cbd5e1' } },
                     tooltip: {
                         callbacks: {
@@ -1563,7 +1566,7 @@
                 responsive: true, maintainAspectRatio: false, color: '#9ca3af',
                 interaction: { mode: 'index', intersect: false },
                 plugins: {
-                    title: { display: true, text: 'Wealth Trajectory (Total Assets Year By Year)', font: { size: 14, weight: '500' }, color: '#f3f4f6', padding: {bottom: 15} },
+                    title: { display: false },
                     tooltip: {
                         callbacks: {
                             label: function(context) {
@@ -1623,7 +1626,7 @@
             </div>`).join('');
 
         document.getElementById('riskPanel').innerHTML = `
-            <h3 style="margin-top:0; color:#cbd5e1; font-size:13px; border-bottom:1px solid #374151; padding-bottom:10px; text-transform:uppercase; letter-spacing:1px; font-weight:600;">Tax & Risk Analytics</h3>
+            <h3 style="margin-top:0; color:#e2e8f0; font-size:13px; border-bottom:1px solid #374151; padding-bottom:10px; text-transform:uppercase; letter-spacing:1.5px; font-weight:700; text-align:center;">Tax & Risk Analytics</h3>
             <div class="risk-card tax">
                 <div class="risk-title">Cumulative Tax Leakage</div>
                 ${taxHtml}
