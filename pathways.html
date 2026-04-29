@@ -152,13 +152,13 @@
                         <div class="section-label">Starting Allocation (%) - Auto Balances</div>
                         <div class="input-row-3">
                             <div class="input-group"><label>Taxable Stocks (%)</label><input type="number" id="pctStocks" class="start-alloc" value="60" step="1"></div>
-                            <div class="input-group"><label>401k/Trad IRA (%)</label><input type="number" id="pct401k" class="start-alloc" value="30" step="1"></div>
+                            <div class="input-group"><label>401K (%)</label><input type="number" id="pct401k" class="start-alloc" value="30" step="1"></div>
                             <div class="input-group"><label>Roth IRA (%)</label><input type="number" id="pctRoth" class="start-alloc" value="10" step="1"></div>
                         </div>
                         <div class="section-label">Cost Basis & Withdrawal</div>
                         <div class="input-row-2">
                             <div class="input-group"><label>Stocks Cost Basis (%)</label><input type="number" id="basisStocks" value="20" step="1" oninput="calculate()"></div>
-                            <div class="input-group"><label>401k Cost Basis (%)</label><input type="number" id="basis401k" value="0" step="1" oninput="calculate()"></div>
+                            <div class="input-group"><label>401K Cost Basis (%)</label><input type="number" id="basis401k" value="0" step="1" oninput="calculate()"></div>
                         </div>
                         <div class="input-group">
                             <label>Withdrawal Sequence Strategy</label>
@@ -227,8 +227,8 @@
                     <div class="input-group-box">
                         <h3>Strategic Roth Conversions</h3>
                         <div class="input-row-2">
-                            <div class="input-group"><label>Conversion Runway (Years)</label><input type="number" id="p1_convYrs" value="20" oninput="calculate()"></div>
-                            <div class="input-group"></div>
+                            <div class="input-group"><label>Conversion Start Yr</label><input type="number" id="p1_convStartYr" value="2029" oninput="calculate()"></div>
+                            <div class="input-group"><label>Conversion Runway (Yrs)</label><input type="number" id="p1_convYrs" value="30" oninput="calculate()"></div>
                         </div>
                     </div>
                 </div>
@@ -257,10 +257,14 @@
                                 Reset Entire Portfolio (Auto-calculate)
                             </label>
                         </div>
-                        <p style="font-size:10px; color:#6b7280; margin-top:0px; margin-bottom:10px; line-height: 1.3;">Select a start year and runway duration. Engine automatically divides the amount across this window. Uses waterfall approach: prioritizes 401k conversions, then stock basis harvesting. (Tax logic automatically adapts if domicile changes during this window).</p>
+                        <p style="font-size:10.5px; color:#9ca3af; margin-top:0px; margin-bottom:12px; line-height: 1.4; background: #1f2937; padding: 10px; border-radius: 6px; border-left: 3px solid #6366f1;">
+                            <strong>Reset Entire Portfolio (Checked):</strong> Systematically amortizes your <em>entire</em> pre-tax and taxable portfolio starting from the selected <strong>Start Year</strong> up to the move year.<br>
+                            <strong>Custom Reset (Unchecked):</strong> Divides your custom amount across the selected Start Year and Runway.<br>
+                            <em>Engine uses a waterfall approach for both: prioritizes 401k conversions, then stock basis harvesting.</em>
+                        </p>
                         <div class="input-row-3">
                             <div class="input-group"><label>Amount ($)</label><input type="text" id="p2_resetAmt" value="5,000,000" oninput="formatCurrencyInput(this)" disabled></div>
-                            <div class="input-group"><label>Start Year</label><input type="number" id="p2_resetStartYr" value="2026" oninput="calculate()" disabled></div>
+                            <div class="input-group"><label>Start Year</label><input type="number" id="p2_resetStartYr" value="2028" oninput="calculate()"></div>
                             <div class="input-group"><label>Runway (Yrs)</label><input type="number" id="p2_resetRunway" value="12" oninput="calculate()" disabled></div>
                         </div>
 
@@ -281,7 +285,7 @@
                     <div class="input-group-box">
                         <h3>Move & Real Estate</h3>
                         <div class="input-row-2">
-                            <div class="input-group"><label>FL Purchase Yr</label><input type="number" id="p3_purchYr" value="2027" oninput="calculate()"></div>
+                            <div class="input-group"><label>FL Purchase Yr</label><input type="number" id="p3_purchYr" value="2028" oninput="calculate()"></div>
                             <div class="input-group"><label>FL Move Yr</label><input type="number" id="p3_moveYr" value="2028" oninput="calculate()"></div>
                         </div>
                         <div class="input-row-2">
@@ -295,8 +299,8 @@
 
                         <div class="section-label">Strategic Roth Conversions</div>
                         <div class="input-row-2">
-                            <div class="input-group"><label>Conversion Runway (Years)</label><input type="number" id="p3_convYrs" value="20" oninput="calculate()"></div>
-                            <div class="input-group"></div>
+                            <div class="input-group"><label>Conversion Start Yr</label><input type="number" id="p3_convStartYr" value="2029" oninput="calculate()"></div>
+                            <div class="input-group"><label>Conversion Runway (Yrs)</label><input type="number" id="p3_convYrs" value="30" oninput="calculate()"></div>
                         </div>
                         
                         <div class="section-label">Scenario Rent Streams (Current Base Value)</div>
@@ -313,7 +317,7 @@
                         <h3>Move & Real Estate</h3>
                         <p style="font-size:11px; color:#6b7280; margin-top:-5px; margin-bottom:15px; font-style:italic;">Uses Base Home Values & Apprec from the isolated scenarios above.</p>
                         <div class="input-row-2">
-                            <div class="input-group"><label>FL Purchase Yr</label><input type="number" id="p4_flPurchYr" value="2027" oninput="calculate()"></div>
+                            <div class="input-group"><label>FL Purchase Yr</label><input type="number" id="p4_flPurchYr" value="2028" oninput="calculate()"></div>
                             <div class="input-group"><label>FL Move Yr (Dom 1)</label><input type="number" id="p4_flMoveYr" value="2028" oninput="calculate()"></div>
                         </div>
                         <div class="input-row-2">
@@ -328,10 +332,14 @@
                                 Reset Entire Portfolio (Auto-calculate)
                             </label>
                         </div>
-                        <p style="font-size:10px; color:#6b7280; margin-top:0px; margin-bottom:10px; line-height: 1.3;">Select a start year and runway duration. Engine automatically divides the amount across this window. Uses waterfall approach: prioritizes 401k conversions, then stock basis harvesting. (Tax logic automatically adapts if domicile changes during this window).</p>
+                        <p style="font-size:10.5px; color:#9ca3af; margin-top:0px; margin-bottom:12px; line-height: 1.4; background: #1f2937; padding: 10px; border-radius: 6px; border-left: 3px solid #6366f1;">
+                            <strong>Reset Entire Portfolio (Checked):</strong> Systematically amortizes your <em>entire</em> pre-tax and taxable portfolio starting from the selected <strong>Start Year</strong> up to the CA move year.<br>
+                            <strong>Custom Reset (Unchecked):</strong> Divides your custom amount across the selected Start Year and Runway.<br>
+                            <em>Engine uses a waterfall approach for both: prioritizes 401k conversions, then stock basis harvesting.</em>
+                        </p>
                         <div class="input-row-3">
                             <div class="input-group"><label>Amount ($)</label><input type="text" id="p4_resetAmt" value="5,000,000" oninput="formatCurrencyInput(this)" disabled></div>
-                            <div class="input-group"><label>Start Year</label><input type="number" id="p4_resetStartYr" value="2026" oninput="calculate()" disabled></div>
+                            <div class="input-group"><label>Start Year</label><input type="number" id="p4_resetStartYr" value="2028" oninput="calculate()"></div>
                             <div class="input-group"><label>Runway (Yrs)</label><input type="number" id="p4_resetRunway" value="12" oninput="calculate()" disabled></div>
                         </div>
 
@@ -357,7 +365,7 @@
             
             <div class="results-container">
                 <div class="results-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;">
-                    <p style="font-size: 13px; color: #9ca3af; margin: 0;"><em>Click any row to view calculation breakdown and year-by-year bucket & rent amortization.</em></p>
+                    <p style="font-size: 13px; color: #9ca3af; margin: 0;"><em>Click any row to view calculation breakdown and year-by-year bucket & rent amortization. Hover columns for details.</em></p>
                     <div style="background: #111827; padding: 6px 12px; border-radius: 6px; border: 1px solid #374151; display: flex; gap: 16px; align-items: center; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);">
                         <div style="display: flex; align-items: center; gap: 6px;">
                             <div style="width: 12px; height: 4px; background: #cbd5e1; border-radius: 2px;"></div>
@@ -376,6 +384,8 @@
                             <th>Pathway Strategy</th>
                             <th class="currency">Final Liquid</th>
                             <th class="currency">Final Real Estate</th>
+                            <th class="currency">Fed Tax Paid</th>
+                            <th class="currency">State Tax Paid</th>
                             <th class="currency">Final Estate Tax</th>
                             <th class="currency">Net Legacy</th>
                         </tr>
@@ -408,11 +418,10 @@
     function toggleResetInput(prefix) {
         const checkbox = document.getElementById(prefix + '_resetFull');
         const inputAmt = document.getElementById(prefix + '_resetAmt');
-        const inputStart = document.getElementById(prefix + '_resetStartYr');
+        // Start Year is now always enabled so user can set when the Full Reset starts
         const inputRunway = document.getElementById(prefix + '_resetRunway');
         
         if (inputAmt) inputAmt.disabled = checkbox.checked;
-        if (inputStart) inputStart.disabled = checkbox.checked;
         if (inputRunway) inputRunway.disabled = checkbox.checked;
         
         calculate();
@@ -576,6 +585,7 @@
         const caDpPct = getNum('caDpPct') / 100;
         const flDpPct = getNum('flDpPct') / 100;
 
+        const p1_convStartYr = getNum('p1_convStartYr');
         const p1_convYrs = getNum('p1_convYrs');
         
         let p2_homeVal = getNum('p2_homeVal'); 
@@ -593,6 +603,7 @@
         let p3_moveYr = getNum('p3_moveYr');
         const p3_apprec = getNum('p3_apprec') / 100;
         const p3_carryRate = getNum('p3_carryRate') / 100;
+        const p3_convStartYr = getNum('p3_convStartYr');
         const p3_convYrs = getNum('p3_convYrs');
 
         let p4_flPurchYr = getNum('p4_flPurchYr'); let p4_flMoveYr = getNum('p4_flMoveYr');
@@ -726,6 +737,11 @@
             let currentState = 'WA';
             let hist = []; let cumTax = 0; let milestones = [];
             let moveYrSnap = null; let snapshots = {};
+            
+            let cumFedTax = 0;
+            let cumWaTax = 0;
+            let cumCaTax = 0;
+            let cumFlTax = 0;
 
             let scenResetAmt = 0;
             let isFullReset = false;
@@ -893,7 +909,7 @@
                 if (path.id === 2) {
                     if (isFullReset) {
                         let targetMoveYrLocal = p2_moveYr;
-                        if (curYr >= startYear && curYr < targetMoveYrLocal) {
+                        if (curYr >= p2_resetStartYr && curYr < targetMoveYrLocal) {
                             isFullResetActive = true;
                             remainingRunway = targetMoveYrLocal - curYr;
                         }
@@ -906,7 +922,7 @@
                 } else if (path.id === 4) {
                     if (isFullReset) {
                         let targetMoveYrLocal = p4_caMoveYr;
-                        if (curYr >= startYear && curYr < targetMoveYrLocal) {
+                        if (curYr >= p4_resetStartYr && curYr < targetMoveYrLocal) {
                             isFullResetActive = true;
                             remainingRunway = targetMoveYrLocal - curYr;
                         }
@@ -1005,10 +1021,10 @@
                     }
                 } else if (path.id === 1 || path.id === 3) {
                     let convYrs = (path.id === 1) ? p1_convYrs : (path.id === 3 ? p3_convYrs : 0);
-                    let curConvYr = curYr - startYear;
+                    let convStart = (path.id === 1) ? p1_convStartYr : (path.id === 3 ? p3_convStartYr : startYear);
                     
-                    if (convYrs > 0 && curConvYr < convYrs && port.pretax > 0) {
-                        let remainingConvYrs = convYrs - curConvYr;
+                    if (convYrs > 0 && curYr >= convStart && curYr < convStart + convYrs && port.pretax > 0) {
+                        let remainingConvYrs = (convStart + convYrs) - curYr;
                         let convertAmt = port.pretax / remainingConvYrs;
                         let gainRatio = 1 - (port.pretaxBasisDol / port.pretax);
                         if (isNaN(gainRatio) || gainRatio < 0) gainRatio = 0;
@@ -1134,6 +1150,11 @@
                 
                 let finalReChart = valWa + valCaChart + valFlChart;
                 cumTax += currentTotalTax;
+                cumFedTax += yrFedTax;
+                cumWaTax += yrWaTax;
+                cumCaTax += yrCaTax;
+                cumFlTax += yrFlTax;
+
                 let endTotalLiq = port.stocksLow + port.stocksHigh + port.pretax + port.roth;
                 
                 let snap = {
@@ -1216,13 +1237,15 @@
                 name: path.name, liq: port.stocksLow + port.stocksHigh + port.pretax + port.roth, 
                 re: finalEstateRE, tax: cumTax + totalEstTax, net: finalEstate - totalEstTax, 
                 hist: hist, milestones: milestones, 
+                cumTaxes: { fed: cumFedTax, wa: cumWaTax, ca: cumCaTax, fl: cumFlTax, totalState: cumWaTax + cumCaTax + cumFlTax },
                 optPerf: { 
                     amt: scenResetAmt, 
                     isFullReset: isFullReset, 
                     convYrs: (path.id === 1 ? p1_convYrs : (path.id === 3 ? p3_convYrs : 0)), 
+                    convStart: (path.id === 1 ? p1_convStartYr : (path.id === 3 ? p3_convStartYr : null)),
                     unharvested: moveYrSnap ? moveYrSnap.unharvestedGains : 0,
-                    startYr: path.id === 2 ? (isFullReset ? startYear : p2_resetStartYr) : (path.id === 4 ? (isFullReset ? startYear : p4_resetStartYr) : null),
-                    runway: path.id === 2 ? (isFullReset ? p2_moveYr - startYear : p2_resetRunway) : (path.id === 4 ? (isFullReset ? p4_caMoveYr - startYear : p4_resetRunway) : null)
+                    startYr: path.id === 2 ? p2_resetStartYr : (path.id === 4 ? p4_resetStartYr : null),
+                    runway: path.id === 2 ? (isFullReset ? p2_moveYr - p2_resetStartYr : p2_resetRunway) : (path.id === 4 ? (isFullReset ? p4_caMoveYr - p4_resetStartYr : p4_resetRunway) : null)
                 },
                 estMath: { wa: finalWa, ca: finalCa, fl: finalFl, fedTax: fedEstTax, waTax: waEstTax, totTax: totalEstTax, totEst: finalEstate, fedExemptObj: fvFedEstateExempt },
                 startYr: startYear, endYr: endYear, moves: path.moves
@@ -1246,6 +1269,17 @@
                 <div>Moves: ${row.moves.length > 0 ? row.moves.map(m => `To ${m.state} (${m.yr})`).join(', ') : 'Remains in WA'}</div>
             </div>`;
 
+            // Setup Hover Tooltips
+            let finalSnap = row.hist[row.hist.length - 1];
+            let rothComp = row.hist.find(s => s.pretax < 100);
+            let rothCompText = rothComp && row.hist[0].pretax > 100 ? rothComp.year : (row.hist[0].pretax <= 100 ? 'N/A' : 'Not Depleted');
+            
+            let liqHover = `Stocks: ${formatCurrency(finalSnap.stocks)}\n401K: ${formatCurrency(finalSnap.pretax)}\nRoth: ${formatCurrency(finalSnap.roth)}\n401K Rollover: ${rothCompText}`;
+            let reHover = `WA Home: ${formatCurrency(row.estMath.wa)}\nCA Home: ${formatCurrency(row.estMath.ca)}\nFL Home: ${formatCurrency(row.estMath.fl)}`;
+            let fedTaxHover = `Total Lifetime Federal Income Tax Paid (excluding Estate).\nIncludes standard brackets and NIIT.`;
+            let stateTaxHover = `WA: ${formatCurrency(row.cumTaxes.wa)}\nCA: ${formatCurrency(row.cumTaxes.ca)}\nFL: ${formatCurrency(row.cumTaxes.fl)}`;
+            let estTaxHover = `Federal: ${formatCurrency(row.estMath.fedTax)}\nWA State: ${formatCurrency(row.estMath.waTax)}`;
+
             let tr = document.createElement('tr');
             tr.id = `main-row-${index}`; tr.className = 'clickable-row'; tr.onclick = () => toggleRow(index);
             tr.innerHTML = `
@@ -1253,15 +1287,23 @@
                     <div style="display: flex; align-items: center;"><span class="toggle-icon" style="color:#64748b; font-size:10px; margin-right: 6px;">▼</span> ${row.name}</div>
                     ${metaHtml}
                 </td>
-                <td class="currency" style="vertical-align: top; padding-top: 20px;">
+                <td class="currency" style="vertical-align: top; padding-top: 20px;" title="${liqHover}">
                     <div style="font-size: 14.5px; font-weight: 600; color: ${row.liq<0?'#f87171':'#f8fafc'}">${formatCurrency(row.liq)}</div>
                     ${pp(row.liq)}
                 </td>
-                <td class="currency" style="vertical-align: top; padding-top: 20px;">
+                <td class="currency" style="vertical-align: top; padding-top: 20px;" title="${reHover}">
                     <div style="font-size: 14.5px; font-weight: 600; color: #f8fafc">${formatCurrency(row.re)}</div>
                     ${pp(row.re)}
                 </td>
-                <td class="currency" style="vertical-align: top; padding-top: 20px;">
+                <td class="currency" style="vertical-align: top; padding-top: 20px;" title="${fedTaxHover}">
+                    <div style="font-size: 14.5px; font-weight: 600; color: #f87171">${formatCurrency(row.cumTaxes.fed)}</div>
+                    ${pp(row.cumTaxes.fed)}
+                </td>
+                <td class="currency" style="vertical-align: top; padding-top: 20px;" title="${stateTaxHover}">
+                    <div style="font-size: 14.5px; font-weight: 600; color: #f87171">${formatCurrency(row.cumTaxes.totalState)}</div>
+                    ${pp(row.cumTaxes.totalState)}
+                </td>
+                <td class="currency" style="vertical-align: top; padding-top: 20px;" title="${estTaxHover}">
                     <div style="font-size: 14.5px; font-weight: 600; color: #f87171">${formatCurrency(row.estMath.totTax)}</div>
                     ${pp(row.estMath.totTax)}
                 </td>
@@ -1286,7 +1328,7 @@
             let optBlock = '';
             if (row.name !== "WA Baseline" && row.name !== "WA ➔ FL") {
                 let strategyText = row.optPerf.isFullReset 
-                    ? `The engine systematically reset your <strong>Entire Available Portfolio</strong> across the years leading up to the move.` 
+                    ? `The engine systematically reset your <strong>Entire Available Portfolio</strong> over a ${row.optPerf.runway}-year window starting in ${row.optPerf.startYr} up to the move year.` 
                     : `The engine automatically divided your Custom Reset Amount of <strong>${formatCurrency(row.optPerf.amt)}</strong> over a ${row.optPerf.runway}-year window starting in ${row.optPerf.startYr}.`;
                 
                 optBlock = `
@@ -1300,7 +1342,7 @@
                     optBlock = `
                         <div class="masonry-item">
                             <h4>Tax Optimization Performance</h4>
-                            <p style="font-size: 11.5px; color: #9ca3af; line-height: 1.4; margin-top: 0;"><em>The engine perfectly amortized your target pre-tax portfolio via Roth Conversions across the specified ${row.optPerf.convYrs}-year conversion runway, avoiding future RMD pressures.</em></p>
+                            <p style="font-size: 11.5px; color: #9ca3af; line-height: 1.4; margin-top: 0;"><em>The engine perfectly amortized your target pre-tax portfolio via Roth Conversions across the specified ${row.optPerf.convYrs}-year conversion runway starting in ${row.optPerf.convStart}, avoiding future RMD pressures.</em></p>
                         </div>
                     `;
                 } else {
@@ -1313,11 +1355,31 @@
                 }
             }
 
+            let stateHoverText = `WA: ${formatCurrency(row.cumTaxes.wa)} | CA: ${formatCurrency(row.cumTaxes.ca)} | FL: ${formatCurrency(row.cumTaxes.fl)}`;
+            let taxBreakdownBlock = `
+                <div class="masonry-item">
+                    <h4>Lifetime Tax Breakdown (Non-Estate)</h4>
+                    <ul>
+                        <li><strong>Federal Tax:</strong> ${formatCurrency(row.cumTaxes.fed)}</li>
+                        <li>
+                            <strong>State Tax:</strong> 
+                            <span title="${stateHoverText}" style="cursor:help; border-bottom:1px dotted #9ca3af; color:#f8fafc;">${formatCurrency(row.cumTaxes.totalState)}</span>
+                            <div style="font-size:10px; color:#64748b; margin-top:4px;">
+                                ${row.cumTaxes.wa > 0 ? `WA: ${formatCurrency(row.cumTaxes.wa)} ` : ''}
+                                ${row.cumTaxes.ca > 0 ? `CA: ${formatCurrency(row.cumTaxes.ca)} ` : ''}
+                                ${row.cumTaxes.fl > 0 ? `FL: ${formatCurrency(row.cumTaxes.fl)}` : ''}
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            `;
+
             let detailTr = document.createElement('tr'); detailTr.id = `detail-row-${index}`; detailTr.className = 'details-row';
-            detailTr.innerHTML = `<td colspan="5"><div class="details-content">
+            detailTr.innerHTML = `<td colspan="7"><div class="details-content">
                 <div class="details-overview"><strong>Strategy Logic:</strong> Explores the ${row.name} trajectory considering dynamic explicit rental streams, multi-state domicile tax shifts, and sequential bucket withdrawals.</div>
                 
                 <div class="masonry-grid">
+                    ${taxBreakdownBlock}
                     ${optBlock}
                     <div class="masonry-item">
                         <h4>Real Estate & Legacy Shielding</h4>
@@ -1421,7 +1483,7 @@
         // Risk Panel
         const getRankColor = (i) => ['#34d399', '#a3e635', '#facc15', '#fb923c'][i] || '#f87171';
 
-        let taxRanks = results.map(row => ({ name: row.name, val: row.tax })).sort((a, b) => a.val - b.val);
+        let taxRanks = results.map(row => ({ name: row.name, val: row.tax, cumTaxes: row.cumTaxes, estTax: row.estMath.totTax })).sort((a, b) => a.val - b.val);
 
         let swrRanks = results.map(row => {
             let peak = 0;
@@ -1432,11 +1494,14 @@
             return { name: row.name, val: peak };
         }).sort((a, b) => a.val - b.val);
 
-        let taxHtml = taxRanks.map((item, i) => `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:${i === 0 ? '10px' : '8px'};">
-                <span style="color:#9ca3af; font-size:13px;">${i + 1}. ${item.name}</span>
+        let taxHtml = taxRanks.map((item, i) => {
+            let tooltip = `Lifetime Breakdown:\nFederal: ${formatCurrency(item.cumTaxes.fed)}\nState: ${formatCurrency(item.cumTaxes.totalState)}\n - WA: ${formatCurrency(item.cumTaxes.wa)}\n - CA: ${formatCurrency(item.cumTaxes.ca)}\n - FL: ${formatCurrency(item.cumTaxes.fl)}\nEstate Tax: ${formatCurrency(item.estTax)}`;
+            return `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:${i === 0 ? '10px' : '8px'};" title="${tooltip}">
+                <span style="color:#9ca3af; font-size:13px; cursor:help; border-bottom:1px dotted #4b5563;">${i + 1}. ${item.name}</span>
                 <strong style="color:${getRankColor(i)}; font-family:'SF Mono',Consolas,monospace; font-size:14.5px;">${formatCurrency(item.val)}</strong>
-            </div>`).join('');
+            </div>`;
+        }).join('');
 
         let swrHtml = swrRanks.map((item, i) => `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-top:${i === 0 ? '10px' : '8px'};">
@@ -1449,7 +1514,7 @@
             <div class="risk-card tax">
                 <div class="risk-title">Cumulative Tax Leakage</div>
                 ${taxHtml}
-                <div class="risk-subtext">Total lifetime state & federal income taxes drawn from the portfolio, plus the final estate tax penalty at death.</div>
+                <div class="risk-subtext">Total lifetime state & federal income taxes drawn from the portfolio, plus the final estate tax penalty at death. (Hover over rows for Fed/State breakdown).</div>
             </div>
             <div class="risk-card swr">
                 <div class="risk-title">Peak Withdrawal Rate</div>
