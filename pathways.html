@@ -58,7 +58,7 @@
         .outputs-section { display: flex; flex-direction: column; gap: 24px; }
         .chart-container { background: #1f2937; padding: 24px; border-radius: 10px; border: 1px solid #374151; height: 420px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
         
-        .results-container { background: #1f2937; padding: 24px; border-radius: 10px; border: 1px solid #374151; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+        .results-container { background: #1f2937; padding: 24px; border-radius: 10px; border: 1px solid #374151; box-shadow: 0 4px 6px rgba(0,0,0,0.2); overflow-x: auto; }
         
         .dashboard-bottom-row { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-top: 5px; align-items: stretch; }
         .dashboard-bottom-row .chart-container { height: auto; min-height: 420px; box-sizing: border-box; }
@@ -71,7 +71,7 @@
         
         table { width: 100%; border-collapse: separate; border-spacing: 0; }
         th, td { padding: 16px 14px; text-align: left; border-bottom: 1px solid #374151; font-size: 14px; }
-        th { background-color: #111827; color: #9ca3af; font-weight: 600; text-transform: uppercase; font-size: 12px; position: sticky; top: 0; z-index: 10; letter-spacing: 0.5px; }
+        th { background-color: #111827; color: #9ca3af; font-weight: 600; text-transform: uppercase; font-size: 11px; position: sticky; top: 0; z-index: 10; letter-spacing: 0.5px; white-space: nowrap; }
         .currency { text-align: right; font-family: 'SF Mono', Consolas, monospace; }
         
         .clickable-row { cursor: pointer; transition: background-color 0.2s ease; background: #1f2937; }
@@ -202,7 +202,7 @@
                         <div class="section-label">Base Spend ($/mo) - Assumes WA Carry Included</div>
                         <div class="input-row-2">
                             <div class="input-group"><label>Yr 1-10</label><input type="text" id="w1_10" value="25,000" oninput="formatCurrencyInput(this)"></div>
-                            <div class="input-group"><label>Yr 11-20</label><input type="text" id="w11_20" value="20,000" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>Yr 11-20</label><input type="text" id="w11_20" value="25,000" oninput="formatCurrencyInput(this)"></div>
                         </div>
                         <div class="input-row-2">
                             <div class="input-group"><label>Yr 21-30</label><input type="text" id="w21_30" value="25,000" oninput="formatCurrencyInput(this)"></div>
@@ -388,6 +388,7 @@
                             <th class="currency">Total State Tax Paid</th>
                             <th class="currency">Final Estate Tax</th>
                             <th class="currency">Net Legacy</th>
+                            <th class="currency" style="color:#3b82f6;">Net Liquid Legacy</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -418,7 +419,6 @@
     function toggleResetInput(prefix) {
         const checkbox = document.getElementById(prefix + '_resetFull');
         const inputAmt = document.getElementById(prefix + '_resetAmt');
-        // Start Year is now always enabled so user can set when the Full Reset starts
         const inputRunway = document.getElementById(prefix + '_resetRunway');
         
         if (inputAmt) inputAmt.disabled = checkbox.checked;
@@ -1233,10 +1233,91 @@
             }
             let totalEstTax = fedEstTax + waEstTax;
 
+            // RE Liquidation end-of-simulation logic
+            let basisWa = waHome;
+            let basisCa = 0; let basisFl = 0;
+            if (path.id === 2 && p2_homeVal > 0) basisCa = caPurchPriceP2;
+            if (path.id === 3 && p3_homeVal > 0) basisFl = flPurchPriceP3;
+            if (path.id === 4) {
+                if (p2_homeVal > 0) basisCa = caPurchPriceP4;
+                if (p3_homeVal > 0) basisFl = flPurchPriceP4;
+            }
+            
+            let totalReBasis = basisWa + basisCa + basisFl;
+            let totalReGain = Math.max(0, finalEstateRE - totalReBasis);
+            let taxableReGain = Math.max(0, totalReGain - 500000); // 500k primary residence exemption
+            
+            let reFedTax = taxableReGain * 0.238; // Top LTCG bracket + NIIT
+            
+            // State Income / Capital Gains taxes on real estate
+            let reStateIncTax = 0;
+            if (currentState === 'CA') {
+                // CA taxes worldwide income for residents
+                reStateIncTax = taxableReGain * caStateTax;
+            } else if (finalCa > 0) {
+                // CA taxes CA-source income for non-residents
+                let caGain = Math.max(0, finalCa - basisCa);
+                reStateIncTax = caGain * caStateTax;
+            }
+
+            // WA Real Estate Excise Tax (REET) on the gross sale of the WA property
+            let waReet = 0;
+            if (finalWa > 0) {
+                let remaining = finalWa;
+                let tier1 = Math.min(remaining, 500000); waReet += tier1 * 0.011; remaining -= tier1;
+                if (remaining > 0) { let tier2 = Math.min(remaining, 1000000); waReet += tier2 * 0.0128; remaining -= tier2; }
+                if (remaining > 0) { let tier3 = Math.min(remaining, 1500000); waReet += tier3 * 0.0275; remaining -= tier3; }
+                if (remaining > 0) { waReet += remaining * 0.03; }
+                waReet += finalWa * 0.005; // 0.5% base local WA REET
+            }
+
+            // FL Documentary Stamp Tax (~0.70% on gross sale of FL property)
+            let flDocStamp = 0;
+            if (finalFl > 0) {
+                flDocStamp = finalFl * 0.007;
+            }
+
+            // CA Documentary Transfer Tax (~0.11% on gross sale of CA property, baseline state rate)
+            let caTransferTax = 0;
+            if (finalCa > 0) {
+                caTransferTax = finalCa * 0.0011;
+            }
+
+            let totalTransferTaxes = waReet + flDocStamp + caTransferTax;
+            let reStateTaxTotal = reStateIncTax + totalTransferTaxes;
+            
+            let netReProceeds = finalEstateRE - reFedTax - reStateTaxTotal;
+            
+            let newGrossEstate = port.stocksLow + port.stocksHigh + port.pretax + port.roth + netReProceeds;
+            let newFedEstTax = newGrossEstate > fvFedEstateExempt ? (newGrossEstate - fvFedEstateExempt) * 0.40 : 0;
+            let newWaEstTax = 0;
+            if (currentState === 'WA' && newGrossEstate > waEstateExempt) {
+                let t = newGrossEstate - waEstateExempt;
+                const waBrackets = [[1e6,0.10],[1e6,0.14],[1e6,0.15],[1e6,0.16],[1e6,0.17],[1e6,0.18],[1e6,0.19],[1e6,0.19],[1e6,0.195],[Infinity,0.20]];
+                for (const [cap, rate] of waBrackets) { let chunk = Math.min(t, cap); newWaEstTax += chunk * rate; t -= chunk; if (t <= 0) break; }
+            }
+            let newTotalEstTax = newFedEstTax + newWaEstTax;
+            let netLiquidLegacy = newGrossEstate - newTotalEstTax;
+            
+            let reLiquidation = {
+                gross: finalEstateRE,
+                basis: totalReBasis,
+                gain: totalReGain,
+                taxable: taxableReGain,
+                fedTax: reFedTax,
+                stateIncTax: reStateIncTax,
+                transferTaxes: totalTransferTaxes,
+                stateTaxTotal: reStateTaxTotal,
+                netProceeds: netReProceeds,
+                newGross: newGrossEstate,
+                newEstTax: newTotalEstTax,
+                netLiquidLegacy: netLiquidLegacy
+            };
+
             results.push({ 
                 name: path.name, liq: port.stocksLow + port.stocksHigh + port.pretax + port.roth, 
                 re: finalEstateRE, tax: cumTax + totalEstTax, net: finalEstate - totalEstTax, 
-                hist: hist, milestones: milestones, 
+                hist: hist, milestones: milestones, reLiquidation: reLiquidation,
                 cumTaxes: { fed: cumFedTax, wa: cumWaTax, ca: cumCaTax, fl: cumFlTax, totalState: cumWaTax + cumCaTax + cumFlTax },
                 optPerf: { 
                     amt: scenResetAmt, 
@@ -1279,6 +1360,7 @@
             let fedTaxHover = `Total Lifetime Federal Income Tax Paid (excluding Estate).\nIncludes standard brackets and NIIT.`;
             let stateTaxHover = `WA: ${formatCurrency(row.cumTaxes.wa)}\nCA: ${formatCurrency(row.cumTaxes.ca)}\nFL: ${formatCurrency(row.cumTaxes.fl)}`;
             let estTaxHover = `Federal: ${formatCurrency(row.estMath.fedTax)}\nWA State: ${formatCurrency(row.estMath.waTax)}`;
+            let liqLegacyHover = `RE Liquidation Details:\nGross RE Sale: ${formatCurrency(row.reLiquidation.gross)}\nCost Basis: ${formatCurrency(row.reLiquidation.basis)}\nPrimary Exemption: $500,000\nTaxable Gain: ${formatCurrency(row.reLiquidation.taxable)}\nFed Tax: ${formatCurrency(row.reLiquidation.fedTax)}\nState Income Tax: ${formatCurrency(row.reLiquidation.stateIncTax)}\nState Transfer/Doc/REET: ${formatCurrency(row.reLiquidation.transferTaxes)}\nNet Sale Proceeds: ${formatCurrency(row.reLiquidation.netProceeds)}\nRe-calculated Estate Tax: ${formatCurrency(row.reLiquidation.newEstTax)}`;
 
             let tr = document.createElement('tr');
             tr.id = `main-row-${index}`; tr.className = 'clickable-row'; tr.onclick = () => toggleRow(index);
@@ -1311,6 +1393,10 @@
                     <div style="font-size: 15px; font-weight: 700; color: #34d399">${formatCurrency(row.net)}</div>
                     ${pp(row.net)}
                 </td>
+                <td class="currency" style="vertical-align: top; padding-top: 20px; background: rgba(59, 130, 246, 0.05);" title="${liqLegacyHover}">
+                    <div style="font-size: 15px; font-weight: 700; color: #60a5fa">${formatCurrency(row.reLiquidation.netLiquidLegacy)}</div>
+                    ${pp(row.reLiquidation.netLiquidLegacy)}
+                </td>
             `;
             tbody.appendChild(tr);
 
@@ -1324,6 +1410,32 @@
                     ${buildMathBox(ms.data)}
                 </div>
             `).join('');
+
+            // Add Hypothetical Liquidation Milestone
+            let liqMilestoneHtml = `
+                <div class="masonry-item">
+                    <h5>Year ${endYear} (${row.hist[row.hist.length-1].state}) - Hypothetical RE Liquidation</h5>
+                    <p style="font-size: 11.5px; color: #9ca3af; margin-top: 0px; margin-bottom: 8px; line-height: 1.4;">Liquidating all real estate at the end of the projection to evaluate a fully liquid legacy. Federal capital gains, CA state income tax (if applicable), and State Document/Excise Taxes (WA REET, FL Doc Stamps, CA Transfer Tax) are applied. Real estate is explicitly exempt from the WA state 7% capital gains tax.</p>
+                    <div class="math-box">
+                        + Gross RE Sale: ${formatCurrency(row.reLiquidation.gross)}<br>
+                        - Cost Basis: -${formatCurrency(row.reLiquidation.basis)}<br>
+                        - Primary Residence Exemption: -$500,000<br>
+                        ---------------------------------------------------------<br>
+                        = Taxable RE Gain: <strong>${formatCurrency(row.reLiquidation.taxable)}</strong><br><br>
+                        <span style="color:#f87171;">- Fed Tax (23.8%): -${formatCurrency(row.reLiquidation.fedTax)}</span><br>
+                        <span style="color:#f87171;">- State Income Tax (CA): -${formatCurrency(row.reLiquidation.stateIncTax)}</span><br>
+                        <span style="color:#f87171;">- State Transfer/Excise Taxes: -${formatCurrency(row.reLiquidation.transferTaxes)}</span><br>
+                        ---------------------------------------------------------<br>
+                        = Net RE Proceeds: <strong style="color:#34d399;">${formatCurrency(row.reLiquidation.netProceeds)}</strong><br><br>
+                        + Final Liquid Portfolio: ${formatCurrency(row.liq)}<br>
+                        = New Gross Liquid Estate: <strong>${formatCurrency(row.reLiquidation.newGross)}</strong><br>
+                        <span style="color:#f87171;">- Final Estate Tax: -${formatCurrency(row.reLiquidation.newEstTax)}</span><br>
+                        ---------------------------------------------------------<br>
+                        = Net Liquid Legacy: <strong style="color:#3b82f6;">${formatCurrency(row.reLiquidation.netLiquidLegacy)}</strong>
+                    </div>
+                </div>
+            `;
+            milestoneHtml += liqMilestoneHtml;
 
             let optBlock = '';
             if (row.name !== "WA Baseline" && row.name !== "WA ➔ FL") {
@@ -1375,7 +1487,7 @@
             `;
 
             let detailTr = document.createElement('tr'); detailTr.id = `detail-row-${index}`; detailTr.className = 'details-row';
-            detailTr.innerHTML = `<td colspan="7"><div class="details-content">
+            detailTr.innerHTML = `<td colspan="8"><div class="details-content">
                 <div class="details-overview"><strong>Strategy Logic:</strong> Explores the ${row.name} trajectory considering dynamic explicit rental streams, multi-state domicile tax shifts, and sequential bucket withdrawals.</div>
                 
                 <div class="masonry-grid">
