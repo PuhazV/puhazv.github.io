@@ -8,7 +8,7 @@
     <style>
         body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #0b1120; color: #f3f4f6; padding: 20px; margin: 0; }
         .container { max-width: 98%; margin: auto; background: #111827; padding: 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); border: 1px solid #1f2937; }
-        h1 { text-align: center; color: #f9fafb; margin-bottom: 35px; font-weight: 400; letter-spacing: 0.5px; font-size: 24px; }
+        h1 { text-align: center; color: #f9fafb; margin-bottom: 35px; font-weight: 400; letter-spacing: 0.5px; font-size: 24px; text-transform: uppercase; }
         
         /* Layout Grid */
         .dashboard-grid { display: grid; grid-template-columns: 420px 1fr; gap: 30px; align-items: start; }
@@ -71,7 +71,8 @@
         
         table { width: 100%; border-collapse: separate; border-spacing: 0; }
         th, td { padding: 16px 14px; text-align: left; border-bottom: 1px solid #374151; font-size: 14px; }
-        th { background-color: #111827; color: #9ca3af; font-weight: 600; text-transform: uppercase; font-size: 11px; position: sticky; top: 0; z-index: 10; letter-spacing: 0.5px; white-space: nowrap; }
+        th { background-color: #111827; color: #9ca3af; font-weight: 600; text-transform: uppercase; font-size: 10.5px; position: sticky; top: 0; z-index: 10; letter-spacing: 0.5px; white-space: nowrap; vertical-align: bottom; }
+        #resultsTable thead th { background-color: #1e293b; color: #e2e8f0; font-size: 12px; letter-spacing: 1px; font-weight: 700; border-bottom: 2px solid #3b82f6; padding: 16px 12px; }
         .currency { text-align: right; font-family: 'SF Mono', Consolas, monospace; }
         
         .clickable-row { cursor: pointer; transition: background-color 0.2s ease; background: #1f2937; }
@@ -223,7 +224,7 @@
                 </div>
 
                 <div class="input-group-container">
-                    <div class="input-group-container-title">Scenario: WA Baseline Parameters</div>
+                    <div class="input-group-container-title">Scenario: WA Baseline</div>
                     <div class="input-group-box">
                         <h3>Strategic Roth Conversions</h3>
                         <div class="input-row-2">
@@ -234,7 +235,7 @@
                 </div>
 
                 <div class="input-group-container">
-                    <div class="input-group-container-title">Scenario: WA ➔ CA Parameters</div>
+                    <div class="input-group-container-title">Scenario: WA ➔ CA</div>
                     <div class="input-group-box">
                         <h3>Move & Real Estate</h3>
                         <div class="input-row-2">
@@ -281,7 +282,7 @@
                 </div>
 
                 <div class="input-group-container">
-                    <div class="input-group-container-title">Scenario: WA ➔ FL Parameters</div>
+                    <div class="input-group-container-title">Scenario: WA ➔ FL</div>
                     <div class="input-group-box">
                         <h3>Move & Real Estate</h3>
                         <div class="input-row-2">
@@ -312,7 +313,7 @@
                 </div>
 
                 <div class="input-group-container">
-                    <div class="input-group-container-title">Scenario: WA ➔ FL ➔ CA Parameters</div>
+                    <div class="input-group-container-title">Scenario: WA ➔ FL ➔ CA</div>
                     <div class="input-group-box">
                         <h3>Move & Real Estate</h3>
                         <p style="font-size:11px; color:#6b7280; margin-top:-5px; margin-bottom:15px; font-style:italic;">Uses Base Home Values & Apprec from the isolated scenarios above.</p>
@@ -321,7 +322,7 @@
                             <div class="input-group"><label>FL Move Yr (Dom 1)</label><input type="number" id="p4_flMoveYr" value="2028" oninput="calculate()"></div>
                         </div>
                         <div class="input-row-2">
-                            <div class="input-group"><label>CA Purchase Yr</label><input type="number" id="p4_caPurchYr" value="2029" oninput="calculate()"></div>
+                            <div class="input-group"><label>CA Purchase Yr</label><input type="number" id="p4_caPurchYr" value="2038" oninput="calculate()"></div>
                             <div class="input-group"><label>CA Move Yr (Dom 2)</label><input type="number" id="p4_caMoveYr" value="2038" oninput="calculate()"></div>
                         </div>
                         
@@ -346,11 +347,25 @@
                         <div class="section-label">Scenario Rent Streams (Current Base Value)</div>
                         <div class="input-row-2">
                             <div class="input-group"><label>WA Rent ($/mo) - Post FL Move</label><input type="text" id="p4_waRent" value="6,500" oninput="formatCurrencyInput(this)"></div>
-                            <div class="input-group"><label>CA Rent ($/mo) - Pre CA Move</label><input type="text" id="p4_caRent" value="6,500" oninput="formatCurrencyInput(this)"></div>
+                            <div class="input-group"><label>CA Rent ($/mo) - Pre CA Move</label><input type="text" id="p4_caRent" value="0" oninput="formatCurrencyInput(this)"></div>
                         </div>
                         <div class="input-row-2">
                             <div class="input-group"><label>FL Rent ($/mo) - Pre FL Move</label><input type="text" id="p4_flRentPre" value="5,000" oninput="formatCurrencyInput(this)"></div>
                             <div class="input-group"><label>FL Rent ($/mo) - Post CA Move</label><input type="text" id="p4_flRentPost" value="5,500" oninput="formatCurrencyInput(this)"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-group-container">
+                    <div class="input-group-container-title">Doomsday Fire-Sale</div>
+                    <div class="input-group-box">
+                        <h3>Pre-Death Liquidation</h3>
+                        <p style="font-size:10.5px; color:#9ca3af; margin-top:0px; margin-bottom:12px; line-height: 1.4; background: #1f2937; padding: 10px; border-radius: 6px; border-left: 3px solid #6366f1;">
+                            Stress-test a scenario where you liquidate <strong>ALL assets</strong> (Stocks, 401k, Real Estate) into cash while still alive, incurring maximum top-bracket capital gains and income taxes before the estate tax.
+                        </p>
+                        <div class="input-row-2">
+                            <div class="input-group"><label>Doomsday Year</label><input type="number" id="doomYear" value="2055" oninput="calculate()"></div>
+                            <div class="input-group" title="Override the tracked stock cost basis just for the Doomsday calculation."><label>Stock Basis (%)</label><input type="number" id="doomStockBasis" value="50" oninput="calculate()"></div>
                         </div>
                     </div>
                 </div>
@@ -360,7 +375,8 @@
 
         <div class="outputs-section">
             <div class="chart-container" id="chartWrapper">
-                <canvas id="legacyChart"></canvas>
+                <h3 style="margin-top:0; color:#e2e8f0; font-size:13px; border-bottom:1px solid #374151; padding-bottom:10px; text-transform:uppercase; letter-spacing:1.5px; font-weight:700; text-align:center;">Total Net Legacy Breakdown</h3>
+                <div style="position:relative; height:360px;"><canvas id="legacyChart"></canvas></div>
             </div>
             
             <div class="results-container">
@@ -384,11 +400,11 @@
                             <th>Pathway Strategy</th>
                             <th class="currency">Final Liquid</th>
                             <th class="currency">Final Real Estate</th>
-                            <th class="currency">Total Fed Tax Paid</th>
-                            <th class="currency">Total State Tax Paid</th>
+                            <th class="currency">Life Fed Tax</th>
+                            <th class="currency">Life State Tax</th>
                             <th class="currency">Final Estate Tax</th>
-                            <th class="currency">Net Legacy</th>
-                            <th class="currency" style="color:#3b82f6;">Net Liquid Legacy</th>
+                            <th class="currency" style="color:#3b82f6; border-left:1px solid #374151;">Heirs' Net Legacy<br></th>
+                            <th class="currency" style="color:#fbbf24; border-left:1px solid #374151;">Doomsday Liq<br></th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -397,7 +413,8 @@
 
             <div class="dashboard-bottom-row">
                 <div class="chart-container">
-                    <canvas id="timeSeriesChart"></canvas>
+                    <h3 style="margin-top:0; color:#e2e8f0; font-size:13px; border-bottom:1px solid #374151; padding-bottom:10px; text-transform:uppercase; letter-spacing:1.5px; font-weight:700; text-align:center;">Wealth Trajectory</h3>
+                    <div style="position:relative; height:360px;"><canvas id="timeSeriesChart"></canvas></div>
                 </div>
                 <div class="risk-panel" id="riskPanel"></div>
             </div>
@@ -561,8 +578,14 @@
     }
 
     function calculate() {
-        const startYear = getNum('startYear'); const endYear = getNum('endYear'); const years = endYear - startYear;
-        if(years <= 0) return;
+        let startYear = getNum('startYear'); 
+        let endYear = getNum('endYear'); 
+        if (endYear <= startYear) return;
+        const years = endYear - startYear;
+
+        let rawDoomYear = getNum('doomYear');
+        const doomYear = Math.max(startYear, Math.min(endYear, rawDoomYear)); 
+        const doomStockBasis = getNum('doomStockBasis') / 100;
 
         const age1 = getNum('age1'); const age2 = getNum('age2');
         const ssAge1 = getNum('ssAge1'); const ssAge2 = getNum('ssAge2');
@@ -657,9 +680,9 @@
         const fedNIIT = 0.038; 
         const caStateTax = 0.093; const waCgTax = 0.07;
 
-        // 2026 MFJ federal brackets (IRS Rev. Proc. 2025-32 / OBBBA), inflation-adjusted each year
         const calcFedOrdTax = (ordIncome, yr) => {
             const inf = Math.pow(1 + inflation, yr - startYear);
+            const stdDed = 30000 * inf; // 2026 MFJ standard deduction (OBBBA)
             const brackets = [
                 [24800  * inf, 0.10],
                 [100800 * inf, 0.12],
@@ -669,7 +692,7 @@
                 [768700 * inf, 0.35],
                 [Infinity,     0.37]
             ];
-            let tax = 0, remaining = Math.max(0, ordIncome), prev = 0;
+            let tax = 0, remaining = Math.max(0, ordIncome - stdDed), prev = 0;
             for (const [cap, rate] of brackets) {
                 let chunk = Math.min(remaining, cap - prev);
                 if (chunk <= 0) break;
@@ -681,9 +704,9 @@
             return tax;
         };
 
-        // 2026 MFJ long-term CG brackets (IRS Rev. Proc. 2025-32), stacking logic
         const calcFedCgTax = (cgIncome, totalOrd, yr) => {
             const inf = Math.pow(1 + inflation, yr - startYear);
+            const stdDed = 30000 * inf; // 2026 MFJ standard deduction (OBBBA)
             const cgBrackets = [
                 [98900  * inf, 0.00],
                 [613700 * inf, 0.15],
@@ -691,16 +714,12 @@
             ];
             
             let tax = 0, remaining = Math.max(0, cgIncome);
-            let stackedBase = Math.max(0, totalOrd); 
+            let stackedBase = Math.max(0, totalOrd - stdDed); // taxable ordinary income stacks below CG
             
             let prev = 0;
             for (const [cap, rate] of cgBrackets) {
                 let bracketSize = cap - prev;
-                
-                // How much of the ordinary income falls into this specific bracket?
                 let ordInThisBracket = Math.max(0, Math.min(bracketSize, stackedBase - prev));
-                
-                // The remaining room in this bracket can be filled by CG
                 let cgRoomInBracket = Math.max(0, bracketSize - ordInThisBracket);
                 
                 if (cgRoomInBracket > 0 && remaining > 0) {
@@ -714,8 +733,8 @@
             return tax;
         };
         
-        const waEstateExempt = 6000000; // $3M per person (RCW 83.100.020, eff. Jul 2025) × 2 assumes A/B trust planning
-        const fvFedEstateExempt = 30000000 * Math.pow(1 + inflation, years + 1); // $15M/person OBBBA 2026, MFJ with portability
+        const waEstateExempt = 6000000; 
+        const fvFedEstateExempt = 30000000 * Math.pow(1 + inflation, years + 1); 
 
         const paths = [
             { id: 1, name: "WA Baseline", moves: [] },
@@ -738,22 +757,12 @@
             let hist = []; let cumTax = 0; let milestones = [];
             let moveYrSnap = null; let snapshots = {};
             
-            let cumFedTax = 0;
-            let cumWaTax = 0;
-            let cumCaTax = 0;
-            let cumFlTax = 0;
+            let cumFedTax = 0; let cumWaTax = 0; let cumCaTax = 0; let cumFlTax = 0;
+            let doomsdayData = null;
 
-            let scenResetAmt = 0;
-            let isFullReset = false;
-
-            if (path.id === 2) { 
-                scenResetAmt = getNum('p2_resetAmt'); 
-                if (p2_resetFull) isFullReset = true;
-            }
-            if (path.id === 4) { 
-                scenResetAmt = getNum('p4_resetAmt'); 
-                if (p4_resetFull) isFullReset = true;
-            }
+            let scenResetAmt = 0; let isFullReset = false;
+            if (path.id === 2) { scenResetAmt = getNum('p2_resetAmt'); if (p2_resetFull) isFullReset = true; }
+            if (path.id === 4) { scenResetAmt = getNum('p4_resetAmt'); if (p4_resetFull) isFullReset = true; }
 
             for(let i = 0; i <= years; i++) {
                 let curYr = startYear + i;
@@ -765,8 +774,6 @@
                 let stateColVal = 1.0;
                 if (currentState === 'CA') stateColVal = colCa;
                 if (currentState === 'FL') stateColVal = colFl;
-                
-                // Composite COL Multiplier based on user exposure %
                 let colMult = (1 - colExposure) + (colExposure * stateColVal);
 
                 let inf = Math.pow(1 + inflation, i);
@@ -788,25 +795,20 @@
                 let currentCaVal = p2_homeVal * Math.pow(1 + p2_apprec, i);
                 let currentFlVal = p3_homeVal * Math.pow(1 + p3_apprec, i);
 
-                if (path.id === 2) {
-                    let caRentBase = getNum('p2_caRent') * 12;
-                    let waRentBase = getNum('p2_waRent') * 12;
+                let currentWaVal = waHome * Math.pow(1 + waApprec, i);
 
+                if (path.id === 2) {
+                    let caRentBase = getNum('p2_caRent') * 12; let waRentBase = getNum('p2_waRent') * 12;
                     if (curYr >= p2_purchYr && curYr < p2_moveYr) caRentNet = caRentBase * (1 - mgmtFee) * inf;
                     if (curYr >= p2_moveYr) waRentNet = waRentBase * (1 - mgmtFee) * inf;
                     if (currentState === 'WA' && curYr >= p2_purchYr && waWinterMonths > 0) winterLoss = caWinterRent * waWinterMonths * inf;
                 } else if (path.id === 3) {
-                    let flRentBase = getNum('p3_flRent') * 12;
-                    let waRentBase = getNum('p3_waRent') * 12;
-
+                    let flRentBase = getNum('p3_flRent') * 12; let waRentBase = getNum('p3_waRent') * 12;
                     if (curYr >= p3_purchYr && curYr < p3_moveYr) flRentNet = flRentBase * (1 - mgmtFee) * inf;
                     if (curYr >= p3_moveYr) waRentNet = waRentBase * (1 - mgmtFee) * inf;
                 } else if (path.id === 4) {
-                    let flRentPreBase = getNum('p4_flRentPre') * 12;
-                    let flRentPostBase = getNum('p4_flRentPost') * 12;
-                    let waRentBase = getNum('p4_waRent') * 12;
-                    let caRentBase = getNum('p4_caRent') * 12;
-
+                    let flRentPreBase = getNum('p4_flRentPre') * 12; let flRentPostBase = getNum('p4_flRentPost') * 12;
+                    let waRentBase = getNum('p4_waRent') * 12; let caRentBase = getNum('p4_caRent') * 12;
                     if (curYr >= p4_caPurchYr && curYr < p4_caMoveYr) caRentNet = caRentBase * (1 - mgmtFee) * inf;
                     if (curYr >= p4_flPurchYr && curYr < p4_flMoveYr) flRentNet = flRentPreBase * (1 - mgmtFee) * inf;
                     if (curYr >= p4_caMoveYr) flRentNet = flRentPostBase * (1 - mgmtFee) * inf;
@@ -822,12 +824,8 @@
                 if (path.id === 4 && curYr === p4_flPurchYr) homePurchaseCost += currentFlVal * flDpPct;
 
                 let investPropCarry = 0;
-                if ((path.id === 2 && curYr >= p2_purchYr) || (path.id === 4 && curYr >= p4_caPurchYr)) {
-                    investPropCarry += currentCaVal * p2_carryRate;
-                }
-                if ((path.id === 3 && curYr >= p3_purchYr) || (path.id === 4 && curYr >= p4_flPurchYr)) {
-                    investPropCarry += currentFlVal * p3_carryRate;
-                }
+                if ((path.id === 2 && curYr >= p2_purchYr) || (path.id === 4 && curYr >= p4_caPurchYr)) investPropCarry += currentCaVal * p2_carryRate;
+                if ((path.id === 3 && curYr >= p3_purchYr) || (path.id === 4 && curYr >= p4_flPurchYr)) investPropCarry += currentFlVal * p3_carryRate;
 
                 let mortgageExp = 0;
                 if (path.id === 2 && curYr >= p2_purchYr) mortgageExp += caMortgageP2;
@@ -843,9 +841,7 @@
                     let totalOrdIncome = ord + taxableSS;
                     let magi = totalOrdIncome + cg;
                     let nii = Math.max(0, totalRentNet + cg);
-                    
-                    let niit = 0;
-                    if (magi > 250000) { niit = 0.038 * Math.max(0, Math.min(nii, magi - 250000)); }
+                    let niit = 0; if (magi > 250000) niit = 0.038 * Math.max(0, Math.min(nii, magi - 250000)); 
                     
                     let fedO = calcFedOrdTax(totalOrdIncome, curYr);
                     let fedC = calcFedCgTax(cg, totalOrdIncome, curYr);
@@ -856,42 +852,119 @@
                         ca = (ord + cg) * caStateTax; 
                     } else if (currentState === 'WA') {
                         let taxableWaCg = Math.max(0, cg - waCgExempt);
-                        wa = taxableWaCg * waCgTax; // 7% on all taxable WA CG
-                        wa += Math.max(0, taxableWaCg - 1000000) * 0.029; // +2.9% surtax on portion >$1M (RCW 82.87.040(1)(b), eff. 2025)
-                        // CA taxes non-resident CA-source rental income regardless of domicile
+                        wa = taxableWaCg * waCgTax + Math.max(0, cg - 1000000) * 0.029; 
                         ca = caRentNet * caStateTax;
                     } else if (currentState === 'FL') {
-                        // FL has no income/CG tax; still apply CA non-resident tax on CA-source rent if any
                         ca = caRentNet * caStateTax;
                     }
-                    
                     return { fed: fedTotal, wa: wa, ca: ca, fl: fl, total: fedTotal + wa + ca + fl };
                 };
 
                 let yrFedTax = 0, yrWaTax = 0, yrCaTax = 0, yrFlTax = 0;
                 
                 let currentTaxObj = calcTotalTaxDetails(accOrd, accCg);
-                yrFedTax += currentTaxObj.fed;
-                yrWaTax += currentTaxObj.wa;
-                yrCaTax += currentTaxObj.ca;
-                yrFlTax += currentTaxObj.fl;
+                yrFedTax += currentTaxObj.fed; yrWaTax += currentTaxObj.wa; yrCaTax += currentTaxObj.ca; yrFlTax += currentTaxObj.fl;
                 let currentTotalTax = currentTaxObj.total;
 
                 const applyIncomeDelta = (addOrd, addCg) => {
                     let newTaxObj = calcTotalTaxDetails(accOrd + addOrd, accCg + addCg);
-                    let dFed = newTaxObj.fed - currentTaxObj.fed;
-                    let dWa = newTaxObj.wa - currentTaxObj.wa;
-                    let dCa = newTaxObj.ca - currentTaxObj.ca;
-                    let dFl = newTaxObj.fl - currentTaxObj.fl;
+                    let dFed = newTaxObj.fed - currentTaxObj.fed; let dWa = newTaxObj.wa - currentTaxObj.wa;
+                    let dCa = newTaxObj.ca - currentTaxObj.ca; let dFl = newTaxObj.fl - currentTaxObj.fl;
                     let dTot = newTaxObj.total - currentTaxObj.total;
                     
                     yrFedTax += dFed; yrWaTax += dWa; yrCaTax += dCa; yrFlTax += dFl;
-                    
-                    accOrd += addOrd; accCg += addCg;
-                    currentTaxObj = newTaxObj;
-                    currentTotalTax = newTaxObj.total;
+                    accOrd += addOrd; accCg += addCg; currentTaxObj = newTaxObj; currentTotalTax = newTaxObj.total;
                     return dTot;
                 };
+
+                // Doomsday Liquidation Sub-routine
+                if (curYr === doomYear) {
+                    // Gather Gross Estate values for this specific year
+                    let dValWa = currentWaVal;
+                    let dValCa = (path.id === 2 && curYr >= p2_purchYr) ? currentCaVal : ((path.id===4 && curYr >= p4_caPurchYr) ? currentCaVal : 0);
+                    let dValFl = (path.id === 3 && curYr >= p3_purchYr) ? currentFlVal : ((path.id===4 && curYr >= p4_flPurchYr) ? currentFlVal : 0);
+                    let dGrossRE = dValWa + dValCa + dValFl;
+
+                    let dBasisWa = waHome;
+                    let dBasisCa = 0; let dBasisFl = 0;
+                    if (path.id === 2 && p2_homeVal > 0 && curYr >= p2_purchYr) dBasisCa = caPurchPriceP2;
+                    if (path.id === 3 && p3_homeVal > 0 && curYr >= p3_purchYr) dBasisFl = flPurchPriceP3;
+                    if (path.id === 4) {
+                        if (p2_homeVal > 0 && curYr >= p4_caPurchYr) dBasisCa = caPurchPriceP4;
+                        if (p3_homeVal > 0 && curYr >= p4_flPurchYr) dBasisFl = flPurchPriceP4;
+                    }
+                    let dBasisRE = dBasisWa + dBasisCa + dBasisFl;
+                    let dReGain = Math.max(0, dGrossRE - dBasisRE);
+                    let dWaGain = Math.max(0, dValWa - dBasisWa);
+                    let dInvGain = Math.max(0, (dValCa + dValFl) - (dBasisCa + dBasisFl));
+                    let dTaxableReGain = Math.max(0, dWaGain - 500000) + dInvGain; // §121 exclusion on primary (WA) only
+
+                    let dGrossStocks = port.stocksLow + port.stocksHigh;
+                    let dBasisStocks = dGrossStocks * doomStockBasis; 
+                    let dStockGain = Math.max(0, dGrossStocks - dBasisStocks);
+
+                    let dPretaxOrd = Math.max(0, port.pretax - port.pretaxBasisDol);
+
+                    // Add massive liquidation income to year's base income
+                    let dOrd = accOrd + dPretaxOrd;
+                    let dCg = accCg + dStockGain + dTaxableReGain;
+
+                    // Compute hypothetical massive tax
+                    let simTaxObj = calcTotalTaxDetails(dOrd, dCg);
+                    let deltaFed = simTaxObj.fed - currentTaxObj.fed;
+                    let deltaCa = simTaxObj.ca - currentTaxObj.ca;
+                    let deltaWa = 0;
+
+                    // Fix WA Capital Gains Tax on Doomsday (Exempt RE completely)
+                    if (currentState === 'WA') {
+                        // WA only taxes the stock gain, not the RE gain
+                        let taxableWaCg = Math.max(0, (accCg + dStockGain) - waCgExempt);
+                        deltaWa = taxableWaCg * waCgTax + Math.max(0, (accCg + dStockGain) - 1000000) * 0.029;
+                        // Subtract whatever WA tax was already paid in the base calc
+                        deltaWa = Math.max(0, deltaWa - currentTaxObj.wa);
+                    }
+
+                    // Apply Transfer Taxes
+                    let waReet = 0;
+                    if (dValWa > 0) {
+                        let remaining = dValWa;
+                        let tier1 = Math.min(remaining, 500000); waReet += tier1 * 0.011; remaining -= tier1;
+                        if (remaining > 0) { let tier2 = Math.min(remaining, 1000000); waReet += tier2 * 0.0128; remaining -= tier2; }
+                        if (remaining > 0) { let tier3 = Math.min(remaining, 1500000); waReet += tier3 * 0.0275; remaining -= tier3; }
+                        if (remaining > 0) { waReet += remaining * 0.03; }
+                        waReet += dValWa * 0.005; 
+                    }
+                    let flDocStamp = dValFl > 0 ? dValFl * 0.007 : 0;
+                    let caTransferTax = dValCa > 0 ? dValCa * 0.0011 : 0;
+                    let totalTransferTaxes = waReet + flDocStamp + caTransferTax;
+
+                    let totalDoomsdayTax = deltaFed + deltaCa + deltaWa + totalTransferTaxes;
+                    let grossLiquidatedValue = dGrossRE + dGrossStocks + port.pretax + port.roth;
+                    let netProceedsPreEstate = grossLiquidatedValue - totalDoomsdayTax;
+
+                    // Apply Estate Tax to the Cash Pile
+                    let dFedEstTax = netProceedsPreEstate > fvFedEstateExempt ? (netProceedsPreEstate - fvFedEstateExempt) * 0.40 : 0;
+                    let dWaEstTax = 0;
+                    if (currentState === 'WA' && netProceedsPreEstate > waEstateExempt) {
+                        let t = netProceedsPreEstate - waEstateExempt;
+                        const waBrackets = [[1e6,0.10],[1e6,0.14],[1e6,0.15],[1e6,0.16],[2e6,0.18],[1e6,0.19],[2e6,0.195],[Infinity,0.20]];
+                        for (const [cap, rate] of waBrackets) { let chunk = Math.min(t, cap); dWaEstTax += chunk * rate; t -= chunk; if (t <= 0) break; }
+                    }
+
+                    doomsdayData = {
+                        year: doomYear,
+                        grossEstate: grossLiquidatedValue,
+                        reGain: dReGain,
+                        stockGain: dStockGain,
+                        fedCgOrd: deltaFed,
+                        stateCgOrd: deltaCa + deltaWa,
+                        transferTaxes: totalTransferTaxes,
+                        totalIncomeTaxes: deltaFed + deltaCa + deltaWa,
+                        netCashPreEstate: netProceedsPreEstate,
+                        estateTax: dFedEstTax + dWaEstTax,
+                        finalNetCash: netProceedsPreEstate - (dFedEstTax + dWaEstTax)
+                    };
+                }
 
                 let netCashFromBaseIncome = preTaxInc + totalRentNet + ssInc - currentTotalTax;
                 let totalExp = baseSpend + medExp + carryCost + winterLoss + investPropCarry + homePurchaseCost + mortgageExp;
@@ -901,37 +974,21 @@
                 let isStepUpTriggered = false; let isConvTriggered = false;
                 let executedConv = 0; let executedCG = 0;
 
-                // Optimization & Resets Engine
-                let isFullResetActive = false;
-                let isCustomResetActive = false;
-                let annualReset = 0;
-                let remainingRunway = 0;
+                let isFullResetActive = false; let isCustomResetActive = false; let annualReset = 0; let remainingRunway = 0;
 
                 if (path.id === 2) {
                     if (isFullReset) {
                         let targetMoveYrLocal = p2_moveYr;
-                        if (curYr >= p2_resetStartYr && curYr < targetMoveYrLocal) {
-                            isFullResetActive = true;
-                            remainingRunway = targetMoveYrLocal - curYr;
-                        }
+                        if (curYr >= p2_resetStartYr && curYr < targetMoveYrLocal) { isFullResetActive = true; remainingRunway = targetMoveYrLocal - curYr; }
                     } else {
-                        if (curYr >= p2_resetStartYr && curYr < p2_resetStartYr + p2_resetRunway) {
-                            isCustomResetActive = true;
-                            annualReset = p2_resetRunway > 0 ? scenResetAmt / p2_resetRunway : 0;
-                        }
+                        if (curYr >= p2_resetStartYr && curYr < p2_resetStartYr + p2_resetRunway) { isCustomResetActive = true; annualReset = p2_resetRunway > 0 ? scenResetAmt / p2_resetRunway : 0; }
                     }
                 } else if (path.id === 4) {
                     if (isFullReset) {
                         let targetMoveYrLocal = p4_caMoveYr;
-                        if (curYr >= p4_resetStartYr && curYr < targetMoveYrLocal) {
-                            isFullResetActive = true;
-                            remainingRunway = targetMoveYrLocal - curYr;
-                        }
+                        if (curYr >= p4_resetStartYr && curYr < targetMoveYrLocal) { isFullResetActive = true; remainingRunway = targetMoveYrLocal - curYr; }
                     } else {
-                        if (curYr >= p4_resetStartYr && curYr < p4_resetStartYr + p4_resetRunway) {
-                            isCustomResetActive = true;
-                            annualReset = p4_resetRunway > 0 ? scenResetAmt / p4_resetRunway : 0;
-                        }
+                        if (curYr >= p4_resetStartYr && curYr < p4_resetStartYr + p4_resetRunway) { isCustomResetActive = true; annualReset = p4_resetRunway > 0 ? scenResetAmt / p4_resetRunway : 0; }
                     }
                 }
 
@@ -940,106 +997,56 @@
                         let convertAmt = port.pretax / remainingRunway;
                         let gainRatio = 1 - (port.pretaxBasisDol / port.pretax);
                         if (isNaN(gainRatio) || gainRatio < 0) gainRatio = 0;
-                        
                         let taxableConv = convertAmt * gainRatio;
                         let convTax = applyIncomeDelta(taxableConv, 0); 
-                        
-                        port.pretax -= convertAmt; port.roth += convertAmt;
-                        let basisDrawn = convertAmt * (1 - gainRatio);
-                        port.pretaxBasisDol -= basisDrawn;
-                        
-                        optTax += convTax;
-                        isConvTriggered = true;
-                        executedConv = convertAmt;
+                        port.pretax -= convertAmt; port.roth += convertAmt; port.pretaxBasisDol -= (convertAmt * (1 - gainRatio));
+                        optTax += convTax; isConvTriggered = true; executedConv = convertAmt;
                     }
-
                     if (port.stocksLow > 0) {
                         let sellAmt = port.stocksLow / remainingRunway;
                         let gainRatio = 1 - (port.stocksLowBasis / port.stocksLow);
                         if (isNaN(gainRatio) || gainRatio < 0) gainRatio = 0;
-                        
                         if (gainRatio > 0) {
-                            let basisSold = sellAmt * (1 - gainRatio);
-                            let gain = sellAmt * gainRatio;
-                            
-                            let harvestTax = applyIncomeDelta(0, gain);
-                            optTax += harvestTax;
-                            
-                            port.stocksLow -= sellAmt;
-                            port.stocksLowBasis -= basisSold;
-                            port.stocksHigh += sellAmt;
-                            port.stocksHighBasis += sellAmt;
-                            isStepUpTriggered = true;
-                            executedCG = sellAmt;
+                            let harvestTax = applyIncomeDelta(0, sellAmt * gainRatio);
+                            optTax += harvestTax; port.stocksLow -= sellAmt; port.stocksLowBasis -= (sellAmt * (1 - gainRatio));
+                            port.stocksHigh += sellAmt; port.stocksHighBasis += sellAmt; isStepUpTriggered = true; executedCG = sellAmt;
                         } else {
-                            port.stocksLow -= sellAmt;
-                            port.stocksLowBasis -= sellAmt;
-                            port.stocksHigh += sellAmt;
-                            port.stocksHighBasis += sellAmt;
-                            executedCG = sellAmt;
+                            port.stocksLow -= sellAmt; port.stocksLowBasis -= sellAmt; port.stocksHigh += sellAmt; port.stocksHighBasis += sellAmt; executedCG = sellAmt;
                         }
                     }
                 } else if (isCustomResetActive && annualReset > 0) {
                     let remainingReset = annualReset;
-
                     if (remainingReset > 0 && port.pretax > 0) {
                         let convertAmt = Math.min(remainingReset, port.pretax);
                         let gainRatio = 1 - (port.pretaxBasisDol / port.pretax);
                         if (isNaN(gainRatio) || gainRatio < 0) gainRatio = 0;
-                        
                         let taxableConv = convertAmt * gainRatio;
                         let convTax = applyIncomeDelta(taxableConv, 0); 
-                        
-                        port.pretax -= convertAmt; port.roth += convertAmt;
-                        let basisDrawn = convertAmt * (1 - gainRatio);
-                        port.pretaxBasisDol -= basisDrawn;
-                        
-                        optTax += convTax;
-                        isConvTriggered = true;
-                        remainingReset -= convertAmt;
-                        executedConv = convertAmt;
+                        port.pretax -= convertAmt; port.roth += convertAmt; port.pretaxBasisDol -= (convertAmt * (1 - gainRatio));
+                        optTax += convTax; isConvTriggered = true; remainingReset -= convertAmt; executedConv = convertAmt;
                     }
-
                     if (remainingReset > 0 && port.stocksLow > 0) {
                         let gainRatio = 1 - (port.stocksLowBasis / port.stocksLow);
                         if (isNaN(gainRatio) || gainRatio < 0) gainRatio = 0;
-                        
                         if (gainRatio > 0) {
                             let sellAmt = Math.min(remainingReset, port.stocksLow);
-                            let basisSold = sellAmt * (1 - gainRatio);
-                            let gain = sellAmt * gainRatio;
-                            
-                            let harvestTax = applyIncomeDelta(0, gain);
-                            optTax += harvestTax;
-                            
-                            port.stocksLow -= sellAmt;
-                            port.stocksLowBasis -= basisSold;
-                            port.stocksHigh += sellAmt;
-                            port.stocksHighBasis += sellAmt;
-                            isStepUpTriggered = true;
-                            executedCG = sellAmt;
+                            let harvestTax = applyIncomeDelta(0, sellAmt * gainRatio);
+                            optTax += harvestTax; port.stocksLow -= sellAmt; port.stocksLowBasis -= (sellAmt * (1 - gainRatio));
+                            port.stocksHigh += sellAmt; port.stocksHighBasis += sellAmt; isStepUpTriggered = true; executedCG = sellAmt;
                         }
                     }
                 } else if (path.id === 1 || path.id === 3) {
                     let convYrs = (path.id === 1) ? p1_convYrs : (path.id === 3 ? p3_convYrs : 0);
                     let convStart = (path.id === 1) ? p1_convStartYr : (path.id === 3 ? p3_convStartYr : startYear);
-                    
                     if (convYrs > 0 && curYr >= convStart && curYr < convStart + convYrs && port.pretax > 0) {
                         let remainingConvYrs = (convStart + convYrs) - curYr;
                         let convertAmt = port.pretax / remainingConvYrs;
                         let gainRatio = 1 - (port.pretaxBasisDol / port.pretax);
                         if (isNaN(gainRatio) || gainRatio < 0) gainRatio = 0;
-                        
                         let taxableConv = convertAmt * gainRatio;
                         let convTax = applyIncomeDelta(taxableConv, 0);
-                        
-                        port.pretax -= convertAmt; port.roth += convertAmt;
-                        let basisDrawn = convertAmt * (1 - gainRatio);
-                        port.pretaxBasisDol -= basisDrawn;
-                        
-                        optTax += convTax;
-                        isConvTriggered = true;
-                        executedConv = convertAmt;
+                        port.pretax -= convertAmt; port.roth += convertAmt; port.pretaxBasisDol -= (convertAmt * (1 - gainRatio));
+                        optTax += convTax; isConvTriggered = true; executedConv = convertAmt;
                     }
                 }
 
@@ -1057,8 +1064,7 @@
                         
                         let maxGross = port[bucket];
                         let maxGain = maxGross * gainRatio;
-                        let simOrd = isPretax ? maxGain : 0;
-                        let simCg = isStock ? maxGain : 0;
+                        let simOrd = isPretax ? maxGain : 0; let simCg = isStock ? maxGain : 0;
                         
                         let simTax = calcTotalTaxDetails(accOrd + simOrd, accCg + simCg).total - currentTaxObj.total;
                         let maxNet = maxGross - simTax;
@@ -1072,23 +1078,14 @@
                             return { gross: maxGross, tax: actualTax, net: maxNet };
                         }
                         
-                        let low = netNeed, high = maxGross;
-                        let targetGross = low;
+                        let low = netNeed, high = maxGross; let targetGross = low;
                         for(let iter=0; iter<40; iter++) {
                             let mid = (low + high) / 2;
                             let midGain = mid * gainRatio; 
-                            let midOrd = isPretax ? midGain : 0;
-                            let midCg = isStock ? midGain : 0;
-                            
-                            let testTax = calcTotalTaxDetails(accOrd + midOrd, accCg + midCg).total - currentTaxObj.total;
+                            let testTax = calcTotalTaxDetails(accOrd + (isPretax?midGain:0), accCg + (isStock?midGain:0)).total - currentTaxObj.total;
                             let testNet = mid - testTax;
                             
-                            if (testNet >= netNeed) {
-                                targetGross = mid;
-                                high = mid;
-                            } else {
-                                low = mid;
-                            }
+                            if (testNet >= netNeed) { targetGross = mid; high = mid; } else { low = mid; }
                         }
                         
                         let targetGain = targetGross * gainRatio;
@@ -1112,14 +1109,8 @@
                         for (let iter=0; iter<4 && need > 0.01; iter++) {
                             let totalLiq = port.stocksLow + port.stocksHigh + port.pretax + port.roth;
                             if (totalLiq <= 0) break;
-                            
-                            let stkPct = (port.stocksLow + port.stocksHigh)/totalLiq; 
-                            let prePct = port.pretax/totalLiq; 
-                            let rthPct = port.roth/totalLiq;
-                            
-                            let stockNeed = need * stkPct;
-                            let preNeed = need * prePct;
-                            let rothNeed = need * rthPct;
+                            let stkPct = (port.stocksLow + port.stocksHigh)/totalLiq; let prePct = port.pretax/totalLiq; let rthPct = port.roth/totalLiq;
+                            let stockNeed = need * stkPct; let preNeed = need * prePct; let rothNeed = need * rthPct;
                             
                             if(rothNeed > 0) { let drawR = Math.min(rothNeed, port.roth); drawRoth += drawR; port.roth -= drawR; need -= drawR; }
                             if(stockNeed > 0) {
@@ -1134,41 +1125,29 @@
                         }
                     }
                 } else if (shortfall < 0) {
-                    port.stocksHigh += Math.abs(shortfall); 
-                    port.stocksHighBasis += Math.abs(shortfall); 
+                    port.stocksHigh += Math.abs(shortfall); port.stocksHighBasis += Math.abs(shortfall); 
                 }
 
-                port.stocksLow *= (1 + r); 
-                port.stocksHigh *= (1 + r); 
-                port.pretax *= (1 + r); 
-                port.roth *= (1 + r);
+                port.stocksLow *= (1 + r); port.stocksHigh *= (1 + r); port.pretax *= (1 + r); port.roth *= (1 + r);
  
                 let valWa = waHome * Math.pow(1 + waApprec, i + 1);
                 let endCaVal = p2_homeVal * Math.pow(1 + p2_apprec, i + 1);
                 let endFlVal = p3_homeVal * Math.pow(1 + p3_apprec, i + 1);
                 let valCaChart = (path.id === 2 && curYr >= p2_purchYr) ? endCaVal : ((path.id===4 && curYr >= p4_caPurchYr) ? endCaVal : 0);
                 let valFlChart = (path.id === 3 && curYr >= p3_purchYr) ? endFlVal : ((path.id===4 && curYr >= p4_flPurchYr) ? endFlVal : 0);
-                
                 let finalReChart = valWa + valCaChart + valFlChart;
-                cumTax += currentTotalTax;
-                cumFedTax += yrFedTax;
-                cumWaTax += yrWaTax;
-                cumCaTax += yrCaTax;
-                cumFlTax += yrFlTax;
-
+                
+                cumTax += currentTotalTax; cumFedTax += yrFedTax; cumWaTax += yrWaTax; cumCaTax += yrCaTax; cumFlTax += yrFlTax;
                 let endTotalLiq = port.stocksLow + port.stocksHigh + port.pretax + port.roth;
                 
                 let snap = {
                     year: curYr, age1: curAge1, age2: curAge2, state: currentState, spend: baseSpend, medExp: medExp, carryCost: investPropCarry, mortgageExp: mortgageExp, purchaseCost: homePurchaseCost, winterLoss: winterLoss,
-                    ssInc: ssInc, preTaxInc: preTaxInc, rentInc: totalRentNet,
-                    waRentCollected: waRentNet, caRentCollected: caRentNet, flRentCollected: flRentNet,
-                    shortfall: shortfall, rentTax: currentTaxObj.total - optTax - taxStocks - tax401k, optTax: optTax,
-                    executedConv: executedConv, executedCG: executedCG,
+                    ssInc: ssInc, preTaxInc: preTaxInc, rentInc: totalRentNet, waRentCollected: waRentNet, caRentCollected: caRentNet, flRentCollected: flRentNet,
+                    shortfall: shortfall, rentTax: currentTaxObj.total - optTax - taxStocks - tax401k, optTax: optTax, executedConv: executedConv, executedCG: executedCG,
                     drawStocks: drawStocks, taxStocks: taxStocks, draw401k: draw401k, tax401k: tax401k, drawRoth: drawRoth,
                     taxTotal: currentTotalTax, fedTax: yrFedTax, waTax: yrWaTax, caTax: yrCaTax, flTax: yrFlTax, 
                     stocks: port.stocksLow + port.stocksHigh, pretax: port.pretax, roth: port.roth,
-                    reValue: finalReChart,
-                    unharvestedGains: Math.max(0, port.stocksLow - port.stocksLowBasis)
+                    reValue: finalReChart, unharvestedGains: Math.max(0, port.stocksLow - port.stocksLowBasis)
                 };
                 hist.push(snap);
 
@@ -1176,11 +1155,9 @@
                 if (path.moves.length > 0 && curYr === path.moves[path.moves.length-1].yr) moveYrSnap = snap;
 
                 let triggers = []; let expText = "";
-                
                 if (i === 0) { triggers.push("Baseline Year"); expText += "Initial retirement year establishing baseline spending and asset drawdowns. "; }
                 if (curYr > startYear && currentState !== prevState) {
-                    triggers.push(`Moved to ${currentState}`);
-                    expText += `Shifted domicile to ${currentState}, directly altering state income and capital gains tax liabilities for future withdrawals. `;
+                    triggers.push(`Moved to ${currentState}`); expText += `Shifted domicile to ${currentState}, directly altering state income and capital gains tax liabilities for future withdrawals. `;
                 }
                 if (homePurchaseCost > 0) {
                     if (path.id === 2 || (path.id === 4 && curYr === p4_caPurchYr)) { triggers.push("CA Property Purchased"); expText += "Acquired CA Property. "; }
@@ -1188,25 +1165,12 @@
                     expText += `Significant capital outflow to fund the real estate acquisition, drawn directly from the liquid portfolio sequence. `;
                 }
                 if (isStepUpTriggered && !triggers.includes("Baseline Year")) {
-                    triggers.push("Basis Step-Up");
-                    expText += `Executed an amortized basis step-up prior to moving. Taxable gains were harvested to reset basis before entering California's high-tax environment. `;
+                    triggers.push("Basis Step-Up"); expText += `Executed an amortized basis step-up prior to moving. Taxable gains were harvested to reset basis before entering California's high-tax environment. `;
                 }
                 if (isConvTriggered && !triggers.includes("Basis Step-Up") && !triggers.includes("Baseline Year")) {
-                    triggers.push("Roth Conversion");
-                    expText += `Executed a smooth, amortized pre-tax to Roth conversion to mitigate future RMDs and state income tax. `;
+                    triggers.push("Roth Conversion"); expText += `Executed a smooth, amortized pre-tax to Roth conversion to mitigate future RMDs and state income tax. `;
                 }
-                if (i > 0 && (curAge1 === ssAge1 || curAge2 === ssAge2)) {
-                    triggers.push("Social Security Commences");
-                    expText += `Social Security benefits begin, acting as a cash-flow shield and noticeably reducing the net cash needed from the liquid portfolio. `;
-                }
-                if (i > 0 && (curAge1 === medAge || curAge2 === medAge)) {
-                    triggers.push("Medicare Premiums Triggered");
-                    expText += `Medicare premiums begin for one or both spouses, slightly increasing baseline carrying expenses. `;
-                }
-
-                if (triggers.length > 0) {
-                    milestones.push({ title: `Year ${curYr} (${currentState}) - ${triggers.join(", ")}`, explanation: expText, data: snap });
-                }
+                if (triggers.length > 0) milestones.push({ title: `Year ${curYr} (${currentState}) - ${triggers.join(", ")}`, explanation: expText, data: snap });
 
                 if (pIdx===0) timeSeries.p1.push(endTotalLiq + finalReChart);
                 if (pIdx===1) timeSeries.p2.push(endTotalLiq + finalReChart);
@@ -1225,43 +1189,10 @@
             let finalEstateRE = finalWa + finalCa + finalFl;
 
             let finalEstate = port.stocksLow + port.stocksHigh + port.pretax + port.roth + finalEstateRE;
-            let fedEstTax = finalEstate > fvFedEstateExempt ? (finalEstate - fvFedEstateExempt) * 0.40 : 0;
-            let waEstTax = 0;
-            if (currentState === 'WA' && finalEstate > waEstateExempt) {
-                let t = finalEstate - waEstateExempt;
-                const waBrackets = [[1e6,0.10],[1e6,0.14],[1e6,0.15],[1e6,0.16],[2e6,0.18],[1e6,0.19],[2e6,0.195],[Infinity,0.20]]; // RCW 83.100.040 (pre-2025 c 421 structure, reverted 2026)
-                for (const [cap, rate] of waBrackets) { let chunk = Math.min(t, cap); waEstTax += chunk * rate; t -= chunk; if (t <= 0) break; }
-            }
-            let totalEstTax = fedEstTax + waEstTax;
-
-            // RE Liquidation end-of-simulation logic
-            let basisWa = waHome;
-            let basisCa = 0; let basisFl = 0;
-            if (path.id === 2 && p2_homeVal > 0) basisCa = caPurchPriceP2;
-            if (path.id === 3 && p3_homeVal > 0) basisFl = flPurchPriceP3;
-            if (path.id === 4) {
-                if (p2_homeVal > 0) basisCa = caPurchPriceP4;
-                if (p3_homeVal > 0) basisFl = flPurchPriceP4;
-            }
             
-            let totalReBasis = basisWa + basisCa + basisFl;
-            let totalReGain = Math.max(0, finalEstateRE - totalReBasis);
-            let taxableReGain = Math.max(0, totalReGain - 500000); // 500k primary residence exemption
-            
-            let reFedTax = taxableReGain * 0.238; // Top LTCG bracket + NIIT
-            
-            // State Income / Capital Gains taxes on real estate
-            let reStateIncTax = 0;
-            if (currentState === 'CA') {
-                // CA taxes worldwide income for residents
-                reStateIncTax = taxableReGain * caStateTax;
-            } else if (finalCa > 0) {
-                // CA taxes CA-source income for non-residents
-                let caGain = Math.max(0, finalCa - basisCa);
-                reStateIncTax = caGain * caStateTax;
-            }
-
-            // WA Real Estate Excise Tax (REET) on the gross sale of the WA property
+            // Post-Death Liquidation (Heirs Reality)
+            // 1. RE gets Step-Up in Basis (CG Taxes = $0)
+            // 2. Transfer taxes still apply to the gross sale value
             let waReet = 0;
             if (finalWa > 0) {
                 let remaining = finalWa;
@@ -1271,58 +1202,45 @@
                 if (remaining > 0) { waReet += remaining * 0.03; }
                 waReet += finalWa * 0.005; // 0.5% base local WA REET
             }
-
-            // FL Documentary Stamp Tax (~0.70% on gross sale of FL property)
-            let flDocStamp = 0;
-            if (finalFl > 0) {
-                flDocStamp = finalFl * 0.007;
-            }
-
-            // CA Documentary Transfer Tax (~0.11% on gross sale of CA property, baseline state rate)
-            let caTransferTax = 0;
-            if (finalCa > 0) {
-                caTransferTax = finalCa * 0.0011;
-            }
-
+            let flDocStamp = finalFl > 0 ? finalFl * 0.007 : 0;
+            let caTransferTax = finalCa > 0 ? finalCa * 0.0011 : 0;
             let totalTransferTaxes = waReet + flDocStamp + caTransferTax;
-            let reStateTaxTotal = reStateIncTax + totalTransferTaxes;
-            
-            let netReProceeds = finalEstateRE - reFedTax - reStateTaxTotal;
-            
-            let newGrossEstate = port.stocksLow + port.stocksHigh + port.pretax + port.roth + netReProceeds;
-            let newFedEstTax = newGrossEstate > fvFedEstateExempt ? (newGrossEstate - fvFedEstateExempt) * 0.40 : 0;
-            let newWaEstTax = 0;
-            if (currentState === 'WA' && newGrossEstate > waEstateExempt) {
-                let t = newGrossEstate - waEstateExempt;
-                const waBrackets = [[1e6,0.10],[1e6,0.14],[1e6,0.15],[1e6,0.16],[2e6,0.18],[1e6,0.19],[2e6,0.195],[Infinity,0.20]]; // RCW 83.100.040 (pre-2025 c 421 structure, reverted 2026)
-                for (const [cap, rate] of waBrackets) { let chunk = Math.min(t, cap); newWaEstTax += chunk * rate; t -= chunk; if (t <= 0) break; }
+
+            // 3. Estate Tax applies
+            // Usually, selling expenses (transfer taxes) are deductible from the gross estate. 
+            // We subtract them before applying the 40% estate tax.
+            let postDeathGross = finalEstate - totalTransferTaxes;
+
+            let fedEstTax = postDeathGross > fvFedEstateExempt ? (postDeathGross - fvFedEstateExempt) * 0.40 : 0;
+            let waEstTax = 0;
+            if (currentState === 'WA' && postDeathGross > waEstateExempt) {
+                let t = postDeathGross - waEstateExempt;
+                const waBrackets = [[1e6,0.10],[1e6,0.14],[1e6,0.15],[1e6,0.16],[2e6,0.18],[1e6,0.19],[2e6,0.195],[Infinity,0.20]]; 
+                for (const [cap, rate] of waBrackets) { let chunk = Math.min(t, cap); waEstTax += chunk * rate; t -= chunk; if (t <= 0) break; }
             }
-            let newTotalEstTax = newFedEstTax + newWaEstTax;
-            let netLiquidLegacy = newGrossEstate - newTotalEstTax;
+            let totalEstTax = fedEstTax + waEstTax;
             
-            let reLiquidation = {
-                gross: finalEstateRE,
-                basis: totalReBasis,
-                gain: totalReGain,
-                taxable: taxableReGain,
-                fedTax: reFedTax,
-                stateIncTax: reStateIncTax,
+            // 4. Final Net to Heirs
+            let heirsNetLegacy = postDeathGross - totalEstTax;
+            
+            let heirsReality = {
+                gross: finalEstate,
                 transferTaxes: totalTransferTaxes,
-                stateTaxTotal: reStateTaxTotal,
-                netProceeds: netReProceeds,
-                newGross: newGrossEstate,
-                newEstTax: newTotalEstTax,
-                netLiquidLegacy: netLiquidLegacy
+                postDeathGross: postDeathGross,
+                fedEstTax: fedEstTax,
+                waEstTax: waEstTax,
+                totEstTax: totalEstTax,
+                netLegacy: heirsNetLegacy
             };
 
             results.push({ 
                 name: path.name, liq: port.stocksLow + port.stocksHigh + port.pretax + port.roth, 
-                re: finalEstateRE, tax: cumTax + totalEstTax, net: finalEstate - totalEstTax, 
-                hist: hist, milestones: milestones, reLiquidation: reLiquidation,
+                re: finalEstateRE, tax: cumTax + totalEstTax, 
+                hist: hist, milestones: milestones, 
+                heirsReality: heirsReality, doomsdayData: doomsdayData,
                 cumTaxes: { fed: cumFedTax, wa: cumWaTax, ca: cumCaTax, fl: cumFlTax, totalState: cumWaTax + cumCaTax + cumFlTax },
                 optPerf: { 
-                    amt: scenResetAmt, 
-                    isFullReset: isFullReset, 
+                    amt: scenResetAmt, isFullReset: isFullReset, 
                     convYrs: (path.id === 1 ? p1_convYrs : (path.id === 3 ? p3_convYrs : 0)), 
                     convStart: (path.id === 1 ? p1_convStartYr : (path.id === 3 ? p3_convStartYr : null)),
                     unharvested: moveYrSnap ? moveYrSnap.unharvestedGains : 0,
@@ -1341,7 +1259,7 @@
         results.forEach((row, index) => {
             labels.push(row.name); liqData.push(row.liq); reData.push(row.re); 
             totalTaxData.push(-row.tax); 
-            netData.push(row.net);
+            netData.push(row.heirsReality.netLegacy);
             
             const deflator = Math.pow(1 + inflation, years);
             const pp = (val) => `<div style="font-size: 11.5px; color: #64748b; margin-top: 5px; font-weight: 400; font-family: 'SF Mono', monospace;">${formatCurrency(val / deflator)}</div>`;
@@ -1351,7 +1269,6 @@
                 <div>Moves: ${row.moves.length > 0 ? row.moves.map(m => `To ${m.state} (${m.yr})`).join(', ') : 'Remains in WA'}</div>
             </div>`;
 
-            // Setup Hover Tooltips
             let finalSnap = row.hist[row.hist.length - 1];
             let rothComp = row.hist.find(s => s.pretax < 100);
             let rothCompText = rothComp && row.hist[0].pretax > 100 ? rothComp.year : (row.hist[0].pretax <= 100 ? 'N/A' : 'Not Depleted');
@@ -1361,7 +1278,10 @@
             let fedTaxHover = `Total Lifetime Federal Income Tax Paid (excluding Estate).\nIncludes standard brackets and NIIT.`;
             let stateTaxHover = `WA: ${formatCurrency(row.cumTaxes.wa)}\nCA: ${formatCurrency(row.cumTaxes.ca)}\nFL: ${formatCurrency(row.cumTaxes.fl)}`;
             let estTaxHover = `Federal: ${formatCurrency(row.estMath.fedTax)}\nWA State: ${formatCurrency(row.estMath.waTax)}`;
-            let liqLegacyHover = `RE Liquidation Details:\nGross RE Sale: ${formatCurrency(row.reLiquidation.gross)}\nCost Basis: ${formatCurrency(row.reLiquidation.basis)}\nPrimary Exemption: $500,000\nTaxable Gain: ${formatCurrency(row.reLiquidation.taxable)}\nFed Tax: ${formatCurrency(row.reLiquidation.fedTax)}\nState Income Tax: ${formatCurrency(row.reLiquidation.stateIncTax)}\nState Transfer/Doc/REET: ${formatCurrency(row.reLiquidation.transferTaxes)}\nNet Sale Proceeds: ${formatCurrency(row.reLiquidation.netProceeds)}\nRe-calculated Estate Tax: ${formatCurrency(row.reLiquidation.newEstTax)}`;
+            
+            let doomHover = row.doomsdayData ? `Doomsday Pre-Death Fire Sale (Year ${row.doomsdayData.year}):\nGross Liquidated Value: ${formatCurrency(row.doomsdayData.grossEstate)}\nFederal Income/CG Tax: ${formatCurrency(row.doomsdayData.fedCgOrd)}\nState Income/CG Tax: ${formatCurrency(row.doomsdayData.stateCgOrd)}\nRE Transfer/Doc Taxes: ${formatCurrency(row.doomsdayData.transferTaxes)}\nSubtotal Net Cash: ${formatCurrency(row.doomsdayData.netCashPreEstate)}\nFinal Estate Tax on Cash: ${formatCurrency(row.doomsdayData.estateTax)}\nNet Proceed: ${formatCurrency(row.doomsdayData.finalNetCash)}` : 'N/A';
+            
+            let heirsHover = `Post-Death Transfer (Heirs' Reality):\nGross Estate: ${formatCurrency(row.heirsReality.gross)}\nRE Capital Gains Tax: $0 (Step-Up in Basis)\nState Transfer/Doc/REET: ${formatCurrency(row.heirsReality.transferTaxes)}\nEstate Tax: ${formatCurrency(row.heirsReality.totEstTax)}\nNet Legacy to Heirs: ${formatCurrency(row.heirsReality.netLegacy)}`;
 
             let tr = document.createElement('tr');
             tr.id = `main-row-${index}`; tr.className = 'clickable-row'; tr.onclick = () => toggleRow(index);
@@ -1387,21 +1307,21 @@
                     ${pp(row.cumTaxes.totalState)}
                 </td>
                 <td class="currency" style="vertical-align: top; padding-top: 20px;" title="${estTaxHover}">
-                    <div style="font-size: 14.5px; font-weight: 600; color: #f87171">${formatCurrency(row.estMath.totTax)}</div>
-                    ${pp(row.estMath.totTax)}
+                    <div style="font-size: 14.5px; font-weight: 600; color: #f87171">${formatCurrency(row.heirsReality.totEstTax)}</div>
+                    ${pp(row.heirsReality.totEstTax)}
                 </td>
-                <td class="currency" style="vertical-align: top; padding-top: 20px;">
-                    <div style="font-size: 15px; font-weight: 700; color: #34d399">${formatCurrency(row.net)}</div>
-                    ${pp(row.net)}
+                <td class="currency" style="vertical-align: top; padding-top: 20px; background: rgba(59, 130, 246, 0.05); border-left: 1px solid #374151;" title="${heirsHover}">
+                    <div style="font-size: 15px; font-weight: 700; color: #60a5fa">${formatCurrency(row.heirsReality.netLegacy)}</div>
+                    ${pp(row.heirsReality.netLegacy)}
                 </td>
-                <td class="currency" style="vertical-align: top; padding-top: 20px; background: rgba(59, 130, 246, 0.05);" title="${liqLegacyHover}">
-                    <div style="font-size: 15px; font-weight: 700; color: #60a5fa">${formatCurrency(row.reLiquidation.netLiquidLegacy)}</div>
-                    ${pp(row.reLiquidation.netLiquidLegacy)}
+                <td class="currency" style="vertical-align: top; padding-top: 20px; background: rgba(251, 191, 36, 0.05); border-left: 1px solid #374151;" title="${doomHover}">
+                    <div style="font-size: 15px; font-weight: 700; color: #fbbf24">${row.doomsdayData ? formatCurrency(row.doomsdayData.finalNetCash) : 'N/A'}</div>
+                    ${row.doomsdayData ? pp(row.doomsdayData.finalNetCash) : ''}
                 </td>
             `;
             tbody.appendChild(tr);
 
-            let estMsg = row.estMath.waTax > 0 ? `<p>Because you remained domiciled in WA, your estate is subject to the state's progressive death tax on top of any Federal liability.</p>` : `<p>By shifting legal domicile outside of Washington, you avoid the state estate tax entirely.</p>`;
+            let estMsg = row.heirsReality.waEstTax > 0 ? `<p>Because you remained domiciled in WA, your estate is subject to the state's progressive death tax on top of any Federal liability.</p>` : `<p>By shifting legal domicile outside of Washington, you avoid the state estate tax entirely.</p>`;
 
             let milestoneHtml = row.milestones.map((ms, idx) => `
                 <div class="masonry-item">
@@ -1412,27 +1332,44 @@
                 </div>
             `).join('');
 
-            // Add Hypothetical Liquidation Milestone
+            let dd = row.doomsdayData;
+            if (dd) {
+                let doomMilestoneHtml = `
+                    <div class="masonry-item" style="border: 1px solid #f87171; border-radius: 8px; padding: 18px; background: #172033; box-shadow: 0 4px 12px rgba(248, 113, 113, 0.1);">
+                        <h4 style="color:#f87171; border-color:#f87171;">Pre-Death Doomsday Liquidation</h4>
+                        <h5>Year ${dd.year} - Hypothetical Fire Sale</h5>
+                        <p style="font-size: 11.5px; color: #9ca3af; margin-top: 0px; margin-bottom: 8px; line-height: 1.4;">Simulates liquidating your entire life into cash while still alive. Forces maximum Federal/State capital gains on stocks and real estate, and massive ordinary income tax on fully draining the 401k/IRA.</p>
+                        <div class="math-box">
+                            Gross Estate Value: ${formatCurrency(dd.grossEstate)}<br><br>
+                            <span style="color:#f87171;">- Fed Income & CG Tax: -${formatCurrency(dd.fedCgOrd)}</span><br>
+                            <span style="color:#f87171;">- State Income & CG Tax: -${formatCurrency(dd.stateCgOrd)}</span><br>
+                            <span style="color:#f87171;">- RE Transfer/Doc/Excise Taxes: -${formatCurrency(dd.transferTaxes)}</span><br>
+                            ---------------------------------------------------------<br>
+                            = Net Cash (Before Death): <strong>${formatCurrency(dd.netCashPreEstate)}</strong><br>
+                            <span style="color:#f87171;">- Final Estate Tax on Cash: -${formatCurrency(dd.estateTax)}</span><br>
+                            ---------------------------------------------------------<br>
+                            = Final Doomsday Net Proceeds: <strong style="color:#f87171;">${formatCurrency(dd.finalNetCash)}</strong>
+                        </div>
+                    </div>
+                `;
+                milestoneHtml += doomMilestoneHtml;
+            }
+
             let liqMilestoneHtml = `
-                <div class="masonry-item">
-                    <h5>Year ${endYear} (${row.hist[row.hist.length-1].state}) - Hypothetical RE Liquidation</h5>
-                    <p style="font-size: 11.5px; color: #9ca3af; margin-top: 0px; margin-bottom: 8px; line-height: 1.4;">Liquidating all real estate at the end of the projection to evaluate a fully liquid legacy. Federal capital gains, CA state income tax (if applicable), and State Document/Excise Taxes (WA REET, FL Doc Stamps, CA Transfer Tax) are applied. Real estate is explicitly exempt from the WA state 7% capital gains tax.</p>
+                <div class="masonry-item" style="border: 1px solid #3b82f6; border-radius: 8px; padding: 18px; background: #172033; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);">
+                    <h4 style="color:#60a5fa; border-color:#3b82f6;">Post-Death Transfer (Heirs' Reality)</h4>
+                    <h5>Year ${endYear} - True Legacy Transfer</h5>
+                    <p style="font-size: 11.5px; color: #9ca3af; margin-top: 0px; margin-bottom: 8px; line-height: 1.4;">Simulates your heirs inheriting the estate. Due to the <strong>IRC Section 1014 step-up in basis</strong>, Federal and State Capital Gains taxes on real estate and stocks are completely wiped out ($0). Heirs only pay required state real estate transfer/excise taxes upon sale.</p>
                     <div class="math-box">
-                        + Gross RE Sale: ${formatCurrency(row.reLiquidation.gross)}<br>
-                        - Cost Basis: -${formatCurrency(row.reLiquidation.basis)}<br>
-                        - Primary Residence Exemption: -$500,000<br>
+                        Total Gross Estate: ${formatCurrency(row.heirsReality.gross)}<br><br>
+                        - Fed/State Capital Gains Tax: $0 (Stepped-up basis)<br>
+                        <span style="color:#f87171;">- RE Transfer/Doc/Excise Taxes: -${formatCurrency(row.heirsReality.transferTaxes)}</span><br>
                         ---------------------------------------------------------<br>
-                        = Taxable RE Gain: <strong>${formatCurrency(row.reLiquidation.taxable)}</strong><br><br>
-                        <span style="color:#f87171;">- Fed Tax (23.8%): -${formatCurrency(row.reLiquidation.fedTax)}</span><br>
-                        <span style="color:#f87171;">- State Income Tax (CA): -${formatCurrency(row.reLiquidation.stateIncTax)}</span><br>
-                        <span style="color:#f87171;">- State Transfer/Excise Taxes: -${formatCurrency(row.reLiquidation.transferTaxes)}</span><br>
+                        = Net Estate for Tax Purposes: <strong>${formatCurrency(row.heirsReality.postDeathGross)}</strong><br><br>
+                        Federal Estate Tax: <strong style="color:#f87171;">${row.heirsReality.fedEstTax > 0 ? '-' + formatCurrency(row.heirsReality.fedEstTax) : '$0'}</strong><br>
+                        WA State Estate Tax: <strong style="color:#f87171;">${row.heirsReality.waEstTax > 0 ? '-' + formatCurrency(row.heirsReality.waEstTax) : '$0'}</strong><br>
                         ---------------------------------------------------------<br>
-                        = Net RE Proceeds: <strong style="color:#34d399;">${formatCurrency(row.reLiquidation.netProceeds)}</strong><br><br>
-                        + Final Liquid Portfolio: ${formatCurrency(row.liq)}<br>
-                        = New Gross Liquid Estate: <strong>${formatCurrency(row.reLiquidation.newGross)}</strong><br>
-                        <span style="color:#f87171;">- Final Estate Tax: -${formatCurrency(row.reLiquidation.newEstTax)}</span><br>
-                        ---------------------------------------------------------<br>
-                        = Net Liquid Legacy: <strong style="color:#3b82f6;">${formatCurrency(row.reLiquidation.netLiquidLegacy)}</strong>
+                        = Net Liquid Legacy to Heirs: <strong style="color:#60a5fa;">${formatCurrency(row.heirsReality.netLegacy)}</strong>
                     </div>
                 </div>
             `;
@@ -1494,24 +1431,6 @@
                 <div class="masonry-grid">
                     ${taxBreakdownBlock}
                     ${optBlock}
-                    <div class="masonry-item">
-                        <h4>Real Estate & Legacy Shielding</h4>
-                        ${estMsg}
-                        <ul>
-                            <li><strong>WA Home Growth:</strong> ${formatCurrency(row.estMath.wa)}</li>
-                            ${row.estMath.ca > 0 ? `<li><strong>CA Home Growth:</strong> ${formatCurrency(row.estMath.ca)}</li>` : ''}
-                            ${row.estMath.fl > 0 ? `<li><strong>FL Home Growth:</strong> ${formatCurrency(row.estMath.fl)}</li>` : ''}
-                            <li><strong>Total Gross Estate in ${endYear}:</strong> ${formatCurrency(row.estMath.totEst)}</li>
-                        </ul>
-                        <h5>Final Estate Tax Calculation:</h5>
-                        <div class="math-box">
-                            Gross Estate: ${formatCurrency(row.estMath.totEst)}<br><br>
-                            Federal Tax (Exempt ${formatCurrency(row.estMath.fedExemptObj)} @ 40%): <strong style="color:#f87171;">${row.estMath.fedTax > 0 ? formatCurrency(row.estMath.fedTax) : '$0'}</strong><br>
-                            WA State Tax (Progressive over ${formatCurrency(waEstateExempt)}): <strong style="color:#f87171;">${row.estMath.waTax > 0 ? formatCurrency(row.estMath.waTax) : '$0'}</strong><br>
-                            ---------------------------------------------------------<br>
-                            <strong>Total Tax Forfeited at Death: <span style="color:${row.estMath.totTax > 0 ? '#f87171' : '#34d399'};">${formatCurrency(row.estMath.totTax)}</span></strong>
-                        </div>
-                    </div>
                     ${milestoneHtml}
                 </div>
 
@@ -1524,7 +1443,7 @@
         legacyChartInstance = new Chart(document.getElementById('legacyChart').getContext('2d'), {
             type: 'bar',
             data: { labels: labels, datasets: [
-                { type: 'line', label: 'FINAL NET LEGACY', data: netData, borderColor: '#fbbf24', backgroundColor: '#fbbf24', borderWidth: 3, pointRadius: 6, fill: false, tension: 0.1 },
+                { type: 'line', label: 'FINAL NET LEGACY', data: netData, borderColor: '#3b82f6', backgroundColor: '#3b82f6', borderWidth: 3, pointRadius: 6, fill: false, tension: 0.1 },
                 { type: 'bar', label: 'Liquid Portfolio ($)', data: liqData, backgroundColor: '#38bdf8', stack: 'Stack 0', maxBarThickness: 60 },
                 { type: 'bar', label: 'Real Estate Portfolio ($)', data: reData, backgroundColor: '#34d399', stack: 'Stack 0', maxBarThickness: 60 },
                 { type: 'bar', label: 'Total Taxes Paid (Life+Estate)', data: totalTaxData, backgroundColor: '#f87171', stack: 'Stack 0', maxBarThickness: 60 }
@@ -1532,7 +1451,7 @@
             options: { 
                 responsive: true, maintainAspectRatio: false, color: '#9ca3af', 
                 plugins: { 
-                    title: { display: true, text: 'Total Net Legacy Breakdown (Gross Assets vs. Final Net)', font: { size: 14, weight: '500' }, color: '#f3f4f6', padding: {bottom: 15} },
+                    title: { display: false },
                     legend: { labels: { color: '#cbd5e1' } },
                     tooltip: {
                         callbacks: {
@@ -1563,7 +1482,7 @@
                 responsive: true, maintainAspectRatio: false, color: '#9ca3af',
                 interaction: { mode: 'index', intersect: false },
                 plugins: {
-                    title: { display: true, text: 'Wealth Trajectory (Total Assets Year By Year)', font: { size: 14, weight: '500' }, color: '#f3f4f6', padding: {bottom: 15} },
+                    title: { display: false },
                     tooltip: {
                         callbacks: {
                             label: function(context) {
@@ -1593,10 +1512,9 @@
             }
         });
 
-        // Risk Panel
         const getRankColor = (i) => ['#34d399', '#a3e635', '#facc15', '#fb923c'][i] || '#f87171';
 
-        let taxRanks = results.map(row => ({ name: row.name, val: row.tax, cumTaxes: row.cumTaxes, estTax: row.estMath.totTax })).sort((a, b) => a.val - b.val);
+        let taxRanks = results.map(row => ({ name: row.name, val: row.tax, cumTaxes: row.cumTaxes, estTax: row.heirsReality.totEstTax })).sort((a, b) => a.val - b.val);
 
         let swrRanks = results.map(row => {
             let peak = 0;
@@ -1623,7 +1541,7 @@
             </div>`).join('');
 
         document.getElementById('riskPanel').innerHTML = `
-            <h3 style="margin-top:0; color:#cbd5e1; font-size:13px; border-bottom:1px solid #374151; padding-bottom:10px; text-transform:uppercase; letter-spacing:1px; font-weight:600;">Tax & Risk Analytics</h3>
+            <h3 style="margin-top:0; color:#e2e8f0; font-size:13px; border-bottom:1px solid #374151; padding-bottom:10px; text-transform:uppercase; letter-spacing:1.5px; font-weight:700; text-align:center;">Tax & Risk Analytics</h3>
             <div class="risk-card tax">
                 <div class="risk-title">Cumulative Tax Leakage</div>
                 ${taxHtml}
