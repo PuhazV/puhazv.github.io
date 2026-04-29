@@ -184,9 +184,10 @@
                     <div class="input-group-box">
                         <h3>Income, Spend & WA Home</h3>
                         <div class="section-label">Cost of Living Adjustments (WA = 100%)</div>
-                        <div class="input-row-2">
-                            <div class="input-group"><label>CA COL (%)</label><input type="number" id="colCA" value="105" step="1" oninput="calculate()"></div>
-                            <div class="input-group"><label>FL COL (%)</label><input type="number" id="colFL" value="80" step="1" oninput="calculate()"></div>
+                        <div class="input-row-3">
+                            <div class="input-group"><label>CA COL (%)</label><input type="number" id="colCA" value="110" step="1" oninput="calculate()"></div>
+                            <div class="input-group"><label>FL COL (%)</label><input type="number" id="colFL" value="74" step="1" oninput="calculate()"></div>
+                            <div class="input-group" title="The portion of base spending that scales with the State COL indices above (e.g. food, gas, local services)."><label>COL Exposure (%)</label><input type="number" id="colExposurePct" value="70" step="1" oninput="calculate()"></div>
                         </div>
                         
                         <div class="section-label">WA Base Home</div>
@@ -565,6 +566,7 @@
 
         const colCa = getNum('colCA') / 100;
         const colFl = getNum('colFL') / 100;
+        const colExposure = getNum('colExposurePct') / 100;
 
         const waHome = getNum('waHome'); const waApprec = getNum('waApprec') / 100;
         const mgmtFee = getNum('mgmtFee') / 100;
@@ -744,9 +746,12 @@
                 
                 path.moves.forEach(m => { if(curYr >= m.yr) currentState = m.state; });
 
-                let colMult = 1.0;
-                if (currentState === 'CA') colMult = colCa;
-                if (currentState === 'FL') colMult = colFl;
+                let stateColVal = 1.0;
+                if (currentState === 'CA') stateColVal = colCa;
+                if (currentState === 'FL') stateColVal = colFl;
+                
+                // Composite COL Multiplier based on user exposure %
+                let colMult = (1 - colExposure) + (colExposure * stateColVal);
 
                 let inf = Math.pow(1 + inflation, i);
                 let baseSpend = getSpend(i) * 12 * inf * colMult;
