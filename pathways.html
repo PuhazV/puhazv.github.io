@@ -239,8 +239,13 @@
                     </div>
                     <div class="input-group-box">
                         <h3>WA Home Sale</h3>
-                        <p style="font-size:10.5px; color:#9ca3af; margin:0 0 10px 0; line-height:1.4;">WA home is auto-sold when the portfolio is about to run out. Enter a year below to sell early instead.</p>
-                        <div class="input-group" title="Enter a year to force an early sale before portfolio depletion. Leave at 0 to auto-sell when the portfolio is about to run out."><label>Early Sale Yr (0 = auto)</label><input type="number" id="p1_sellWaYr" value="0" oninput="calculate()"></div>
+                        <div class="input-group" style="margin-bottom:8px;">
+                            <label style="display:flex; align-items:center; gap:8px; color:#f3f4f6; cursor:pointer; text-transform:none;">
+                                <input type="checkbox" id="p1_sellWaAuto" onchange="toggleSellWa('p1')" style="margin:0;" checked> Sell WA Home if portfolio depletes
+                            </label>
+                        </div>
+                        <div class="input-group" title="Optionally force an early sale before depletion. Leave at 0 to auto-sell at depletion."><label>Early Sale Yr (0 = at depletion)</label><input type="number" id="p1_sellWaYr" value="0" oninput="calculate()"></div>
+                        <div class="input-group" title="Monthly rent paid after selling the WA home, while still living in WA."><label>Rent After Sale ($/mo)</label><input type="text" id="p1_rentAfterSale" value="4,000" oninput="formatCurrencyInput(this)"></div>
                     </div>
                 </div>
 
@@ -262,8 +267,13 @@
                         </div>
                         
                         <div class="section-label">Property Sale Controls</div>
-                        <p style="font-size:10.5px; color:#9ca3af; margin:0 0 10px 0; line-height:1.4;">WA home is auto-sold when the portfolio is about to run out. Enter a year below to sell early instead.</p>
-                        <div class="input-group" title="Enter a year to force an early sale before portfolio depletion. Leave at 0 to auto-sell when the portfolio is about to run out."><label>Early Sale Yr (0 = auto)</label><input type="number" id="p2_sellWaYr" value="0" oninput="calculate()"></div>
+                        <div class="input-group" style="margin-bottom:8px;">
+                            <label style="display:flex; align-items:center; gap:8px; color:#f3f4f6; cursor:pointer; text-transform:none;">
+                                <input type="checkbox" id="p2_sellWaAuto" onchange="toggleSellWa('p2')" style="margin:0;" checked> Sell WA Home if portfolio depletes
+                            </label>
+                        </div>
+                        <div class="input-group" title="Optionally force an early sale before depletion. Leave at 0 to auto-sell at depletion."><label>Early Sale Yr (0 = at depletion)</label><input type="number" id="p2_sellWaYr" value="0" oninput="calculate()"></div>
+                        <div class="input-group" title="Monthly rent paid after selling the WA home, if still living in WA at time of sale."><label>Rent After Sale ($/mo)</label><input type="text" id="p2_rentAfterSale" value="4,000" oninput="formatCurrencyInput(this)"></div>
 
                         <div class="section-label">Custom Portfolio Reset Window</div>
                         <div class="input-group" style="margin-bottom: 8px;">
@@ -313,8 +323,13 @@
                         </div>
 
                         <div class="section-label">Property Sale Controls</div>
-                        <p style="font-size:10.5px; color:#9ca3af; margin:0 0 10px 0; line-height:1.4;">WA home is auto-sold when the portfolio is about to run out. Enter a year below to sell early instead.</p>
-                        <div class="input-group" title="Enter a year to force an early sale before portfolio depletion. Leave at 0 to auto-sell when the portfolio is about to run out."><label>Early Sale Yr (0 = auto)</label><input type="number" id="p3_sellWaYr" value="0" oninput="calculate()"></div>
+                        <div class="input-group" style="margin-bottom:8px;">
+                            <label style="display:flex; align-items:center; gap:8px; color:#f3f4f6; cursor:pointer; text-transform:none;">
+                                <input type="checkbox" id="p3_sellWaAuto" onchange="toggleSellWa('p3')" style="margin:0;" checked> Sell WA Home if portfolio depletes
+                            </label>
+                        </div>
+                        <div class="input-group" title="Optionally force an early sale before depletion. Leave at 0 to auto-sell at depletion."><label>Early Sale Yr (0 = at depletion)</label><input type="number" id="p3_sellWaYr" value="0" oninput="calculate()"></div>
+                        <div class="input-group" title="Monthly rent paid after selling the WA home, if still living in WA at time of sale."><label>Rent After Sale ($/mo)</label><input type="text" id="p3_rentAfterSale" value="4,000" oninput="formatCurrencyInput(this)"></div>
 
                         <div class="section-label">Strategic Roth Conversions</div>
                         <div class="input-row-2">
@@ -447,6 +462,13 @@
         if (inputAmt) inputAmt.disabled = checkbox.checked;
         if (inputRunway) inputRunway.disabled = checkbox.checked;
         
+        calculate();
+    }
+
+    function toggleSellWa(prefix) {
+        const cb = document.getElementById(prefix + '_sellWaAuto');
+        const yr = document.getElementById(prefix + '_sellWaYr');
+        if (yr) yr.disabled = !cb.checked;
         calculate();
     }
 
@@ -632,6 +654,10 @@
         const mgmtFee = getNum('mgmtFee') / 100;
         const waCgExempt = getNum('waCgExempt');
 
+        const p1_rentAfterSale = getNum('p1_rentAfterSale') * 12;
+        const p2_rentAfterSale = getNum('p2_rentAfterSale') * 12;
+        const p3_rentAfterSale = getNum('p3_rentAfterSale') * 12;
+
         const intRate = getNum('intRate') / 100;
         const caDpPct = getNum('caDpPct') / 100;
         const flDpPct = getNum('flDpPct') / 100;
@@ -790,10 +816,13 @@
             if (path.id === 2) { scenResetAmt = getNum('p2_resetAmt'); if (p2_resetFull) isFullReset = true; }
 
             let waSold = false; let flSold = false; let caSold = false;
-            let waAutoSold = false; // true when WA home was sold due to depletion (not a planned early sale)
-            let p1_sellWaYr = getNum('p1_sellWaYr');
-            let p2_sellWaYr = getNum('p2_sellWaYr');
-            let p3_sellWaYr = getNum('p3_sellWaYr');
+            let waAutoSold = false;
+            const p1_sellWaEnabled = document.getElementById('p1_sellWaAuto')?.checked;
+            const p2_sellWaEnabled = document.getElementById('p2_sellWaAuto')?.checked;
+            const p3_sellWaEnabled = document.getElementById('p3_sellWaAuto')?.checked;
+            let p1_sellWaYr = p1_sellWaEnabled ? getNum('p1_sellWaYr') : -1;
+            let p2_sellWaYr = p2_sellWaEnabled ? getNum('p2_sellWaYr') : -1;
+            let p3_sellWaYr = p3_sellWaEnabled ? getNum('p3_sellWaYr') : -1;
 
             for(let i = 0; i <= years; i++) {
                 let curYr = startYear + i;
@@ -861,6 +890,10 @@
                 if ((path.id === 2 && curYr >= p2_purchYr && !caSold)) investPropCarry += currentCaVal * p2_carryRate;
                 if ((path.id === 3 && curYr >= p3_purchYr && !flSold)) investPropCarry += currentFlVal * p3_carryRate;
 
+                // Rent paid after WA home is sold while still living in WA (inflated)
+                let rentAfterSaleBase = path.id === 1 ? p1_rentAfterSale : (path.id === 2 ? p2_rentAfterSale : p3_rentAfterSale);
+                let waRentAfterSaleExp = (waSold && currentState === 'WA') ? rentAfterSaleBase * inf : 0;
+
                 let mortgageExp = 0;
                 if (path.id === 2 && curYr >= p2_purchYr && !caSold) mortgageExp += caMortgageP2;
                 if (path.id === 3 && curYr >= p3_purchYr && !flSold) mortgageExp += flMortgageP3;
@@ -911,21 +944,21 @@
 
                 // Real Estate Sales Processing
                 // Auto-sell: detect if this year's shortfall will exceed the liquid portfolio (pre-depletion check)
-                let estTotalExp = baseSpend + medExp + carryCost + winterLoss + investPropCarry + homePurchaseCost + mortgageExp;
+                let estTotalExp = baseSpend + medExp + carryCost + winterLoss + investPropCarry + homePurchaseCost + mortgageExp + waRentAfterSaleExp;
                 let estNetIncome = preTaxInc + totalRentNet + ssInc - currentTaxObj.total;
                 let liquidBeforeYear = port.stocksHigh + port.stocksLow + port.pretax + port.roth;
                 let portAboutToDeplete = portDepleted || (i > 0 && (estTotalExp - estNetIncome) > liquidBeforeYear);
 
                 let sellWaThisYr = false;
-                if (path.id === 1 && !waSold) {
+                if (path.id === 1 && !waSold && p1_sellWaEnabled) {
                     if (p1_sellWaYr > 0 && curYr >= p1_sellWaYr) sellWaThisYr = true;
                     else if (p1_sellWaYr === 0 && portAboutToDeplete) sellWaThisYr = true;
                 }
-                if (path.id === 2 && !waSold) {
+                if (path.id === 2 && !waSold && p2_sellWaEnabled) {
                     if (p2_sellWaYr > 0 && curYr >= Math.max(p2_sellWaYr, p2_moveYr)) sellWaThisYr = true;
                     else if (p2_sellWaYr === 0 && portAboutToDeplete) sellWaThisYr = true;
                 }
-                if (path.id === 3 && !waSold) {
+                if (path.id === 3 && !waSold && p3_sellWaEnabled) {
                     if (p3_sellWaYr > 0 && curYr >= Math.max(p3_sellWaYr, p3_moveYr)) sellWaThisYr = true;
                     else if (p3_sellWaYr === 0 && portAboutToDeplete) sellWaThisYr = true;
                 }
@@ -1035,7 +1068,7 @@
                 }
 
                 let netCashFromBaseIncome = preTaxInc + totalRentNet + ssInc - currentTotalTax;
-                let totalExp = baseSpend + medExp + carryCost + winterLoss + investPropCarry + homePurchaseCost + mortgageExp;
+                let totalExp = baseSpend + medExp + carryCost + winterLoss + investPropCarry + homePurchaseCost + mortgageExp + waRentAfterSaleExp;
                 let shortfall = totalExp - netCashFromBaseIncome - prePaidFromProceeds;
 
                 let drawStocks = 0, taxStocks = 0, draw401k = 0, tax401k = 0, drawRoth = 0;
@@ -1213,7 +1246,7 @@
                 let endTotalLiq = port.stocksLow + port.stocksHigh + port.pretax + port.roth;
                 
                 let snap = {
-                    year: curYr, age1: curAge1, age2: curAge2, state: currentState, spend: baseSpend, medExp: medExp, carryCost: investPropCarry, mortgageExp: mortgageExp, purchaseCost: homePurchaseCost, winterLoss: winterLoss,
+                    year: curYr, age1: curAge1, age2: curAge2, state: currentState, spend: baseSpend, medExp: medExp, carryCost: investPropCarry, mortgageExp: mortgageExp, purchaseCost: homePurchaseCost, winterLoss: winterLoss, waRentAfterSale: waRentAfterSaleExp,
                     ssInc: ssInc, preTaxInc: preTaxInc, rentInc: totalRentNet, waRentCollected: waRentNet, caRentCollected: caRentNet, flRentCollected: flRentNet,
                     shortfall: shortfall, rentTax: currentTaxObj.total - optTax - taxStocks - tax401k, optTax: optTax, executedConv: executedConv, executedCG: executedCG,
                     drawStocks: drawStocks, taxStocks: taxStocks, draw401k: draw401k, tax401k: tax401k, drawRoth: drawRoth,
@@ -1382,9 +1415,17 @@
                     ${pp(row.heirsReality.totEstTax)}
                 </td>
                 <td class="currency" style="vertical-align: top; padding-top: 20px; background: ${row.portDepleted ? 'rgba(127,29,29,0.12)' : 'rgba(59,130,246,0.05)'}; border-left: 1px solid #374151;" title="${heirsHover}">
-                    <div style="font-size: 15px; font-weight: 700; color: ${row.portDepleted ? '#fb923c' : '#60a5fa'}">${formatCurrency(row.heirsReality.netLegacy)}</div>
-                    ${pp(row.heirsReality.netLegacy)}
-                    ${row.portDepleted ? `<div style="font-size:10px; color:#fca5a5; margin-top:5px; line-height:1.5; text-align:left;">⚠ RE-only from ${row.firstDepletionYear}<br>Unfunded: ${formatCurrency(row.cumUnfundedShortfall)}</div>` : ''}
+                    ${row.portDepleted ? (() => {
+                        const netAfterDebt = row.heirsReality.netLegacy - row.cumUnfundedShortfall;
+                        return `<div style="font-size: 15px; font-weight: 700; color: ${netAfterDebt >= 0 ? '#fb923c' : '#f87171'}">${formatCurrency(netAfterDebt)}</div>
+                    ${pp(netAfterDebt)}
+                    <div style="font-size:10px; color:#9ca3af; margin-top:6px; line-height:1.8; text-align:left;">
+                        Real Estate: <span style="color:#fb923c;">${formatCurrency(row.heirsReality.netLegacy)}</span><br>
+                        Unfunded Gap: <span style="color:#fca5a5;">−${formatCurrency(row.cumUnfundedShortfall)}</span><br>
+                        <span style="color:#fca5a5; font-size:9.5px;">⚠ Cash depleted ${row.firstDepletionYear}</span>
+                    </div>`;
+                    })() : `<div style="font-size: 15px; font-weight: 700; color: #60a5fa">${formatCurrency(row.heirsReality.netLegacy)}</div>
+                    ${pp(row.heirsReality.netLegacy)}`}
                 </td>
                 <td class="currency" style="vertical-align: top; padding-top: 20px; background: rgba(251, 191, 36, 0.05); border-left: 1px solid #374151;" title="${doomHover}">
                     <div style="font-size: 15px; font-weight: 700; color: #fbbf24">${row.doomsdayData ? formatCurrency(row.doomsdayData.finalNetCash) : 'N/A'}</div>
