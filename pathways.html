@@ -568,6 +568,7 @@
                             <th>Stocks</th><th>401k</th><th>Roth</th>
                             <th style="color:#a78bfa;" title="Pre-tax to Roth conversion executed this year">Roth Conv</th>
                             <th style="color:#f87171;" title="Stock portfolio value stepped-up this year">CG Reset</th>
+                            <th style="color:#34d399;" title="WA home was sold this year — net proceeds invested into taxable stocks">WA Sale</th>
                             <th style="color:#fca5a5; background:#450a0a;" title="Amount of annual spending shortfall that could NOT be covered — illiquid portfolio was empty">Unmet $</th>
                         </tr>
                     </thead>
@@ -589,6 +590,7 @@
                 <td style="color:#34d399;">${formatCurrency(r.roth)}</td>
                 <td style="color:#a78bfa;">${r.executedConv > 0 ? formatCurrency(r.executedConv) : '-'}</td>
                 <td style="color:#f87171;">${r.executedCG > 0 ? formatCurrency(r.executedCG) : '-'}</td>
+                <td style="color:#34d399; font-weight:${r.soldWaHome ? '700' : '400'}" title="${r.soldWaHome ? 'Sold WA Home: gross ' + formatCurrency(r.waSaleGross) + ' → net proceeds ' + formatCurrency(r.waSaleNet) + ' invested into taxable stocks' : ''}"> ${r.soldWaHome ? '🏠 ' + formatCurrency(r.waSaleNet) : '-'}</td>
                 <td style="color:#fca5a5; font-weight:${r.unmetShortfall > 0.01 ? '700' : '400'}; background:${r.unmetShortfall > 0.01 ? 'rgba(127,29,29,0.5)' : 'transparent'}">${r.unmetShortfall > 0.01 ? formatCurrency(r.unmetShortfall) : '-'}</td>
             </tr>`;
         });
@@ -788,6 +790,7 @@
             if (path.id === 2) { scenResetAmt = getNum('p2_resetAmt'); if (p2_resetFull) isFullReset = true; }
 
             let waSold = false; let flSold = false; let caSold = false;
+            let waAutoSold = false; // true when WA home was sold due to depletion (not a planned early sale)
             let p1_sellWaYr = getNum('p1_sellWaYr');
             let p2_sellWaYr = getNum('p2_sellWaYr');
             let p3_sellWaYr = getNum('p3_sellWaYr');
@@ -949,6 +952,7 @@
                     prePaidFromProceeds += taxOnSale;
                     port.stocksHigh += netAfterTax; port.stocksHighBasis += netAfterTax;
                     waSold = true; activeWaVal = 0; propertySaleProceeds += netAfterTax;
+                    if (portAboutToDeplete) waAutoSold = true; // mark as depletion-driven sale
                     yrEvents.push("Sold WA Home");
                     yrExp += `Sold WA Home for ${formatCurrency(gross)}. After WA REET (${formatCurrency(waReet)}) and CG taxes (${formatCurrency(taxOnSale)}), invested ${formatCurrency(netAfterTax)} into taxable stocks. `;
                 }
@@ -1041,7 +1045,16 @@
 
                 let isFullResetActive = false; let isCustomResetActive = false; let annualReset = 0; let remainingRunway = 0;
 
-                if (path.id === 2) {
+                // Skip all tax-optimization conversions/step-ups in any year the WA home is sold due to depletion
+                // (selling because funds ran out is not a year for discretionary Roth conversions)
+                // Skip all discretionary tax-optimization (Roth conversions, basis step-ups) once the portfolio
+                // has depleted or the house is being sold due to depletion. A retired person with no liquid
+                // assets cannot afford to pay the ordinary income tax triggered by a Roth conversion.
+                // Also skip if house was previously auto-sold due to depletion — those proceeds are survival
+                // cash, not investment capital, so no discretionary conversions in any subsequent year.
+                const skipOptimization = portDepleted || waAutoSold || (sellWaThisYr && portAboutToDeplete);
+
+                if (!skipOptimization && path.id === 2) {
                     if (isFullReset) {
                         let targetMoveYrLocal = p2_moveYr;
                         if (curYr >= p2_resetStartYr && curYr < targetMoveYrLocal) { isFullResetActive = true; remainingRunway = targetMoveYrLocal - curYr; }
@@ -1050,7 +1063,7 @@
                     }
                 }
 
-                if (isFullResetActive && remainingRunway > 0) {
+                if (!skipOptimization && isFullResetActive && remainingRunway > 0) {
                     if (port.pretax > 0) {
                         let convertAmt = port.pretax / remainingRunway;
                         let gainRatio = 1 - (port.pretaxBasisDol / port.pretax);
@@ -1072,7 +1085,7 @@
                             port.stocksLow -= sellAmt; port.stocksLowBasis -= sellAmt; port.stocksHigh += sellAmt; port.stocksHighBasis += sellAmt; executedCG = sellAmt;
                         }
                     }
-                } else if (isCustomResetActive && annualReset > 0) {
+                } else if (!skipOptimization && isCustomResetActive && annualReset > 0) {
                     let remainingReset = annualReset;
                     if (remainingReset > 0 && port.pretax > 0) {
                         let convertAmt = Math.min(remainingReset, port.pretax);
@@ -1093,7 +1106,7 @@
                             port.stocksHigh += sellAmt; port.stocksHighBasis += sellAmt; isStepUpTriggered = true; executedCG = sellAmt;
                         }
                     }
-                } else if (path.id === 1 || path.id === 3) {
+                } else if (!skipOptimization && (path.id === 1 || path.id === 3)) {
                     let convYrs = (path.id === 1) ? p1_convYrs : (path.id === 3 ? p3_convYrs : 0);
                     let convStart = (path.id === 1) ? p1_convStartYr : (path.id === 3 ? p3_convStartYr : startYear);
                     if (convYrs > 0 && curYr >= convStart && curYr < convStart + convYrs && port.pretax > 0) {
@@ -1207,7 +1220,8 @@
                     taxTotal: currentTotalTax, fedTax: yrFedTax, waTax: yrWaTax, caTax: yrCaTax, flTax: yrFlTax, 
                     stocks: port.stocksLow + port.stocksHigh, pretax: port.pretax, roth: port.roth,
                     reValue: finalReChart, unharvestedGains: Math.max(0, port.stocksLow - port.stocksLowBasis),
-                    unmetShortfall: unmetShortfall
+                    unmetShortfall: unmetShortfall,
+                    soldWaHome: sellWaThisYr, waSaleGross: sellWaThisYr ? currentWaVal : 0, waSaleNet: sellWaThisYr ? propertySaleProceeds : 0
                 };
                 hist.push(snap);
                 if (unmetShortfall > 0.01) { cumUnfundedShortfall += unmetShortfall; if (!portDepleted) { portDepleted = true; firstDepletionYear = curYr; } }
@@ -1315,9 +1329,14 @@
             const pp = (val) => `<div style="font-size: 11.5px; color: #64748b; margin-top: 5px; font-weight: 400; font-family: 'SF Mono', monospace;">${formatCurrency(val / deflator)}</div>`;
 
             let depletionBadge = row.portDepleted ? `<div style="margin-top:5px;"><span style="background:#7f1d1d; color:#fca5a5; font-size:10px; padding:2px 8px; border-radius:3px; font-weight:700; letter-spacing:0.5px;">⚠ CASH DEPLETED ${row.firstDepletionYear}</span></div>` : '';
+            let waSaleSnap = row.hist.find(s => s.soldWaHome);
+            let waSaleLine = waSaleSnap
+                ? `<div style="color:#d97706; font-size:11px; margin-top:2px;">🏠 WA Home Sold To Cover Costs: ${waSaleSnap.year} &nbsp;·&nbsp; Net ${formatCurrency(waSaleSnap.waSaleNet)} → stocks</div>`
+                : `<div style="color:#6b7280; font-size:11px; margin-top:2px;">WA Home: Retained</div>`;
             let metaHtml = `<div style="font-size: 11px; color: #64748b; margin-top: 6px; font-weight: 400; line-height: 1.4; padding-left: 16px;">
                 <div>Timeline: ${row.startYr} – ${row.endYr}</div>
                 <div>Moves: ${row.moves.length > 0 ? row.moves.map(m => `To ${m.state} (${m.yr})`).join(', ') : 'Remains in WA'}</div>
+                ${waSaleLine}
                 ${depletionBadge}
             </div>`;
 
